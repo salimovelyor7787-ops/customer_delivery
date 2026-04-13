@@ -46,6 +46,13 @@ Next.js must be deployed **from the `web_admin` folder**, otherwise the producti
 
 **Alternative (repo root as Vercel root):** leave Root Directory empty, then set **Install Command** to `npm run install:web-admin` and **Build Command** to `npm run build` in the Vercel UI (not recommended; Next.js preset works best with Root = `web_admin`).
 
+### Если после деплоя видите платформенный `404: NOT_FOUND` (не страница Next.js)
+
+1. **Settings → General → Framework Preset** должно быть **Next.js** (не «Other» и не Static Site).
+2. **Root Directory** = `web_admin`, **Output Directory** пустой.
+3. Откройте именно **Production** URL из последнего успешного деплоя (Deployments → три точки → Visit).
+4. После этого сделайте **Redeploy** с последнего коммита (в репозитории снова используется `middleware.ts` для совместимости с Vercel).
+
 ## Role routing
 
 After login, users are redirected by role:
@@ -56,7 +63,7 @@ After login, users are redirected by role:
 
 ## Security
 
-- Frontend route protection in `src/proxy.ts` (Next.js 16 convention)
+- Frontend route protection in `src/middleware.ts` (Vercel-compatible edge middleware)
 - Server role-guard helper in `src/lib/guards.ts`
 - RLS policy blueprint in `../supabase/004_admin_panel_rls.sql`
 

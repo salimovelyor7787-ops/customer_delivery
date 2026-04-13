@@ -3,10 +3,20 @@ import { NextResponse, type NextRequest } from "next/server";
 
 const authRoutes = ["/admin", "/restaurant", "/courier"];
 
-export async function proxy(request: NextRequest) {
+export async function middleware(request: NextRequest) {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
   let response = NextResponse.next({ request });
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+  const pathname = request.nextUrl.pathname;
+  const isProtected = authRoutes.some((route) => pathname.startsWith(route));
+
+  if (!supabaseUrl || !supabaseAnonKey) {
+    if (isProtected) {
+      return NextResponse.redirect(new URL("/login", request.url));
+    }
+    return response;
+  }
 
   const supabase = createServerClient(supabaseUrl, supabaseAnonKey, {
     cookies: {
@@ -20,13 +30,9 @@ export async function proxy(request: NextRequest) {
   });
 
   const { data } = await supabase.auth.getSession();
-  const pathname = request.nextUrl.pathname;
-  const isProtected = authRoutes.some((route) => pathname.startsWith(route));
 
   if (isProtected && !data.session) {
-    const url = request.nextUrl.clone();
-    url.pathname = "/login";
-    return NextResponse.redirect(url);
+    return NextResponse.redirect(new URL("/login", request.url));
   }
 
   if (pathname === "/login" && data.session) {
@@ -49,7 +55,11 @@ export async function proxy(request: NextRequest) {
       .eq("id", data.session.user.id)
       .single();
     const role = profile?.role;
-    if ((pathname.startsWith("/admin") && role !== "admin") || (pathname.startsWith("/restaurant") && role !== "restaurant") || (pathname.startsWith("/courier") && role !== "courier")) {
+    if (
+      (pathname.startsWith("/admin") && role !== "admin") ||
+      (pathname.startsWith("/restaurant") && role !== "restaurant") ||
+      (pathname.startsWith("/courier") && role !== "courier")
+    ) {
       const url = request.nextUrl.clone();
       url.pathname = role === "admin" ? "/admin" : role === "restaurant" ? "/restaurant" : "/courier";
       return NextResponse.redirect(url);
