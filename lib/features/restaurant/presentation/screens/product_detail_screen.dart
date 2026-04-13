@@ -1,5 +1,6 @@
 import 'package:customer_delivery/core/widgets/app_network_image.dart';
 import 'package:customer_delivery/features/cart/presentation/notifiers/cart_notifier.dart';
+import 'package:customer_delivery/features/cart/presentation/utils/cart_helpers.dart';
 import 'package:customer_delivery/features/restaurant/domain/entities/menu_item.dart';
 import 'package:customer_delivery/features/restaurant/presentation/providers/menu_providers.dart';
 import 'package:flutter/material.dart';
@@ -40,7 +41,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
     final itemForCart = asyncItem.asData?.value;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Item')),
+      appBar: AppBar(title: const Text('Блюдо')),
       body: asyncItem.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => Center(child: Text('$e')),
@@ -65,10 +66,10 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
               const SizedBox(height: 8),
               Text(item.description ?? '', style: Theme.of(context).textTheme.bodyLarge),
               const SizedBox(height: 16),
-              Text('From ${money.format(unit / 100)}', style: Theme.of(context).textTheme.titleMedium),
+              Text('От ${money.format(unit / 100)}', style: Theme.of(context).textTheme.titleMedium),
               if (item.options.isNotEmpty) ...[
                 const SizedBox(height: 24),
-                Text('Options', style: Theme.of(context).textTheme.titleMedium),
+                Text('Опции', style: Theme.of(context).textTheme.titleMedium),
                 const SizedBox(height: 8),
                 ...item.options.map(
                   (o) => CheckboxListTile(
@@ -90,7 +91,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
               if (!item.isAvailable)
                 Padding(
                   padding: const EdgeInsets.only(top: 16),
-                  child: Text('Currently unavailable', style: TextStyle(color: Theme.of(context).colorScheme.error)),
+                  child: Text('Сейчас недоступно', style: TextStyle(color: Theme.of(context).colorScheme.error)),
                 ),
             ],
           );
@@ -101,13 +102,24 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
           padding: const EdgeInsets.all(16),
           child: FilledButton(
             onPressed: itemForCart != null && itemForCart.isAvailable
-                ? () {
-                    ref.read(cartNotifierProvider.notifier).addItem(itemForCart, selectedOptionIds: Set.from(_selected));
-                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Added to cart')));
+                ? () async {
+                    final ok = await ensureCartRestaurantOrConfirmSwitch(
+                      context,
+                      ref,
+                      widget.restaurantId,
+                    );
+                    if (!ok || !context.mounted) return;
+                    ref.read(cartNotifierProvider.notifier).addItem(
+                          itemForCart,
+                          selectedOptionIds: Set.from(_selected),
+                        );
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Добавлено в корзину')),
+                    );
                     context.pop();
                   }
                 : null,
-            child: const Text('Add to cart'),
+            child: const Text('В корзину'),
           ),
         ),
       ),

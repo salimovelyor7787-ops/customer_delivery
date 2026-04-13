@@ -107,14 +107,6 @@ GoRouter createAppRouter({
           StatefulShellBranch(
             routes: [
               GoRoute(
-                path: '/messages',
-                builder: (_, __) => const MessagesPlaceholderScreen(),
-              ),
-            ],
-          ),
-          StatefulShellBranch(
-            routes: [
-              GoRoute(
                 path: '/profile',
                 builder: (_, __) => const ProfileScreen(),
               ),
@@ -137,6 +129,11 @@ GoRouter createAppRouter({
         path: '/checkout',
         parentNavigatorKey: rootNavigatorKey,
         builder: (_, __) => const CheckoutScreen(),
+      ),
+      GoRoute(
+        path: '/support',
+        parentNavigatorKey: rootNavigatorKey,
+        builder: (_, __) => const SupportChatScreen(),
       ),
     ],
   );
@@ -172,11 +169,6 @@ class ScaffoldWithNavBar extends StatelessWidget {
             icon: Icon(Icons.shopping_bag_outlined),
             selectedIcon: Icon(Icons.shopping_bag_rounded),
             label: 'Корзина',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.chat_bubble_outline_rounded),
-            selectedIcon: Icon(Icons.chat_bubble_rounded),
-            label: 'Чат',
           ),
           NavigationDestination(
             icon: Icon(Icons.person_outline_rounded),

@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 
-/// Заглушка под чат с поддержкой / курьером (как на макете).
-class MessagesPlaceholderScreen extends StatelessWidget {
-  const MessagesPlaceholderScreen({super.key});
+/// Экран чата с поддержкой (пока заглушка).
+class SupportChatScreen extends StatelessWidget {
+  const SupportChatScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Сообщения')),
+      appBar: AppBar(title: const Text('Поддержка')),
       body: Center(
         child: Padding(
           padding: const EdgeInsets.all(32),

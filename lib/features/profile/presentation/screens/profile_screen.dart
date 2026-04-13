@@ -16,7 +16,7 @@ class ProfileScreen extends ConsumerWidget {
 
     if (session == null) {
       return Scaffold(
-        appBar: AppBar(title: const Text('Profile')),
+        appBar: AppBar(title: const Text('Профиль')),
         body: Center(
           child: Padding(
             padding: const EdgeInsets.all(24),
@@ -24,7 +24,7 @@ class ProfileScreen extends ConsumerWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(
-                  'Sign in to see your profile and saved addresses.',
+                  'Войдите, чтобы видеть профиль и сохранённые адреса.',
                   textAlign: TextAlign.center,
                   style: Theme.of(context).textTheme.bodyLarge,
                 ),
@@ -35,14 +35,20 @@ class ProfileScreen extends ConsumerWidget {
                   trailing: const Icon(Icons.chevron_right_rounded),
                   onTap: () => context.push('/orders'),
                 ),
+                ListTile(
+                  leading: const Icon(Icons.support_agent_rounded),
+                  title: const Text('Чат с поддержкой'),
+                  trailing: const Icon(Icons.chevron_right_rounded),
+                  onTap: () => context.push('/support'),
+                ),
                 const SizedBox(height: 8),
                 FilledButton(
                   onPressed: () => context.push(withNextQuery('/login', '/profile')),
-                  child: const Text('Sign in'),
+                  child: const Text('Войти'),
                 ),
                 TextButton(
                   onPressed: () => context.push(withNextQuery('/register', '/profile')),
-                  child: const Text('Create account'),
+                  child: const Text('Создать аккаунт'),
                 ),
               ],
             ),
@@ -55,7 +61,7 @@ class ProfileScreen extends ConsumerWidget {
     final addressesAsync = ref.watch(addressesProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Profile')),
+      appBar: AppBar(title: const Text('Профиль')),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
@@ -70,13 +76,19 @@ class ProfileScreen extends ConsumerWidget {
             trailing: const Icon(Icons.chevron_right_rounded),
             onTap: () => context.push('/orders'),
           ),
+          ListTile(
+            leading: const Icon(Icons.support_agent_rounded),
+            title: const Text('Чат с поддержкой'),
+            trailing: const Icon(Icons.chevron_right_rounded),
+            onTap: () => context.push('/support'),
+          ),
           const Divider(),
-          Text('Saved addresses', style: Theme.of(context).textTheme.titleMedium),
+          Text('Сохранённые адреса', style: Theme.of(context).textTheme.titleMedium),
           const SizedBox(height: 8),
           addressesAsync.when(
             data: (list) {
               if (list.isEmpty) {
-                return const Text('No addresses yet. Add one in your Supabase dashboard or profile API.');
+                return const Text('Адресов пока нет. Добавьте в кабинете или через API.');
               }
               return Column(
                 children: list
@@ -85,7 +97,7 @@ class ProfileScreen extends ConsumerWidget {
                         child: ListTile(
                           title: Text(a.label),
                           subtitle: Text(a.singleLine),
-                          trailing: a.isDefault ? const Chip(label: Text('Default')) : null,
+                          trailing: a.isDefault ? const Chip(label: Text('По умолчанию')) : null,
                         ),
                       ),
                     )
@@ -93,7 +105,7 @@ class ProfileScreen extends ConsumerWidget {
               );
             },
             loading: () => const Center(child: Padding(padding: EdgeInsets.all(24), child: CircularProgressIndicator())),
-            error: (e, _) => Text('Addresses: $e'),
+            error: (e, _) => Text('Адреса: $e'),
           ),
           const SizedBox(height: 24),
           FilledButton.tonal(
@@ -101,7 +113,7 @@ class ProfileScreen extends ConsumerWidget {
               await ref.read(authActionNotifierProvider.notifier).signOut();
               if (context.mounted) context.go('/home');
             },
-            child: const Text('Log out'),
+            child: const Text('Выйти'),
           ),
         ],
       ),

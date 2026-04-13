@@ -2,6 +2,7 @@ import 'package:customer_delivery/core/di/providers.dart';
 import 'package:customer_delivery/features/auth/domain/entities/app_user.dart';
 import 'package:customer_delivery/features/auth/presentation/providers/auth_providers.dart';
 import 'package:customer_delivery/features/cart/presentation/notifiers/cart_notifier.dart';
+import 'package:customer_delivery/features/home/presentation/providers/home_providers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -38,11 +39,56 @@ class _CartScreenState extends ConsumerState<CartScreen> {
     final money = NumberFormat.simpleCurrency();
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Cart')),
+      appBar: AppBar(title: const Text('Корзина')),
       body: cart.lines.isEmpty
-          ? const Center(child: Text('Your cart is empty'))
+          ? Center(
+              child: Padding(
+                padding: const EdgeInsets.all(32),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.shopping_bag_outlined,
+                      size: 64,
+                      color: Theme.of(context).colorScheme.outline,
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      'Корзина пуста',
+                      style: Theme.of(context).textTheme.titleLarge,
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Выберите ресторан на главной и добавьте блюда в корзину.',
+                      style: Theme.of(context).textTheme.bodyMedium,
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 24),
+                    FilledButton(
+                      onPressed: () => context.go('/home'),
+                      child: const Text('На главную'),
+                    ),
+                  ],
+                ),
+              ),
+            )
           : Column(
               children: [
+                if (cart.restaurantId != null)
+                  ref.watch(restaurantDetailProvider(cart.restaurantId!)).when(
+                        data: (r) => Material(
+                          color: Theme.of(context).colorScheme.surfaceVariant,
+                          child: ListTile(
+                            dense: true,
+                            leading: const Icon(Icons.storefront_outlined),
+                            title: Text(r.name),
+                            subtitle: const Text('Заказ из этого заведения'),
+                          ),
+                        ),
+                        loading: () => const SizedBox.shrink(),
+                        error: (_, __) => const SizedBox.shrink(),
+                      ),
                 Expanded(
                   child: ListView.builder(
                     itemCount: cart.lines.length,
@@ -55,13 +101,23 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             IconButton(
+                              tooltip: 'Удалить',
+                              icon: Icon(Icons.delete_outline, color: Theme.of(context).colorScheme.error),
+                              onPressed: () =>
+                                  ref.read(cartNotifierProvider.notifier).removeLine(l.lineId),
+                            ),
+                            IconButton(
                               icon: const Icon(Icons.remove_circle_outline),
-                              onPressed: () => ref.read(cartNotifierProvider.notifier).setQuantity(l.lineId, l.quantity - 1),
+                              onPressed: () => ref
+                                  .read(cartNotifierProvider.notifier)
+                                  .setQuantity(l.lineId, l.quantity - 1),
                             ),
                             Text('${l.quantity}'),
                             IconButton(
                               icon: const Icon(Icons.add_circle_outline),
-                              onPressed: () => ref.read(cartNotifierProvider.notifier).setQuantity(l.lineId, l.quantity + 1),
+                              onPressed: () => ref
+                                  .read(cartNotifierProvider.notifier)
+                                  .setQuantity(l.lineId, l.quantity + 1),
                             ),
                           ],
                         ),
@@ -74,7 +130,7 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                   Padding(
                     padding: const EdgeInsets.all(8),
                     child: Text(
-                      'Pricing: ${cart.quoteError}',
+                      'Расчёт стоимости: ${cart.quoteError}',
                       style: TextStyle(color: Theme.of(context).colorScheme.error),
                     ),
                   ),
@@ -86,14 +142,14 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          const Text('Cart subtotal (client)'),
+                          const Text('Сумма по позициям'),
                           Text(money.format(cart.clientSubtotalCents / 100)),
                         ],
                       ),
                       if (guest) ...[
                         const SizedBox(height: 8),
                         Text(
-                          'After sign in you will see delivery fee and total from the server.',
+                          'После входа в аккаунт появятся доставка, налоги и итог с сервера.',
                           style: Theme.of(context).textTheme.bodySmall,
                         ),
                       ],
@@ -102,14 +158,14 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            const Text('Delivery'),
+                            const Text('Доставка'),
                             Text(money.format(cart.quote!.deliveryFeeCents / 100)),
                           ],
                         ),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            const Text('Tax'),
+                            const Text('Налог'),
                             Text(money.format(cart.quote!.taxCents / 100)),
                           ],
                         ),
@@ -117,7 +173,7 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Text('Total (server)', style: Theme.of(context).textTheme.titleMedium),
+                            Text('Итого', style: Theme.of(context).textTheme.titleMedium),
                             Text(
                               money.format(cart.quote!.totalCents / 100),
                               style: Theme.of(context).textTheme.titleMedium,
@@ -127,10 +183,8 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                       ],
                       const SizedBox(height: 16),
                       FilledButton(
-                        onPressed: cart.lines.isEmpty
-                            ? null
-                            : () => context.push('/checkout'),
-                        child: const Text('Checkout'),
+                        onPressed: cart.lines.isEmpty ? null : () => context.push('/checkout'),
+                        child: const Text('Оформить заказ'),
                       ),
                     ],
                   ),
