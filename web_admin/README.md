@@ -29,15 +29,24 @@ npm install
 npm run dev
 ```
 
-## Vercel deploy (from repo root)
+## Vercel deploy
 
-This repository now includes root scripts and `vercel.json`, so you can connect the repository as-is.
+Next.js must be deployed **from the `web_admin` folder**, otherwise the production URL returns **404**.
 
-- Root build command: `npm run build`
-- Root install command: `npm run install:web-admin`
-- Env vars in Vercel Project Settings:
-  - `NEXT_PUBLIC_SUPABASE_URL`
-  - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+1. Vercel → Project → **Settings** → **General** → **Root Directory** → set to `web_admin` → Save.
+2. Clear **Override** fields if you set them earlier:
+   - **Output Directory** — leave **empty** (do not use `public` or `.next`).
+   - **Build Command** — leave default `npm run build`, or use root scripts only if Root Directory stays the repo root (not recommended).
+3. **Environment Variables** (Production + Preview):
+   - `NEXT_PUBLIC_SUPABASE_URL`
+   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+
+If Root Directory is the **repository root** (`customer_delivery`), the repo includes `vercel.json` with:
+
+- `installCommand`: `npm run install:web-admin`
+- `buildCommand`: `npm run build`
+
+That still builds Next inside `web_admin`, but Vercel’s Next.js integration works most reliably when **Root Directory = `web_admin`**.
 
 ## Role routing
 
