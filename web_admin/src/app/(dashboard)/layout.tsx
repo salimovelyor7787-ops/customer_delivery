@@ -17,7 +17,11 @@ export default async function DashboardLayout({ children }: { children: React.Re
     .eq("id", sessionData.session.user.id)
     .single();
 
-  const role = (userRow?.role ?? "courier") as UserRole;
+  const rawRole = userRow?.role ?? "customer";
+  if (rawRole === "customer") {
+    redirect("/no-access");
+  }
+  const role = rawRole as UserRole;
 
   return (
     <div className="flex min-h-screen">

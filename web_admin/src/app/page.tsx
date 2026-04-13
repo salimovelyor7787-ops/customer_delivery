@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { roleHomePath } from "@/lib/supabase";
+import { pathAfterAuth } from "@/lib/auth-redirect";
 import { createSupabaseServerClient } from "@/lib/supabase-server";
 
 export default async function Home() {
@@ -16,5 +16,5 @@ export default async function Home() {
     .eq("id", sessionData.session.user.id)
     .single();
 
-  redirect(roleHomePath((userRow?.role ?? "courier") as "admin" | "restaurant" | "courier"));
+  redirect(pathAfterAuth(userRow?.role ?? "customer"));
 }

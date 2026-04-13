@@ -53,6 +53,13 @@ Next.js must be deployed **from the `web_admin` folder**, otherwise the producti
 3. Откройте именно **Production** URL из последнего успешного деплоя (Deployments → три точки → Visit).
 4. После этого сделайте **Redeploy** с последнего коммита (в репозитории снова используется `middleware.ts` для совместимости с Vercel).
 
+## Регистрация и роли
+
+- **`/register`** — создаёт пользователя в Auth; триггер в БД ставит роль **`customer`**.
+- **`/login`** — вход; редирект по роли (`admin` / `restaurant` / `courier` → панель, `customer` → `/no-access`).
+- В БД допустимые роли в `profiles.role`: **`customer`**, **`courier`**, **`restaurant`**, **`admin`** (см. `src/lib/auth-redirect.ts`).
+- Смена роли с клиента заблокирована; пример SQL: `supabase/005_example_assign_staff_role.sql`.
+
 ## Role routing
 
 After login, users are redirected by role:
@@ -60,6 +67,7 @@ After login, users are redirected by role:
 - `admin` -> `/admin`
 - `restaurant` -> `/restaurant`
 - `courier` -> `/courier`
+- `customer` -> `/no-access` (нет доступа к панели до выдачи роли админом)
 
 ## Security
 

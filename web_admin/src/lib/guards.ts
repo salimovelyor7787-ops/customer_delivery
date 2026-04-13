@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
-import { roleHomePath, type UserRole } from "@/lib/supabase";
+import { pathAfterAuth } from "@/lib/auth-redirect";
+import { type UserRole } from "@/lib/supabase";
 import { createSupabaseServerClient } from "@/lib/supabase-server";
 
 export async function requireRole(allowed: UserRole[]) {
@@ -16,10 +17,10 @@ export async function requireRole(allowed: UserRole[]) {
     .eq("id", sessionData.session.user.id)
     .single();
 
-  const role = (row?.role ?? "courier") as UserRole;
-  if (!allowed.includes(role)) {
-    redirect(roleHomePath(role));
+  const role = row?.role ?? "customer";
+  if (!(allowed as readonly string[]).includes(role)) {
+    redirect(pathAfterAuth(role));
   }
 
-  return { supabase, user: row, role };
+  return { supabase, user: row, role: role as UserRole };
 }

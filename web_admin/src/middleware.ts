@@ -1,3 +1,4 @@
+import { pathAfterAuth } from "@/lib/auth-redirect";
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
@@ -35,17 +36,15 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL("/login", request.url));
   }
 
-  if (pathname === "/login" && data.session) {
+  if ((pathname === "/login" || pathname === "/register") && data.session) {
     const { data: profile } = await supabase
       .from("profiles")
       .select("role")
       .eq("id", data.session.user.id)
       .single();
 
-    const role = profile?.role;
-    const url = request.nextUrl.clone();
-    url.pathname = role === "admin" ? "/admin" : role === "restaurant" ? "/restaurant" : "/courier";
-    return NextResponse.redirect(url);
+    const role = profile?.role ?? "customer";
+    return NextResponse.redirect(new URL(pathAfterAuth(role), request.url));
   }
 
   if (isProtected && data.session) {
@@ -54,15 +53,13 @@ export async function middleware(request: NextRequest) {
       .select("role")
       .eq("id", data.session.user.id)
       .single();
-    const role = profile?.role;
+    const role = profile?.role ?? "customer";
     if (
       (pathname.startsWith("/admin") && role !== "admin") ||
       (pathname.startsWith("/restaurant") && role !== "restaurant") ||
       (pathname.startsWith("/courier") && role !== "courier")
     ) {
-      const url = request.nextUrl.clone();
-      url.pathname = role === "admin" ? "/admin" : role === "restaurant" ? "/restaurant" : "/courier";
-      return NextResponse.redirect(url);
+      return NextResponse.redirect(new URL(pathAfterAuth(role), request.url));
     }
   }
 
@@ -70,5 +67,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/admin/:path*", "/restaurant/:path*", "/courier/:path*", "/login"],
+  matcher: ["/admin/:path*", "/restaurant/:path*", "/courier/:path*", "/login", "/register"],
 };
