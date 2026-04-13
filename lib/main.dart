@@ -33,21 +33,35 @@ class _MissingSupabaseConfigApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
+    return MaterialApp(
       home: Scaffold(
         body: SafeArea(
-          child: Padding(
-            padding: EdgeInsets.all(24),
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(24),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('Supabase configuration required', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-                SizedBox(height: 16),
+              children: const [
                 Text(
-                  'Run with dart-define values, for example:\n\n'
-                  'flutter run '
-                  '--dart-define=SUPABASE_URL=https://YOUR_PROJECT.supabase.co '
-                  '--dart-define=SUPABASE_ANON_KEY=YOUR_ANON_KEY',
+                  'Нужны ключи Supabase',
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                ),
+                SizedBox(height: 12),
+                Text(
+                  'В APK не были переданы URL и anon-ключ при сборке. '
+                  'Ключи подставляются только на этапе компиляции (dart-define), в коде их нет.',
+                ),
+                SizedBox(height: 20),
+                Text('Что сделать', style: TextStyle(fontWeight: FontWeight.w600)),
+                SizedBox(height: 8),
+                Text(
+                  '• GitHub Actions: в репозитории Settings → Secrets → Actions задайте '
+                  'SUPABASE_URL и SUPABASE_ANON_KEY, затем снова запустите workflow «Build Android APK».\n\n'
+                  '• Локально: скопируйте dart_defines.example.json → dart_defines.json, '
+                  'вставьте свои значения и выполните:\n'
+                  'flutter build apk --release --dart-define-from-file=dart_defines.json\n\n'
+                  '• Запуск с ПК:\n'
+                  'flutter run --dart-define=SUPABASE_URL=https://....supabase.co '
+                  '--dart-define=SUPABASE_ANON_KEY=eyJ...',
                 ),
               ],
             ),
