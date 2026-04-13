@@ -31,22 +31,20 @@ npm run dev
 
 ## Vercel deploy
 
-Next.js must be deployed **from the `web_admin` folder**, otherwise the production URL returns **404**.
+Next.js must be deployed **from the `web_admin` folder**, otherwise the production URL often returns **404**.
 
-1. Vercel → Project → **Settings** → **General** → **Root Directory** → set to `web_admin` → Save.
-2. Clear **Override** fields if you set them earlier:
-   - **Output Directory** — leave **empty** (do not use `public` or `.next`).
-   - **Build Command** — leave default `npm run build`, or use root scripts only if Root Directory stays the repo root (not recommended).
+1. Vercel → Project → **Settings** → **General** → **Root Directory** → **`web_admin`** → Save.
+2. **Settings** → **Build & Development** — remove overrides that break subfolder installs:
+   - **Install Command** — leave **empty** (default `npm install` inside `web_admin`).
+   - **Build Command** — leave **empty** (default `npm run build` from `web_admin/package.json`).
+   - **Output Directory** — leave **empty** (never `public` or `.next` for Next.js on Vercel).
 3. **Environment Variables** (Production + Preview):
    - `NEXT_PUBLIC_SUPABASE_URL`
    - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 
-If Root Directory is the **repository root** (`customer_delivery`), the repo includes `vercel.json` with:
+**Why `npm run install:web-admin` fails:** that script lives in the **parent** `package.json`. It only works when the project root on Vercel is the repo root, not `web_admin`. With **Root Directory = `web_admin`**, use the defaults above.
 
-- `installCommand`: `npm run install:web-admin`
-- `buildCommand`: `npm run build`
-
-That still builds Next inside `web_admin`, but Vercel’s Next.js integration works most reliably when **Root Directory = `web_admin`**.
+**Alternative (repo root as Vercel root):** leave Root Directory empty, then set **Install Command** to `npm run install:web-admin` and **Build Command** to `npm run build` in the Vercel UI (not recommended; Next.js preset works best with Root = `web_admin`).
 
 ## Role routing
 
