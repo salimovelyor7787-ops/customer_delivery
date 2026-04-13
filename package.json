@@ -1,0 +1,11 @@
+{
+  "name": "customer-delivery-monorepo",
+  "private": true,
+  "scripts": {
+    "dev": "npm --prefix web_admin run dev",
+    "build": "npm --prefix web_admin run build",
+    "start": "npm --prefix web_admin run start",
+    "lint": "npm --prefix web_admin run lint",
+    "install:web-admin": "npm --prefix web_admin install"
+  }
+}
