@@ -1,0 +1,54 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Flutter Web + Supabase (спросить URL и ключ)",
+      "request": "launch",
+      "type": "dart",
+      "cwd": "${workspaceFolder}",
+      "program": "lib/main.dart",
+      "deviceId": "chrome",
+      "toolArgs": [
+        "--dart-define=SUPABASE_URL=${input:supabaseProjectUrl}",
+        "--dart-define=SUPABASE_ANON_KEY=${input:supabaseAnonKey}"
+      ]
+    },
+    {
+      "name": "Flutter Web + Supabase (из переменных окружения)",
+      "request": "launch",
+      "type": "dart",
+      "cwd": "${workspaceFolder}",
+      "program": "lib/main.dart",
+      "deviceId": "chrome",
+      "toolArgs": [
+        "--dart-define=SUPABASE_URL=${env:SUPABASE_URL}",
+        "--dart-define=SUPABASE_ANON_KEY=${env:SUPABASE_ANON_KEY}"
+      ]
+    },
+    {
+      "name": "Flutter (устройство по умолчанию) + Supabase (спросить)",
+      "request": "launch",
+      "type": "dart",
+      "cwd": "${workspaceFolder}",
+      "program": "lib/main.dart",
+      "toolArgs": [
+        "--dart-define=SUPABASE_URL=${input:supabaseProjectUrl}",
+        "--dart-define=SUPABASE_ANON_KEY=${input:supabaseAnonKey}"
+      ]
+    }
+  ],
+  "inputs": [
+    {
+      "id": "supabaseProjectUrl",
+      "type": "promptString",
+      "description": "Supabase Project URL (например https://xxxx.supabase.co)",
+      "default": "https://YOUR_PROJECT_REF.supabase.co"
+    },
+    {
+      "id": "supabaseAnonKey",
+      "type": "promptString",
+      "description": "Supabase anon public key",
+      "password": true
+    }
+  ]
+}
