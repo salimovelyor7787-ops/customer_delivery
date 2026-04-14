@@ -123,21 +123,21 @@ export default function AdminRestaurantsPage() {
   const onSubmit = async (event: FormEvent) => {
     event.preventDefault();
     setSaving(true);
-    final payload = {
-      "name": name.trim(),
-      "description": description.trim().isEmpty ? null : description.trim(),
-      "slug": slug.trim().isEmpty ? null : slug.trim(),
-      "image_url": imageUrl.trim().isEmpty ? null : imageUrl.trim(),
-      "is_open": isOpen,
-      "open_time_from": openTimeFrom.isEmpty ? null : openTimeFrom,
-      "open_time_to": openTimeTo.isEmpty ? null : openTimeTo,
-      "delivery_fee_cents": Math.max(0, Math.round(Number(deliveryFee || "0") * 100)),
-      "min_order_cents": Math.max(0, Math.round(Number(minOrder || "0") * 100)),
-      "owner_id": ownerId.trim().isEmpty ? null : ownerId.trim(),
-      "category_id": categoryId.isEmpty ? null : categoryId,
+    const payload = {
+      name: name.trim(),
+      description: description.trim() === "" ? null : description.trim(),
+      slug: slug.trim() === "" ? null : slug.trim(),
+      image_url: imageUrl.trim() === "" ? null : imageUrl.trim(),
+      is_open: isOpen,
+      open_time_from: openTimeFrom === "" ? null : openTimeFrom,
+      open_time_to: openTimeTo === "" ? null : openTimeTo,
+      delivery_fee_cents: Math.max(0, Math.round(Number(deliveryFee || "0") * 100)),
+      min_order_cents: Math.max(0, Math.round(Number(minOrder || "0") * 100)),
+      owner_id: ownerId.trim() === "" ? null : ownerId.trim(),
+      category_id: categoryId === "" ? null : categoryId,
     };
 
-    final response = editingId != null
+    const response = editingId != null
         ? await supabase.from("restaurants").update(payload).eq("id", editingId)
         : await supabase.from("restaurants").insert(payload);
     setSaving(false);
