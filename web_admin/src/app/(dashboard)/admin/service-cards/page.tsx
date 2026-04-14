@@ -18,9 +18,9 @@ type ServiceCard = {
 const supabase = createSupabaseBrowserClient();
 
 const serviceOptions: { value: ServiceKey; label: string }[] = [
-  { value: "stores", label: "Stores" },
-  { value: "restaurants", label: "Restaurants" },
-  { value: "courier", label: "Courier" },
+  { value: "stores", label: "Do'konlar" },
+  { value: "restaurants", label: "Restoranlar" },
+  { value: "courier", label: "Kuryer" },
 ];
 
 export default function AdminServiceCardsPage() {
@@ -73,7 +73,7 @@ export default function AdminServiceCardsPage() {
     const { error } = await query;
     if (error) return toast.error(error.message);
 
-    toast.success(existing ? "Card updated" : "Card created");
+    toast.success(existing ? "Kartochka yangilandi" : "Kartochka yaratildi");
     resetForm();
     await loadRows();
   };
@@ -81,7 +81,7 @@ export default function AdminServiceCardsPage() {
   const onDelete = async (id: string) => {
     const { error } = await supabase.from("home_service_cards").delete().eq("id", id);
     if (error) return toast.error(error.message);
-    toast.success("Card deleted");
+    toast.success("Kartochka o'chirildi");
     await loadRows();
   };
 
@@ -100,9 +100,9 @@ export default function AdminServiceCardsPage() {
 
   return (
     <section className="space-y-6">
-      <h1 className="text-2xl font-semibold">Service Cards</h1>
+      <h1 className="text-2xl font-semibold">Xizmat kartochkalari</h1>
       <p className="text-sm text-zinc-500">
-        Configure home cards for stores, restaurants, and courier categories.
+        Bosh sahifadagi do&apos;konlar, restoranlar va kuryer kartochkalarini sozlang.
       </p>
 
       <form
@@ -123,14 +123,14 @@ export default function AdminServiceCardsPage() {
         <input
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          placeholder="Card title"
+          placeholder="Sarlavha"
           required
           className="rounded-lg border border-zinc-300 px-3 py-2"
         />
         <input
           value={imageUrl}
           onChange={(e) => setImageUrl(e.target.value)}
-          placeholder="Image URL"
+          placeholder="Rasm URL"
           required
           className="rounded-lg border border-zinc-300 px-3 py-2"
         />
@@ -138,7 +138,7 @@ export default function AdminServiceCardsPage() {
           type="number"
           value={sortOrder}
           onChange={(e) => setSortOrder(Number(e.target.value))}
-          placeholder="Sort order"
+          placeholder="Tartib"
           className="rounded-lg border border-zinc-300 px-3 py-2"
         />
         <label className="flex items-center gap-2 rounded-lg border border-zinc-300 px-3 py-2">
@@ -147,10 +147,10 @@ export default function AdminServiceCardsPage() {
             checked={isActive}
             onChange={(e) => setIsActive(e.target.checked)}
           />
-          Active
+          Faol
         </label>
         <button className="rounded-lg bg-zinc-900 px-4 py-2 text-white md:col-span-5">
-          Save card
+          Saqlash
         </button>
       </form>
 
@@ -161,22 +161,22 @@ export default function AdminServiceCardsPage() {
               {row.title} <span className="text-xs text-zinc-500">({row.service_key})</span>
             </p>
             <p className="truncate text-xs text-zinc-500">{row.image_url}</p>
-            <p className="mt-1 text-xs text-zinc-500">Sort: {row.sort_order}</p>
+            <p className="mt-1 text-xs text-zinc-500">Tartib: {row.sort_order}</p>
             <p className="mt-1 text-xs text-zinc-600">
-              Status: {row.is_active ? "active" : "inactive"}
+              Holat: {row.is_active ? "faol" : "o'chirilgan"}
             </p>
             <div className="mt-3 flex gap-2">
               <button
                 className="rounded border border-zinc-300 px-2 py-1 text-xs"
                 onClick={() => onToggle(row)}
               >
-                Toggle
+                Almashirish
               </button>
               <button
                 className="rounded border border-red-300 px-2 py-1 text-xs text-red-600"
                 onClick={() => onDelete(row.id)}
               >
-                Delete
+                O&apos;chirish
               </button>
             </div>
           </div>

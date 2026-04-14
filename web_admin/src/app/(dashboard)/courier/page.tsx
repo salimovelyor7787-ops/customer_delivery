@@ -11,10 +11,10 @@ export default async function CourierDashboardPage() {
 
   return (
     <section className="space-y-6">
-      <h1 className="text-2xl font-semibold">Courier panel</h1>
+      <h1 className="text-2xl font-semibold">Kuryer paneli</h1>
       <div className="grid gap-4 md:grid-cols-2">
-        <StatCard label="Assigned now" value={assigned ?? 0} />
-        <StatCard label="Delivered total" value={delivered ?? 0} />
+        <StatCard label="Hozirgi topshiriqlar" value={assigned ?? 0} />
+        <StatCard label="Jami yetkazilgan" value={delivered ?? 0} />
       </div>
     </section>
   );

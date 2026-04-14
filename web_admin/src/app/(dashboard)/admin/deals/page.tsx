@@ -85,10 +85,10 @@ export default function AdminDealsPage() {
   const onSavePrice = async (row: ProductRow) => {
     if (!row.is_deal) return;
     if (!row.deal_price_cents || row.deal_price_cents <= 0) {
-      return toast.error("Deal price must be greater than 0");
+      return toast.error("Aksiya narxi 0 dan katta bo'lishi kerak");
     }
     if (row.deal_price_cents > row.price_cents) {
-      return toast.error("Deal price cannot be higher than base price");
+      return toast.error("Aksiya narxi asosiy narxdan yuqori bo'lmasligi kerak");
     }
 
     setSavingId(row.id);
@@ -98,14 +98,14 @@ export default function AdminDealsPage() {
       .eq("id", row.id);
     setSavingId(null);
     if (error) return toast.error(error.message);
-    toast.success("Deal price updated");
+    toast.success("Aksiya narxi yangilandi");
   };
 
   return (
     <section className="space-y-6">
-      <h1 className="text-2xl font-semibold">Deals</h1>
+      <h1 className="text-2xl font-semibold">Aksiyalar</h1>
       <p className="text-sm text-zinc-500">
-        Choose a restaurant, mark products as deals, and set a new deal price for carousel.
+        Restoran tanlang, mahsulotlarni aksiya qiling va bosh sahifa karuselidagi narxni belgilang.
       </p>
 
       <div className="rounded-2xl border border-zinc-200 bg-white p-4">
@@ -122,7 +122,7 @@ export default function AdminDealsPage() {
             ))}
           </select>
           <div className="flex items-center text-sm text-zinc-600">
-            Active deals in restaurant: <span className="ml-2 font-semibold text-zinc-900">{activeDealsCount}</span>
+            Faol aksiyalar: <span className="ml-2 font-semibold text-zinc-900">{activeDealsCount}</span>
           </div>
           <label className="inline-flex items-center gap-2 text-sm text-zinc-700">
             <input
@@ -130,7 +130,7 @@ export default function AdminDealsPage() {
               checked={showOnlyDeals}
               onChange={(e) => setShowOnlyDeals(e.target.checked)}
             />
-            Show only active deals
+            Faqat aksiyadagilar
           </label>
         </div>
       </div>
@@ -139,11 +139,11 @@ export default function AdminDealsPage() {
         <table className="min-w-full text-sm">
           <thead className="bg-zinc-50 text-left text-zinc-500">
             <tr>
-              <th className="px-4 py-3">Product</th>
-              <th className="px-4 py-3">Base price</th>
-              <th className="px-4 py-3">Deal status</th>
-              <th className="px-4 py-3">Deal price</th>
-              <th className="px-4 py-3">Actions</th>
+              <th className="px-4 py-3">Mahsulot</th>
+              <th className="px-4 py-3">Asosiy narx</th>
+              <th className="px-4 py-3">Aksiya</th>
+              <th className="px-4 py-3">Aksiya narxi</th>
+              <th className="px-4 py-3">Amallar</th>
             </tr>
           </thead>
           <tbody>
@@ -162,7 +162,7 @@ export default function AdminDealsPage() {
                       row.is_deal ? "bg-green-100 text-green-700" : "bg-zinc-100 text-zinc-700"
                     }`}
                   >
-                    {row.is_deal ? "Deal active" : "Not in deals"}
+                    {row.is_deal ? "Aksiyada" : "Aksiyasiz"}
                   </button>
                 </td>
                 <td className="px-4 py-3">
@@ -183,7 +183,7 @@ export default function AdminDealsPage() {
                     disabled={!row.is_deal || savingId === row.id}
                     className="rounded border border-zinc-300 px-3 py-1 text-xs disabled:opacity-50"
                   >
-                    Save
+                    Saqlash
                   </button>
                 </td>
               </tr>

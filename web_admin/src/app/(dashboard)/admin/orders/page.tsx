@@ -25,26 +25,26 @@ export default function AdminOrdersPage() {
   return (
     <section className="space-y-4">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold">All Orders</h1>
+        <h1 className="text-2xl font-semibold">Barcha buyurtmalar</h1>
         <select value={status} onChange={(e) => setStatus(e.target.value)} className="rounded-lg border border-zinc-300 px-3 py-2 text-sm">
-          <option value="all">All statuses</option>
-          <option value="pending">pending</option>
-          <option value="accepted">accepted</option>
-          <option value="cooking">cooking</option>
-          <option value="ready">ready</option>
-          <option value="picked_up">picked_up</option>
-          <option value="delivered">delivered</option>
+          <option value="all">Barcha holatlar</option>
+          <option value="pending">pending (kutilmoqda)</option>
+          <option value="accepted">accepted (qabul)</option>
+          <option value="cooking">cooking (tayyorlanmoqda)</option>
+          <option value="ready">ready (tayyor)</option>
+          <option value="picked_up">picked_up (olib ketildi)</option>
+          <option value="delivered">delivered (yetkazildi)</option>
         </select>
       </div>
       <div className="overflow-hidden rounded-2xl border border-zinc-200 bg-white">
         <table className="min-w-full text-sm">
           <thead className="bg-zinc-50 text-left text-zinc-500">
             <tr>
-              <th className="px-4 py-3">Order</th>
-              <th className="px-4 py-3">Status</th>
-              <th className="px-4 py-3">Total</th>
-              <th className="px-4 py-3">Restaurant</th>
-              <th className="px-4 py-3">Courier</th>
+              <th className="px-4 py-3">Buyurtma</th>
+              <th className="px-4 py-3">Holat</th>
+              <th className="px-4 py-3">Jami</th>
+              <th className="px-4 py-3">Restoran</th>
+              <th className="px-4 py-3">Kuryer</th>
             </tr>
           </thead>
           <tbody>
@@ -54,7 +54,7 @@ export default function AdminOrdersPage() {
                 <td className="px-4 py-3">{order.status}</td>
                 <td className="px-4 py-3">${(Number(order.total_cents) / 100).toFixed(2)}</td>
                 <td className="px-4 py-3 text-xs">{order.restaurant_id}</td>
-                <td className="px-4 py-3 text-xs">{order.courier_id ?? "unassigned"}</td>
+                <td className="px-4 py-3 text-xs">{order.courier_id ?? "yo'q"}</td>
               </tr>
             ))}
           </tbody>

@@ -17,14 +17,14 @@ export default async function AdminDashboardPage() {
   return (
     <section className="space-y-6">
       <header>
-        <h1 className="text-2xl font-semibold">Admin Dashboard</h1>
-        <p className="text-sm text-zinc-500">Live business metrics and operational controls.</p>
+        <h1 className="text-2xl font-semibold">Admin boshqaruvi</h1>
+        <p className="text-sm text-zinc-500">Asosiy ko&apos;rsatkichlar va buyurtmalar.</p>
       </header>
 
       <div className="grid gap-4 md:grid-cols-3">
-        <StatCard label="Total Orders" value={ordersCount ?? 0} />
-        <StatCard label="Total Revenue" value={`$${(revenueCents / 100).toFixed(2)}`} />
-        <StatCard label="Total Users" value={usersCount ?? 0} />
+        <StatCard label="Jami buyurtmalar" value={ordersCount ?? 0} />
+        <StatCard label="Jami tushum" value={`$${(revenueCents / 100).toFixed(2)}`} />
+        <StatCard label="Foydalanuvchilar" value={usersCount ?? 0} />
       </div>
 
       <RealtimeOrders initialOrders={(orders ?? []) as never[]} />

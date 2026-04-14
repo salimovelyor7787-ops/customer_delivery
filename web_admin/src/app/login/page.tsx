@@ -20,7 +20,7 @@ export default function LoginPage() {
 
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     if (error || !data.user) {
-      toast.error(error?.message ?? "Не удалось войти");
+      toast.error(error?.message ?? "Kirish muvaffaqiyatsiz");
       setLoading(false);
       return;
     }
@@ -32,12 +32,12 @@ export default function LoginPage() {
       .single();
 
     if (profileError || !profile?.role) {
-      toast.error("Профиль не найден");
+      toast.error("Profil topilmadi");
       setLoading(false);
       return;
     }
 
-    toast.success("С возвращением");
+    toast.success("Xush kelibsiz");
     router.push(pathAfterAuth(profile.role));
     router.refresh();
   };
@@ -45,10 +45,10 @@ export default function LoginPage() {
   return (
     <main className="flex min-h-screen items-center justify-center px-4 py-10">
       <div className="w-full max-w-md rounded-2xl border border-zinc-200 bg-white p-8 shadow-sm">
-        <h1 className="text-2xl font-semibold text-zinc-900">Вход</h1>
+        <h1 className="text-2xl font-semibold text-zinc-900">Kirish</h1>
         <p className="mt-2 text-sm text-zinc-500">
-          Панель для ролей <strong>admin</strong>, <strong>restaurant</strong>, <strong>courier</strong>. После регистрации у вас роль{" "}
-          <strong>customer</strong> — доступ к панели выдаёт администратор.
+          Panel <strong>admin</strong>, <strong>restaurant</strong> va <strong>courier</strong> rollari uchun. Ro&apos;yxatdan
+          o&apos;tgach avvalo <strong>customer</strong> roli beriladi — panelga kirishni administrator beradi.
         </p>
 
         <form className="mt-6 space-y-4" onSubmit={onSubmit}>
@@ -65,7 +65,7 @@ export default function LoginPage() {
           </label>
 
           <label className="block">
-            <span className="mb-1 block text-sm text-zinc-600">Пароль</span>
+            <span className="mb-1 block text-sm text-zinc-600">Parol</span>
             <input
               type="password"
               required
@@ -81,14 +81,14 @@ export default function LoginPage() {
             disabled={loading}
             className="w-full rounded-lg bg-zinc-900 px-4 py-2 font-medium text-white disabled:opacity-60"
           >
-            {loading ? "Вход…" : "Войти"}
+            {loading ? "Kirilmoqda…" : "Kirish"}
           </button>
         </form>
 
         <p className="mt-6 text-center text-sm text-zinc-600">
-          Нет аккаунта?{" "}
+          Hisobingiz yo&apos;qmi?{" "}
           <Link href="/register" className="font-medium text-zinc-900 underline">
-            Регистрация
+            Ro&apos;yxatdan o&apos;tish
           </Link>
         </p>
       </div>

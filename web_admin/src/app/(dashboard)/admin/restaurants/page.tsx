@@ -137,26 +137,27 @@ export default function AdminRestaurantsPage() {
       category_id: categoryId === "" ? null : categoryId,
     };
 
-    const response = editingId != null
+    const response =
+      editingId != null
         ? await supabase.from("restaurants").update(payload).eq("id", editingId)
         : await supabase.from("restaurants").insert(payload);
     setSaving(false);
 
     if (response.error != null) return toast.error(response.error.message);
-    toast.success(editingId != null ? "Restaurant updated" : "Restaurant created");
+    toast.success(editingId != null ? "Restoran yangilandi" : "Restoran yaratildi");
     resetForm();
     await loadData();
   };
 
   return (
     <section className="space-y-6">
-      <h1 className="text-2xl font-semibold">Restaurants</h1>
+      <h1 className="text-2xl font-semibold">Restoranlar</h1>
       <p className="text-sm text-zinc-500">
-        Admin can edit restaurant data: open/closed status, name, description, image, slug, fees and category.
+        Ochiq/yopiq, nom, tavsif, rasm, slug, yetkazib berish narxi, minimal buyurtma, ish vaqti va kategoriya.
       </p>
       <div>
         <button onClick={startCreate} className="rounded-lg bg-zinc-900 px-4 py-2 text-sm text-white">
-          Create restaurant
+          Restoran yaratish
         </button>
       </div>
 
@@ -164,24 +165,24 @@ export default function AdminRestaurantsPage() {
         <table className="min-w-full text-sm">
           <thead className="bg-zinc-50 text-left text-zinc-500">
             <tr>
-              <th className="px-4 py-3">Name</th>
-              <th className="px-4 py-3">Status</th>
-              <th className="px-4 py-3">Owner ID</th>
-              <th className="px-4 py-3">Actions</th>
+              <th className="px-4 py-3">Nomi</th>
+              <th className="px-4 py-3">Holat</th>
+              <th className="px-4 py-3">Egasi (ID)</th>
+              <th className="px-4 py-3">Amallar</th>
             </tr>
           </thead>
           <tbody>
             {rows.map((restaurant) => (
               <tr key={restaurant.id} className="border-t border-zinc-100">
                 <td className="px-4 py-3">{restaurant.name}</td>
-                <td className="px-4 py-3">{restaurant.is_open ? "Open" : "Closed"}</td>
-                <td className="px-4 py-3 text-xs">{restaurant.owner_id ?? "-"}</td>
+                <td className="px-4 py-3">{restaurant.is_open ? "Ochiq" : "Yopiq"}</td>
+                <td className="px-4 py-3 text-xs">{restaurant.owner_id ?? "—"}</td>
                 <td className="px-4 py-3">
                   <button
                     onClick={() => startEdit(restaurant)}
                     className="rounded border border-zinc-300 px-3 py-1 text-xs"
                   >
-                    Edit
+                    Tahrirlash
                   </button>
                 </td>
               </tr>
@@ -196,7 +197,7 @@ export default function AdminRestaurantsPage() {
             value={name}
             onChange={(e) => setName(e.target.value)}
             required
-            placeholder="Name"
+            placeholder="Nomi"
             className="rounded-lg border border-zinc-300 px-3 py-2"
           />
           <input
@@ -208,20 +209,20 @@ export default function AdminRestaurantsPage() {
           <input
             value={imageUrl}
             onChange={(e) => setImageUrl(e.target.value)}
-            placeholder="Image URL"
+            placeholder="Rasm URL"
             className="rounded-lg border border-zinc-300 px-3 py-2 md:col-span-2"
           />
           <textarea
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            placeholder="Description"
+            placeholder="Tavsif"
             rows={3}
             className="rounded-lg border border-zinc-300 px-3 py-2 md:col-span-2"
           />
           <input
             value={ownerId}
             onChange={(e) => setOwnerId(e.target.value)}
-            placeholder="Owner user ID"
+            placeholder="Egasi foydalanuvchi ID"
             className="rounded-lg border border-zinc-300 px-3 py-2"
           />
           <select
@@ -229,7 +230,7 @@ export default function AdminRestaurantsPage() {
             onChange={(e) => setCategoryId(e.target.value)}
             className="rounded-lg border border-zinc-300 px-3 py-2"
           >
-            <option value="">No category</option>
+            <option value="">Kategoriyasiz</option>
             {categories.map((category) => (
               <option key={category.id} value={category.id}>
                 {category.name}
@@ -242,7 +243,7 @@ export default function AdminRestaurantsPage() {
             step="0.01"
             value={deliveryFee}
             onChange={(e) => setDeliveryFee(e.target.value)}
-            placeholder="Delivery fee"
+            placeholder="Yetkazib berish narxi"
             className="rounded-lg border border-zinc-300 px-3 py-2"
           />
           <input
@@ -251,7 +252,7 @@ export default function AdminRestaurantsPage() {
             step="0.01"
             value={minOrder}
             onChange={(e) => setMinOrder(e.target.value)}
-            placeholder="Min order"
+            placeholder="Minimal buyurtma"
             className="rounded-lg border border-zinc-300 px-3 py-2"
           />
           <input
@@ -268,7 +269,7 @@ export default function AdminRestaurantsPage() {
           />
           <label className="inline-flex items-center gap-2 rounded-lg border border-zinc-300 px-3 py-2">
             <input type="checkbox" checked={isOpen} onChange={(e) => setIsOpen(e.target.checked)} />
-            Open now
+            Hozir ochiq
           </label>
           <div className="flex gap-2">
             <button
@@ -276,14 +277,10 @@ export default function AdminRestaurantsPage() {
               disabled={saving}
               className="rounded-lg bg-zinc-900 px-4 py-2 text-white disabled:opacity-50"
             >
-              {editingId != null ? "Save changes" : "Create"}
+              {editingId != null ? "Saqlash" : "Yaratish"}
             </button>
-            <button
-              type="button"
-              onClick={resetForm}
-              className="rounded-lg border border-zinc-300 px-4 py-2"
-            >
-              Cancel
+            <button type="button" onClick={resetForm} className="rounded-lg border border-zinc-300 px-4 py-2">
+              Bekor qilish
             </button>
           </div>
         </form>

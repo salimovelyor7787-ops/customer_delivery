@@ -9,8 +9,8 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Food Delivery Admin",
-  description: "Role-based operations panel powered by Supabase and Next.js",
+  title: "Yetkazib berish — boshqaruv",
+  description: "Supabase va Next.js asosidagi rolli boshqaruv paneli",
 };
 
 export default function RootLayout({
@@ -19,7 +19,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${inter.variable} h-full antialiased`}>
+    <html lang="uz" className={`${inter.variable} h-full antialiased`}>
       <body className="min-h-full bg-zinc-50 text-zinc-900">
         {children}
         <Toaster position="top-right" />

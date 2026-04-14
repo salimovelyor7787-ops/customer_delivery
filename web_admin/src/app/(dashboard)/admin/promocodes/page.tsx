@@ -27,7 +27,7 @@ export default function AdminPromocodesPage() {
       active: true,
     });
     if (error) return toast.error(error.message);
-    toast.success("Promocode created");
+    toast.success("Promokod yaratildi");
     setCode("");
     setDiscount("10");
     const { data } = await supabase.from("promocodes").select("*").order("code");
@@ -44,17 +44,17 @@ export default function AdminPromocodesPage() {
     const { error } = await supabase.from("promocodes").delete().eq("id", id);
     if (error) return toast.error(error.message);
     setItems((prev) => prev.filter((row) => row.id !== id));
-    toast.success("Promocode deleted");
+    toast.success("Promokod o'chirildi");
   };
 
   return (
     <section className="space-y-6">
-      <h1 className="text-2xl font-semibold">Promocodes</h1>
+      <h1 className="text-2xl font-semibold">Promokodlar</h1>
       <form onSubmit={onCreate} className="grid gap-3 rounded-2xl border border-zinc-200 bg-white p-4 md:grid-cols-3">
         <input
           value={code}
           onChange={(e) => setCode(e.target.value)}
-          placeholder="Code"
+          placeholder="Kod"
           required
           className="rounded-lg border border-zinc-300 px-3 py-2"
         />
@@ -67,17 +67,17 @@ export default function AdminPromocodesPage() {
           required
           className="rounded-lg border border-zinc-300 px-3 py-2"
         />
-        <button className="rounded-lg bg-zinc-900 px-4 py-2 text-white">Add promo</button>
+        <button className="rounded-lg bg-zinc-900 px-4 py-2 text-white">Promokod qo&apos;shish</button>
       </form>
 
       <div className="overflow-hidden rounded-2xl border border-zinc-200 bg-white">
         <table className="min-w-full text-sm">
           <thead className="bg-zinc-50 text-left text-zinc-500">
             <tr>
-              <th className="px-4 py-3">Code</th>
-              <th className="px-4 py-3">Discount</th>
-              <th className="px-4 py-3">Status</th>
-              <th className="px-4 py-3">Actions</th>
+              <th className="px-4 py-3">Kod</th>
+              <th className="px-4 py-3">Chegirma</th>
+              <th className="px-4 py-3">Holat</th>
+              <th className="px-4 py-3">Amallar</th>
             </tr>
           </thead>
           <tbody>
@@ -85,14 +85,14 @@ export default function AdminPromocodesPage() {
               <tr key={promo.id} className="border-t border-zinc-100">
                 <td className="px-4 py-3">{promo.code}</td>
                 <td className="px-4 py-3">{promo.discount}%</td>
-                <td className="px-4 py-3">{promo.active ? "Active" : "Inactive"}</td>
+                <td className="px-4 py-3">{promo.active ? "Faol" : "O'chirilgan"}</td>
                 <td className="px-4 py-3">
                   <div className="flex gap-2">
                     <button className="rounded border border-zinc-300 px-2 py-1 text-xs" onClick={() => onToggle(promo)}>
-                      Toggle
+                      Almashirish
                     </button>
                     <button className="rounded border border-red-300 px-2 py-1 text-xs text-red-600" onClick={() => onDelete(promo.id)}>
-                      Delete
+                      O&apos;chirish
                     </button>
                   </div>
                 </td>

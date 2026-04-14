@@ -94,7 +94,7 @@ export default function AdminNearbyCardsPage() {
     const { error } = await query;
     if (error) return toast.error(error.message);
 
-    toast.success(editingId ? "Card updated" : "Card created");
+    toast.success(editingId ? "Kartochka yangilandi" : "Kartochka yaratildi");
     resetForm();
     await loadRows();
   };
@@ -102,7 +102,7 @@ export default function AdminNearbyCardsPage() {
   const onDelete = async (id: string) => {
     const { error } = await supabase.from("home_nearby_cards").delete().eq("id", id);
     if (error) return toast.error(error.message);
-    toast.success("Card deleted");
+    toast.success("Kartochka o'chirildi");
     await loadRows();
   };
 
@@ -121,9 +121,9 @@ export default function AdminNearbyCardsPage() {
 
   return (
     <section className="space-y-6">
-      <h1 className="text-2xl font-semibold">Nearby Cards</h1>
+      <h1 className="text-2xl font-semibold">Yaqin kartochkalar</h1>
       <p className="text-sm text-zinc-500">
-        Manage image-only cards for the &quot;Nearby stores&quot; block on home screen.
+        Bosh sahifadagi &quot;Yaqin do&apos;konlar&quot; bloki uchun rasm kartochkalarini boshqaring.
       </p>
 
       <form
@@ -133,13 +133,13 @@ export default function AdminNearbyCardsPage() {
         <input
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          placeholder="Optional internal title"
+          placeholder="Ichki nom (ixtiyoriy)"
           className="rounded-lg border border-zinc-300 px-3 py-2"
         />
         <input
           value={imageUrl}
           onChange={(e) => setImageUrl(e.target.value)}
-          placeholder="Image URL"
+          placeholder="Rasm URL"
           required
           className="rounded-lg border border-zinc-300 px-3 py-2"
         />
@@ -148,7 +148,7 @@ export default function AdminNearbyCardsPage() {
           onChange={(e) => setRestaurantId(e.target.value)}
           className="rounded-lg border border-zinc-300 px-3 py-2"
         >
-          <option value="">No restaurant link</option>
+          <option value="">Restoranga bog&apos;lamaslik</option>
           {restaurants.map((restaurant) => (
             <option key={restaurant.id} value={restaurant.id}>
               {restaurant.name}
@@ -159,7 +159,7 @@ export default function AdminNearbyCardsPage() {
           type="number"
           value={sortOrder}
           onChange={(e) => setSortOrder(Number(e.target.value))}
-          placeholder="Sort order"
+          placeholder="Tartib raqami"
           className="rounded-lg border border-zinc-300 px-3 py-2"
         />
         <label className="flex items-center gap-2 rounded-lg border border-zinc-300 px-3 py-2">
@@ -168,10 +168,10 @@ export default function AdminNearbyCardsPage() {
             checked={isActive}
             onChange={(e) => setIsActive(e.target.checked)}
           />
-          Active
+          Faol
         </label>
         <button className="rounded-lg bg-zinc-900 px-4 py-2 text-white">
-          {editingId ? "Update card" : "Create card"}
+          {editingId ? "Yangilash" : "Yaratish"}
         </button>
         {editingId ? (
           <button
@@ -179,7 +179,7 @@ export default function AdminNearbyCardsPage() {
             onClick={resetForm}
             className="rounded-lg border border-zinc-300 px-4 py-2"
           >
-            Cancel edit
+            Bekor qilish
           </button>
         ) : null}
       </form>
@@ -187,31 +187,31 @@ export default function AdminNearbyCardsPage() {
       <div className="grid gap-3 md:grid-cols-2">
         {rows.map((row) => (
           <div key={row.id} className="rounded-xl border border-zinc-200 bg-white p-4">
-            <p className="font-medium">{row.title || "Untitled card"}</p>
+            <p className="font-medium">{row.title || "Nomsiz"}</p>
             <p className="truncate text-xs text-zinc-500">{row.image_url}</p>
-            <p className="mt-1 text-xs text-zinc-500">Restaurant: {row.restaurant_id || "none"}</p>
-            <p className="mt-1 text-xs text-zinc-500">Sort: {row.sort_order}</p>
+            <p className="mt-1 text-xs text-zinc-500">Restoran: {row.restaurant_id || "yo'q"}</p>
+            <p className="mt-1 text-xs text-zinc-500">Tartib: {row.sort_order}</p>
             <p className="mt-1 text-xs text-zinc-600">
-              Status: {row.is_active ? "active" : "inactive"}
+              Holat: {row.is_active ? "faol" : "o'chirilgan"}
             </p>
             <div className="mt-3 flex gap-2">
               <button
                 className="rounded border border-zinc-300 px-2 py-1 text-xs"
                 onClick={() => startEdit(row)}
               >
-                Edit
+                Tahrirlash
               </button>
               <button
                 className="rounded border border-zinc-300 px-2 py-1 text-xs"
                 onClick={() => onToggle(row)}
               >
-                Toggle
+                Almashirish
               </button>
               <button
                 className="rounded border border-red-300 px-2 py-1 text-xs text-red-600"
                 onClick={() => onDelete(row.id)}
               >
-                Delete
+                {"O'chirish"}
               </button>
             </div>
           </div>

@@ -42,7 +42,7 @@ export default function RestaurantProductsPage() {
       image_url: imageUrl || null,
     });
     if (error) return toast.error(error.message);
-    toast.success("Product created");
+    toast.success("Mahsulot yaratildi");
     setName("");
     setPrice("0");
     setImageUrl("");
@@ -70,7 +70,7 @@ export default function RestaurantProductsPage() {
       .eq("id", editingId)
       .eq("restaurant_id", restaurantId);
     if (error) return toast.error(error.message);
-    toast.success("Product updated");
+    toast.success("Mahsulot yangilandi");
     setEditingId(null);
     setName("");
     setPrice("0");
@@ -82,15 +82,15 @@ export default function RestaurantProductsPage() {
   const onDelete = async (id: string) => {
     const { error } = await supabase.from("menu_items").delete().eq("id", id).eq("restaurant_id", restaurantId);
     if (error) return toast.error(error.message);
-    toast.success("Product deleted");
+    toast.success("Mahsulot o'chirildi");
     setProducts((prev) => prev.filter((item) => item.id !== id));
   };
 
   return (
     <section className="space-y-6">
-      <h1 className="text-2xl font-semibold">Products</h1>
+      <h1 className="text-2xl font-semibold">Mahsulotlar</h1>
       <form onSubmit={editingId ? onSave : onCreate} className="grid gap-3 rounded-2xl border border-zinc-200 bg-white p-4 md:grid-cols-4">
-        <input value={name} onChange={(e) => setName(e.target.value)} required placeholder="Name" className="rounded-lg border border-zinc-300 px-3 py-2" />
+        <input value={name} onChange={(e) => setName(e.target.value)} required placeholder="Nomi" className="rounded-lg border border-zinc-300 px-3 py-2" />
         <input
           value={price}
           onChange={(e) => setPrice(e.target.value)}
@@ -98,16 +98,16 @@ export default function RestaurantProductsPage() {
           type="number"
           min="0"
           step="0.01"
-          placeholder="Price"
+          placeholder="Narx"
           className="rounded-lg border border-zinc-300 px-3 py-2"
         />
         <input
           value={imageUrl}
           onChange={(e) => setImageUrl(e.target.value)}
-          placeholder="Image URL"
+          placeholder="Rasm URL"
           className="rounded-lg border border-zinc-300 px-3 py-2"
         />
-        <button className="rounded-lg bg-zinc-900 px-4 py-2 text-white">{editingId ? "Save changes" : "Add product"}</button>
+        <button className="rounded-lg bg-zinc-900 px-4 py-2 text-white">{editingId ? "Saqlash" : "Qo&apos;shish"}</button>
         {editingId ? (
           <button
             type="button"
@@ -119,7 +119,7 @@ export default function RestaurantProductsPage() {
               setImageUrl("");
             }}
           >
-            Cancel
+            Bekor qilish
           </button>
         ) : null}
         <ImageUpload onUploaded={setImageUrl} />
@@ -133,10 +133,10 @@ export default function RestaurantProductsPage() {
             {product.image_url ? <p className="truncate text-xs text-zinc-500">{product.image_url}</p> : null}
             <div className="mt-3 flex gap-2">
               <button className="rounded border border-zinc-300 px-2 py-1 text-xs" onClick={() => onEdit(product)}>
-                Edit
+                Tahrirlash
               </button>
               <button className="rounded border border-red-300 px-2 py-1 text-xs text-red-600" onClick={() => onDelete(product.id)}>
-                Delete
+                O&apos;chirish
               </button>
             </div>
           </div>

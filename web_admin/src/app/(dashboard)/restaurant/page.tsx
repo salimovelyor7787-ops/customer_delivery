@@ -18,10 +18,10 @@ export default async function RestaurantDashboardPage() {
 
   return (
     <section className="space-y-6">
-      <h1 className="text-2xl font-semibold">{restaurant?.name ?? "Restaurant"} panel</h1>
+      <h1 className="text-2xl font-semibold">{restaurant?.name ?? "Restoran"} paneli</h1>
       <div className="grid gap-4 md:grid-cols-2">
-        <StatCard label="Products" value={productsCount ?? 0} />
-        <StatCard label="Active orders" value={activeOrdersCount ?? 0} />
+        <StatCard label="Mahsulotlar" value={productsCount ?? 0} />
+        <StatCard label="Faol buyurtmalar" value={activeOrdersCount ?? 0} />
       </div>
     </section>
   );

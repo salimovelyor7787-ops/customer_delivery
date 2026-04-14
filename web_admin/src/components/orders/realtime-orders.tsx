@@ -38,7 +38,7 @@ export function RealtimeOrders({ initialOrders }: { initialOrders: LiveOrder[] }
 
   return (
     <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm">
-      <h3 className="text-base font-semibold text-zinc-900">Live Orders</h3>
+      <h3 className="text-base font-semibold text-zinc-900">Jonli buyurtmalar</h3>
       <div className="mt-4 space-y-3">
         {orders.map((order) => (
           <div key={order.id} className="rounded-lg border border-zinc-100 px-3 py-2">

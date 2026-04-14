@@ -6,14 +6,14 @@ export default async function AdminUsersPage() {
 
   return (
     <section className="space-y-4">
-      <h1 className="text-2xl font-semibold">Users</h1>
+      <h1 className="text-2xl font-semibold">Foydalanuvchilar</h1>
       <div className="overflow-hidden rounded-2xl border border-zinc-200 bg-white">
         <table className="min-w-full text-sm">
           <thead className="bg-zinc-50 text-left text-zinc-500">
             <tr>
-              <th className="px-4 py-3">Name</th>
-              <th className="px-4 py-3">Phone</th>
-              <th className="px-4 py-3">Role</th>
+              <th className="px-4 py-3">Ism</th>
+              <th className="px-4 py-3">Telefon</th>
+              <th className="px-4 py-3">Rol</th>
             </tr>
           </thead>
           <tbody>

@@ -19,11 +19,11 @@ export default function RegisterPage() {
   const onSubmit = async (event: FormEvent) => {
     event.preventDefault();
     if (password !== confirm) {
-      toast.error("Пароли не совпадают");
+      toast.error("Parollar mos kelmaydi");
       return;
     }
     if (password.length < 6) {
-      toast.error("Пароль не короче 6 символов");
+      toast.error("Parol kamida 6 belgidan iborat bo'lsin");
       return;
     }
 
@@ -48,7 +48,7 @@ export default function RegisterPage() {
     }
 
     if (!data.user) {
-      toast.error("Регистрация не удалась");
+      toast.error("Ro'yxatdan o'tish muvaffaqiyatsiz");
       setLoading(false);
       return;
     }
@@ -60,13 +60,13 @@ export default function RegisterPage() {
     if (data.session) {
       const { data: profile } = await supabase.from("profiles").select("role").eq("id", data.user.id).single();
       const role = profile?.role ?? "customer";
-      toast.success("Аккаунт создан");
+      toast.success("Hisob yaratildi");
       router.push(pathAfterAuth(role));
       router.refresh();
       return;
     }
 
-    toast.success("Проверьте почту и подтвердите email, затем войдите");
+    toast.success("Emailni tasdiqlang, so'ng kirish sahifasiga o'ting");
     router.push("/login");
     setLoading(false);
   };
@@ -74,15 +74,15 @@ export default function RegisterPage() {
   return (
     <main className="flex min-h-screen items-center justify-center px-4 py-10">
       <div className="w-full max-w-md rounded-2xl border border-zinc-200 bg-white p-8 shadow-sm">
-        <h1 className="text-2xl font-semibold text-zinc-900">Регистрация</h1>
+        <h1 className="text-2xl font-semibold text-zinc-900">Ro&apos;yxatdan o&apos;tish</h1>
         <p className="mt-2 text-sm text-zinc-500">
-          Новый пользователь получает роль <strong>customer</strong> (клиент). Доступ к панелям admin / restaurant / courier выдаёт
-          администратор в Supabase.
+          Yangi foydalanuvchiga <strong>customer</strong> (mijoz) roli beriladi. Admin / restoran / kuryer rollarini
+          administrator Supabase orqali beradi.
         </p>
 
         <form className="mt-6 space-y-4" onSubmit={onSubmit}>
           <label className="block">
-            <span className="mb-1 block text-sm text-zinc-600">Имя</span>
+            <span className="mb-1 block text-sm text-zinc-600">Ism</span>
             <input
               type="text"
               required
@@ -94,7 +94,7 @@ export default function RegisterPage() {
           </label>
 
           <label className="block">
-            <span className="mb-1 block text-sm text-zinc-600">Телефон (необязательно)</span>
+            <span className="mb-1 block text-sm text-zinc-600">Telefon (ixtiyoriy)</span>
             <input
               type="tel"
               value={phone}
@@ -117,7 +117,7 @@ export default function RegisterPage() {
           </label>
 
           <label className="block">
-            <span className="mb-1 block text-sm text-zinc-600">Пароль</span>
+            <span className="mb-1 block text-sm text-zinc-600">Parol</span>
             <input
               type="password"
               required
@@ -129,7 +129,7 @@ export default function RegisterPage() {
           </label>
 
           <label className="block">
-            <span className="mb-1 block text-sm text-zinc-600">Повтор пароля</span>
+            <span className="mb-1 block text-sm text-zinc-600">Parolni takrorlang</span>
             <input
               type="password"
               required
@@ -145,14 +145,14 @@ export default function RegisterPage() {
             disabled={loading}
             className="w-full rounded-lg bg-zinc-900 px-4 py-2 font-medium text-white disabled:opacity-60"
           >
-            {loading ? "Регистрация…" : "Создать аккаунт"}
+            {loading ? "Ro'yxatdan o'tilmoqda…" : "Hisob yaratish"}
           </button>
         </form>
 
         <p className="mt-6 text-center text-sm text-zinc-600">
-          Уже есть аккаунт?{" "}
+          Hisobingiz bormi?{" "}
           <Link href="/login" className="font-medium text-zinc-900 underline">
-            Войти
+            Kirish
           </Link>
         </p>
       </div>

@@ -33,7 +33,7 @@ export default function CourierOrdersPage() {
   const acceptOrder = async (orderId: string) => {
     const { error } = await supabase.from("orders").update({ courier_id: userId, status: "picked_up" }).eq("id", orderId);
     if (error) return toast.error(error.message);
-    toast.success("Order accepted");
+    toast.success("Buyurtma qabul qilindi");
     const { data } = await supabase
       .from("orders")
       .select("id,status,total_cents,courier_id")
@@ -49,7 +49,7 @@ export default function CourierOrdersPage() {
       .eq("id", orderId)
       .eq("courier_id", userId);
     if (error) return toast.error(error.message);
-    toast.success("Order delivered");
+    toast.success("Yetkazildi deb belgilandi");
     const { data } = await supabase
       .from("orders")
       .select("id,status,total_cents,courier_id")
@@ -60,7 +60,7 @@ export default function CourierOrdersPage() {
 
   return (
     <section className="space-y-4">
-      <h1 className="text-2xl font-semibold">Assigned Orders</h1>
+      <h1 className="text-2xl font-semibold">Mening buyurtmalarim</h1>
       <div className="grid gap-3">
         {orders.map((order) => (
           <div key={order.id} className="rounded-xl border border-zinc-200 bg-white p-4">
@@ -72,12 +72,12 @@ export default function CourierOrdersPage() {
               <div className="flex gap-2">
                 {!order.courier_id ? (
                   <button className="rounded-lg bg-zinc-900 px-3 py-1 text-xs text-white" onClick={() => acceptOrder(order.id)}>
-                    Accept
+                    Qabul qilish
                   </button>
                 ) : null}
                 {order.status === "picked_up" ? (
                   <button className="rounded-lg border border-zinc-300 px-3 py-1 text-xs" onClick={() => markDelivered(order.id)}>
-                    Mark delivered
+                    Yetkazildi
                   </button>
                 ) : null}
               </div>
