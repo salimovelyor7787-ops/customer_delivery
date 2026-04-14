@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { Sidebar } from "@/components/dashboard/sidebar";
+import { DashboardShell } from "@/components/dashboard/dashboard-shell";
 import { type UserRole } from "@/lib/supabase";
 import { createSupabaseServerClient } from "@/lib/supabase-server";
 
@@ -23,10 +23,5 @@ export default async function DashboardLayout({ children }: { children: React.Re
   }
   const role = rawRole as UserRole;
 
-  return (
-    <div className="flex min-h-screen">
-      <Sidebar role={role} />
-      <main className="flex-1 p-6 md:p-8">{children}</main>
-    </div>
-  );
+  return <DashboardShell role={role}>{children}</DashboardShell>;
 }

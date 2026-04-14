@@ -1,6 +1,7 @@
 import 'package:customer_delivery/core/router/app_router.dart';
 import 'package:customer_delivery/core/router/auth_refresh_notifier.dart';
 import 'package:customer_delivery/core/theme/app_theme.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -37,6 +38,18 @@ class _CustomerAppState extends ConsumerState<CustomerApp> {
       title: 'Delivery',
       theme: AppTheme.light(),
       routerConfig: _router,
+      builder: (context, child) {
+        if (child == null) return const SizedBox.shrink();
+        if (!kIsWeb) return child;
+        // Brauzerda juda keng ekranda kontent markazda va o‘qish qulay bo‘lishi uchun.
+        return Align(
+          alignment: Alignment.topCenter,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 1280),
+            child: child,
+          ),
+        );
+      },
     );
   }
 }

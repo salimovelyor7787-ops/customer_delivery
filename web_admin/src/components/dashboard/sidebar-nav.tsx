@@ -30,7 +30,13 @@ const navByRole: Record<UserRole, NavItem[]> = {
   ],
 };
 
-export function Sidebar({ role }: { role: UserRole }) {
+type Props = {
+  role: UserRole;
+  /** Chaqiriladi: mobil drawer yopish */
+  onNavigate?: () => void;
+};
+
+export function SidebarNav({ role, onNavigate }: Props) {
   const pathname = usePathname();
 
   const onLogout = async () => {
@@ -40,7 +46,7 @@ export function Sidebar({ role }: { role: UserRole }) {
   };
 
   return (
-    <aside className="w-64 shrink-0 border-r border-zinc-200 bg-white p-4">
+    <>
       <div className="mb-8 px-2">
         <p className="text-xs uppercase tracking-wider text-zinc-500">Ovqat yetkazish</p>
         <h2 className="text-lg font-semibold text-zinc-900">Boshqaruv paneli</h2>
@@ -54,12 +60,13 @@ export function Sidebar({ role }: { role: UserRole }) {
             <Link
               key={item.href}
               href={item.href}
+              onClick={() => onNavigate?.()}
               className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition ${
                 active ? "bg-zinc-900 text-white" : "text-zinc-700 hover:bg-zinc-100"
               }`}
             >
-              <Icon className="h-4 w-4" />
-              {item.label}
+              <Icon className="h-4 w-4 shrink-0" />
+              <span className="truncate">{item.label}</span>
             </Link>
           );
         })}
@@ -70,9 +77,9 @@ export function Sidebar({ role }: { role: UserRole }) {
         onClick={onLogout}
         className="mt-8 flex w-full items-center gap-2 rounded-lg border border-zinc-200 px-3 py-2 text-sm text-zinc-700 hover:bg-zinc-100"
       >
-        <LogOut className="h-4 w-4" />
+        <LogOut className="h-4 w-4 shrink-0" />
         Chiqish
       </button>
-    </aside>
+    </>
   );
 }
