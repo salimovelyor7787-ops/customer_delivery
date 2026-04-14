@@ -2,6 +2,7 @@
 
 import { FormEvent, useEffect, useState } from "react";
 import toast from "react-hot-toast";
+import { ImageUpload } from "@/components/ui/image-upload";
 import { createSupabaseBrowserClient } from "@/lib/supabase";
 
 type ServiceKey = "stores" | "restaurants" | "courier";
@@ -127,13 +128,16 @@ export default function AdminServiceCardsPage() {
           required
           className="rounded-lg border border-zinc-300 px-3 py-2"
         />
-        <input
-          value={imageUrl}
-          onChange={(e) => setImageUrl(e.target.value)}
-          placeholder="Rasm URL"
-          required
-          className="rounded-lg border border-zinc-300 px-3 py-2"
-        />
+        <div className="flex min-w-0 flex-col gap-2">
+          <input
+            value={imageUrl}
+            onChange={(e) => setImageUrl(e.target.value)}
+            placeholder="Rasm URL yoki fayl yuklang"
+            required
+            className="w-full rounded-lg border border-zinc-300 px-3 py-2"
+          />
+          <ImageUpload folder="home-service-cards" onUploaded={setImageUrl} className="self-start" />
+        </div>
         <input
           type="number"
           value={sortOrder}

@@ -2,6 +2,7 @@
 
 import { FormEvent, useEffect, useState } from "react";
 import toast from "react-hot-toast";
+import { ImageUpload } from "@/components/ui/image-upload";
 import { createSupabaseBrowserClient } from "@/lib/supabase";
 
 type NearbyCard = {
@@ -136,13 +137,19 @@ export default function AdminNearbyCardsPage() {
           placeholder="Ichki nom (ixtiyoriy)"
           className="rounded-lg border border-zinc-300 px-3 py-2"
         />
-        <input
-          value={imageUrl}
-          onChange={(e) => setImageUrl(e.target.value)}
-          placeholder="Rasm URL"
-          required
-          className="rounded-lg border border-zinc-300 px-3 py-2"
-        />
+        <div className="flex flex-col gap-2 md:col-span-2">
+          <p className="text-xs text-zinc-500">Rasm: URL yoki fayl (majburiy)</p>
+          <div className="flex flex-wrap items-stretch gap-2">
+            <input
+              value={imageUrl}
+              onChange={(e) => setImageUrl(e.target.value)}
+              placeholder="Rasm URL"
+              required
+              className="min-w-[200px] flex-1 rounded-lg border border-zinc-300 px-3 py-2"
+            />
+            <ImageUpload folder="home-nearby-cards" onUploaded={setImageUrl} />
+          </div>
+        </div>
         <select
           value={restaurantId}
           onChange={(e) => setRestaurantId(e.target.value)}

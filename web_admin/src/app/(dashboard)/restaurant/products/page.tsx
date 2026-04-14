@@ -101,12 +101,15 @@ export default function RestaurantProductsPage() {
           placeholder="Narx"
           className="rounded-lg border border-zinc-300 px-3 py-2"
         />
-        <input
-          value={imageUrl}
-          onChange={(e) => setImageUrl(e.target.value)}
-          placeholder="Rasm URL"
-          className="rounded-lg border border-zinc-300 px-3 py-2"
-        />
+        <div className="flex min-w-0 flex-col gap-2">
+          <input
+            value={imageUrl}
+            onChange={(e) => setImageUrl(e.target.value)}
+            placeholder="Rasm URL yoki fayl"
+            className="w-full rounded-lg border border-zinc-300 px-3 py-2"
+          />
+          <ImageUpload folder="products" onUploaded={setImageUrl} className="self-start" />
+        </div>
         <button className="rounded-lg bg-zinc-900 px-4 py-2 text-white">{editingId ? "Saqlash" : "Qo&apos;shish"}</button>
         {editingId ? (
           <button
@@ -122,7 +125,6 @@ export default function RestaurantProductsPage() {
             Bekor qilish
           </button>
         ) : null}
-        <ImageUpload onUploaded={setImageUrl} />
       </form>
 
       <div className="grid gap-3 md:grid-cols-2">

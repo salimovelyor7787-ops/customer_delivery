@@ -2,6 +2,7 @@
 
 import { FormEvent, useEffect, useState } from "react";
 import toast from "react-hot-toast";
+import { ImageUpload } from "@/components/ui/image-upload";
 import { createSupabaseBrowserClient } from "@/lib/supabase";
 
 type RestaurantRow = {
@@ -206,12 +207,18 @@ export default function AdminRestaurantsPage() {
             placeholder="Slug"
             className="rounded-lg border border-zinc-300 px-3 py-2"
           />
-          <input
-            value={imageUrl}
-            onChange={(e) => setImageUrl(e.target.value)}
-            placeholder="Rasm URL"
-            className="rounded-lg border border-zinc-300 px-3 py-2 md:col-span-2"
-          />
+          <div className="flex flex-col gap-2 md:col-span-2">
+            <p className="text-xs text-zinc-500">Rasm: havola yoki kompyuter/telefondan fayl</p>
+            <div className="flex flex-wrap items-stretch gap-2">
+              <input
+                value={imageUrl}
+                onChange={(e) => setImageUrl(e.target.value)}
+                placeholder="Rasm URL (ixtiyoriy, yuklash bilan almashtiriladi)"
+                className="min-w-[200px] flex-1 rounded-lg border border-zinc-300 px-3 py-2"
+              />
+              <ImageUpload folder="restaurants" onUploaded={setImageUrl} />
+            </div>
+          </div>
           <textarea
             value={description}
             onChange={(e) => setDescription(e.target.value)}
