@@ -1,5 +1,7 @@
 import 'package:collection/collection.dart';
 import 'package:customer_delivery/features/cart/presentation/notifiers/cart_notifier.dart';
+import 'package:customer_delivery/features/home/domain/utils/restaurant_schedule.dart';
+import 'package:customer_delivery/features/home/presentation/providers/home_providers.dart';
 import 'package:customer_delivery/features/orders/presentation/providers/order_providers.dart';
 import 'package:customer_delivery/features/profile/presentation/providers/profile_providers.dart';
 import 'package:flutter/material.dart';
@@ -23,6 +25,12 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
   Widget build(BuildContext context) {
     final cart = ref.watch(cartNotifierProvider);
     final addressesAsync = ref.watch(addressesProvider);
+    final restaurantAsync = cart.restaurantId == null ? null : ref.watch(restaurantDetailProvider(cart.restaurantId!));
+    final canPlaceOrderNow = restaurantAsync?.maybeWhen(
+          data: (r) => isRestaurantOpenNow(r),
+          orElse: () => true,
+        ) ??
+        true;
 
     if (cart.lines.isEmpty) {
       return Scaffold(
@@ -77,9 +85,16 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                 const SizedBox(height: 12),
                 Text(_error!, style: TextStyle(color: Theme.of(context).colorScheme.error)),
               ],
+              if (!canPlaceOrderNow) ...[
+                const SizedBox(height: 12),
+                Text(
+                  "Restoran hozir yopiq. Buyurtma faqat ish vaqtida qabul qilinadi.",
+                  style: TextStyle(color: Theme.of(context).colorScheme.error),
+                ),
+              ],
               const SizedBox(height: 24),
               FilledButton(
-                onPressed: _submitting || effectiveAddressId == null || addresses.isEmpty
+                onPressed: _submitting || effectiveAddressId == null || addresses.isEmpty || !canPlaceOrderNow
                     ? null
                     : () async {
                         setState(() {

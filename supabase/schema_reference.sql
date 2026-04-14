@@ -23,9 +23,12 @@ create table if not exists public.restaurants (
   id uuid primary key default uuid_generate_v4(),
   category_id uuid references public.categories (id),
   name text not null,
+  description text,
   slug text unique,
   image_url text,
   is_open boolean default false,
+  open_time_from time,
+  open_time_to time,
   delivery_fee_cents int not null default 0,
   min_order_cents int not null default 0,
   created_at timestamptz default now()
@@ -38,6 +41,8 @@ create table if not exists public.menu_items (
   description text,
   image_url text,
   price_cents int not null,
+  is_deal boolean not null default false,
+  deal_price_cents int,
   is_available boolean default true,
   sort_order int default 0
 );
@@ -92,6 +97,44 @@ create table if not exists public.courier_locations (
   lat double precision not null,
   lng double precision not null,
   updated_at timestamptz default now()
+);
+
+-- Home screen service cards (stores / restaurants / courier)
+create table if not exists public.home_service_cards (
+  id uuid primary key default uuid_generate_v4(),
+  service_key text not null check (service_key in ('stores', 'restaurants', 'courier')),
+  title text not null,
+  image_url text not null,
+  sort_order int not null default 0,
+  is_active boolean not null default true,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  unique (service_key)
+);
+
+-- Home "nearby stores" image cards.
+create table if not exists public.home_nearby_cards (
+  id uuid primary key default uuid_generate_v4(),
+  title text,
+  image_url text not null,
+  restaurant_id uuid references public.restaurants (id) on delete set null,
+  sort_order int not null default 0,
+  is_active boolean not null default true,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+-- Promo banners managed by admin panel.
+create table if not exists public.banners (
+  id uuid primary key default uuid_generate_v4(),
+  image_url text not null,
+  title text not null,
+  subtitle text,
+  button_text text,
+  action_path text,
+  sort_order int not null default 0,
+  active boolean not null default true,
+  created_at timestamptz not null default now()
 );
 
 -- Enable replication in Dashboard → Database → Replication, or:

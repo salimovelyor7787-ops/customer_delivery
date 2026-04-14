@@ -2,6 +2,7 @@ import 'package:customer_delivery/core/di/providers.dart';
 import 'package:customer_delivery/features/auth/domain/entities/app_user.dart';
 import 'package:customer_delivery/features/auth/presentation/providers/auth_providers.dart';
 import 'package:customer_delivery/features/cart/presentation/notifiers/cart_notifier.dart';
+import 'package:customer_delivery/features/home/domain/utils/restaurant_schedule.dart';
 import 'package:customer_delivery/features/home/presentation/providers/home_providers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -37,6 +38,12 @@ class _CartScreenState extends ConsumerState<CartScreen> {
     final cart = ref.watch(cartNotifierProvider);
     final guest = ref.watch(supabaseClientProvider).auth.currentSession == null;
     final money = NumberFormat.simpleCurrency();
+    final restaurantAsync = cart.restaurantId == null ? null : ref.watch(restaurantDetailProvider(cart.restaurantId!));
+    final canCheckoutBySchedule = restaurantAsync?.maybeWhen(
+          data: (r) => isRestaurantOpenNow(r),
+          orElse: () => true,
+        ) ??
+        true;
 
     return Scaffold(
       appBar: AppBar(title: const Text('Savat')),
@@ -76,14 +83,16 @@ class _CartScreenState extends ConsumerState<CartScreen> {
           : Column(
               children: [
                 if (cart.restaurantId != null)
-                  ref.watch(restaurantDetailProvider(cart.restaurantId!)).when(
+                  restaurantAsync!.when(
                         data: (r) => Material(
                           color: Theme.of(context).colorScheme.surfaceVariant,
                           child: ListTile(
                             dense: true,
                             leading: const Icon(Icons.storefront_outlined),
                             title: Text(r.name),
-                            subtitle: const Text('Buyurtma shu muassasadan'),
+                            subtitle: Text(canCheckoutBySchedule
+                                ? 'Buyurtma shu muassasadan'
+                                : "Restoran yopiq (${restaurantWorkingHoursLabel(r)})"),
                           ),
                         ),
                         loading: () => const SizedBox.shrink(),
@@ -131,6 +140,14 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                     padding: const EdgeInsets.all(8),
                     child: Text(
                       "Narx hisoblash: ${cart.quoteError}",
+                      style: TextStyle(color: Theme.of(context).colorScheme.error),
+                    ),
+                  ),
+                if (!canCheckoutBySchedule)
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                    child: Text(
+                      "Ish vaqtidan tashqari buyurtma berib bo'lmaydi.",
                       style: TextStyle(color: Theme.of(context).colorScheme.error),
                     ),
                   ),
@@ -183,7 +200,7 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                       ],
                       const SizedBox(height: 16),
                       FilledButton(
-                        onPressed: cart.lines.isEmpty ? null : () => context.push('/checkout'),
+                        onPressed: cart.lines.isEmpty || !canCheckoutBySchedule ? null : () => context.push('/checkout'),
                         child: const Text("Buyurtmani rasmiylashtirish"),
                       ),
                     ],

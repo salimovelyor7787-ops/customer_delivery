@@ -31,6 +31,8 @@ class MenuItem extends Equatable {
     required this.priceCents,
     this.description,
     this.imageUrl,
+    this.isDeal = false,
+    this.dealPriceCents,
     this.isAvailable = true,
     this.options = const [],
   });
@@ -41,6 +43,8 @@ class MenuItem extends Equatable {
   final String? description;
   final String? imageUrl;
   final int priceCents;
+  final bool isDeal;
+  final int? dealPriceCents;
   final bool isAvailable;
   final List<MenuOptionChoice> options;
 
@@ -59,11 +63,13 @@ class MenuItem extends Equatable {
       description: json['description'] as String?,
       imageUrl: json['image_url'] as String?,
       priceCents: (json['price_cents'] as num?)?.toInt() ?? 0,
+      isDeal: json['is_deal'] as bool? ?? false,
+      dealPriceCents: (json['deal_price_cents'] as num?)?.toInt(),
       isAvailable: json['is_available'] as bool? ?? true,
       options: opts,
     );
   }
 
   @override
-  List<Object?> get props => [id, restaurantId, name, description, imageUrl, priceCents, isAvailable, options];
+  List<Object?> get props => [id, restaurantId, name, description, imageUrl, priceCents, isDeal, dealPriceCents, isAvailable, options];
 }

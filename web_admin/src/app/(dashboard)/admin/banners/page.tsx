@@ -1,33 +1,78 @@
 "use client";
 
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useEffect, useMemo, useState } from "react";
 import toast from "react-hot-toast";
 import { createSupabaseBrowserClient } from "@/lib/supabase";
 
-type Banner = { id: string; title: string; image_url: string; active: boolean };
+type Banner = {
+  id: string;
+  title: string;
+  subtitle: string | null;
+  image_url: string;
+  button_text: string | null;
+  action_path: string | null;
+  sort_order: number;
+  active: boolean;
+};
 const supabase = createSupabaseBrowserClient();
 
 export default function AdminBannersPage() {
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [title, setTitle] = useState("");
+  const [subtitle, setSubtitle] = useState("");
   const [imageUrl, setImageUrl] = useState("");
+  const [buttonText, setButtonText] = useState("");
+  const [actionPath, setActionPath] = useState("");
+  const [sortOrder, setSortOrder] = useState(0);
   const [banners, setBanners] = useState<Banner[]>([]);
+
+  const isEditing = useMemo(() => editingId != null, [editingId]);
+
+  const loadBanners = async () => {
+    const { data, error } = await supabase
+      .from("banners")
+      .select("*")
+      .order("sort_order", { ascending: true });
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    setBanners((data ?? []) as Banner[]);
+  };
+
   useEffect(() => {
-    const fetchBanners = async () => {
-      const { data } = await supabase.from("banners").select("*").order("title");
-      setBanners((data ?? []) as Banner[]);
-    };
-    void fetchBanners();
+    void loadBanners();
   }, []);
+
+  const resetForm = () => {
+    setEditingId(null);
+    setTitle("");
+    setSubtitle("");
+    setImageUrl("");
+    setButtonText("");
+    setActionPath("");
+    setSortOrder(0);
+  };
 
   const onCreate = async (event: FormEvent) => {
     event.preventDefault();
-    const { error } = await supabase.from("banners").insert({ title, image_url: imageUrl, active: true });
+    const payload = {
+      title,
+      subtitle: subtitle || null,
+      image_url: imageUrl,
+      button_text: buttonText || null,
+      action_path: actionPath || null,
+      sort_order: sortOrder,
+      active: true,
+    };
+    const query = isEditing
+      ? supabase.from("banners").update(payload).eq("id", editingId)
+      : supabase.from("banners").insert(payload);
+    const { error } = await query;
     if (error) return toast.error(error.message);
-    setTitle("");
-    setImageUrl("");
-    toast.success("Banner created");
-    const { data } = await supabase.from("banners").select("*").order("title");
-    setBanners((data ?? []) as Banner[]);
+    toast.success(isEditing ? "Banner updated" : "Banner created");
+    resetForm();
+    await loadBanners();
   };
 
   const onToggle = async (banner: Banner) => {
@@ -43,6 +88,16 @@ export default function AdminBannersPage() {
     toast.success("Banner deleted");
   };
 
+  const onEdit = (banner: Banner) => {
+    setEditingId(banner.id);
+    setTitle(banner.title);
+    setSubtitle(banner.subtitle ?? "");
+    setImageUrl(banner.image_url);
+    setButtonText(banner.button_text ?? "");
+    setActionPath(banner.action_path ?? "");
+    setSortOrder(banner.sort_order ?? 0);
+  };
+
   return (
     <section className="space-y-6">
       <h1 className="text-2xl font-semibold">Banners</h1>
@@ -55,22 +110,67 @@ export default function AdminBannersPage() {
           className="rounded-lg border border-zinc-300 px-3 py-2"
         />
         <input
+          value={subtitle}
+          onChange={(e) => setSubtitle(e.target.value)}
+          placeholder="Subtitle"
+          className="rounded-lg border border-zinc-300 px-3 py-2"
+        />
+        <input
           value={imageUrl}
           onChange={(e) => setImageUrl(e.target.value)}
           placeholder="Image URL"
           required
           className="rounded-lg border border-zinc-300 px-3 py-2"
         />
-        <button className="rounded-lg bg-zinc-900 px-4 py-2 text-white">Add banner</button>
+        <input
+          value={buttonText}
+          onChange={(e) => setButtonText(e.target.value)}
+          placeholder="Button text (e.g. Ko'rish)"
+          className="rounded-lg border border-zinc-300 px-3 py-2"
+        />
+        <input
+          value={actionPath}
+          onChange={(e) => setActionPath(e.target.value)}
+          placeholder="Action path (e.g. /search or /home/stores)"
+          className="rounded-lg border border-zinc-300 px-3 py-2"
+        />
+        <input
+          type="number"
+          value={sortOrder}
+          onChange={(e) => setSortOrder(Number(e.target.value))}
+          placeholder="Sort order"
+          className="rounded-lg border border-zinc-300 px-3 py-2"
+        />
+        <div className="flex gap-2 md:col-span-3">
+          <button className="rounded-lg bg-zinc-900 px-4 py-2 text-white">
+            {isEditing ? "Update banner" : "Add banner"}
+          </button>
+          {isEditing ? (
+            <button
+              type="button"
+              className="rounded-lg border border-zinc-300 px-4 py-2"
+              onClick={resetForm}
+            >
+              Cancel
+            </button>
+          ) : null}
+        </div>
       </form>
 
       <div className="grid gap-3 md:grid-cols-2">
         {banners.map((banner) => (
           <div key={banner.id} className="rounded-xl border border-zinc-200 bg-white p-4">
             <p className="font-medium">{banner.title}</p>
+            <p className="text-xs text-zinc-500">{banner.subtitle ?? "-"}</p>
             <p className="truncate text-xs text-zinc-500">{banner.image_url}</p>
+            <p className="truncate text-xs text-zinc-500">Button: {banner.button_text ?? "-"}</p>
+            <p className="truncate text-xs text-zinc-500">Action: {banner.action_path ?? "-"}</p>
+            <p className="text-xs text-zinc-500">Sort: {banner.sort_order ?? 0}</p>
             <p className="mt-2 text-xs text-zinc-600">Status: {banner.active ? "active" : "inactive"}</p>
             <div className="mt-3 flex gap-2">
+              <button className="rounded border border-zinc-300 px-2 py-1 text-xs" onClick={() => onEdit(banner)}>
+                Edit
+              </button>
               <button className="rounded border border-zinc-300 px-2 py-1 text-xs" onClick={() => onToggle(banner)}>
                 Toggle
               </button>

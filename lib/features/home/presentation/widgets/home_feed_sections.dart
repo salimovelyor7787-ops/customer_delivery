@@ -3,9 +3,13 @@ import 'package:customer_delivery/features/cart/presentation/notifiers/cart_noti
 import 'package:customer_delivery/features/cart/presentation/utils/cart_helpers.dart';
 import 'package:customer_delivery/features/cart/presentation/widgets/cart_quantity_control.dart';
 import 'package:customer_delivery/features/home/domain/entities/category.dart';
+import 'package:customer_delivery/features/home/domain/entities/home_banner.dart';
+import 'package:customer_delivery/features/home/domain/entities/home_deal_item.dart';
+import 'package:customer_delivery/features/home/domain/entities/home_nearby_card.dart';
+import 'package:customer_delivery/features/home/domain/entities/home_service_card.dart';
 import 'package:customer_delivery/features/home/domain/entities/restaurant.dart';
-import 'package:customer_delivery/features/restaurant/domain/entities/menu_item.dart';
 import 'package:customer_delivery/features/restaurant/presentation/providers/menu_providers.dart';
+import 'package:customer_delivery/features/home/presentation/providers/home_providers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -40,135 +44,122 @@ class HomeSectionHeader extends StatelessWidget {
 
 /// Горизонталь: Продукты / Рестораны / Курьер (как на макете).
 class HomeServiceTypeRow extends StatelessWidget {
-  const HomeServiceTypeRow({super.key, required this.selectedIndex, required this.onSelect});
+  const HomeServiceTypeRow({
+    super.key,
+    required this.selectedIndex,
+    required this.onSelect,
+    required this.items,
+  });
 
   final int selectedIndex;
   final ValueChanged<int> onSelect;
-
-  static const _items = [
-    _ServiceItem('Mahsulotlar', '15 daqiqa', 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=400&q=80'),
-    _ServiceItem('Restoranlar', '25 daqiqa', 'https://images.unsplash.com/photo-1600891964092-4316c288032e?w=400&q=80'),
-    _ServiceItem('Kuryer', '10 daqiqa', 'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=400&q=80'),
-  ];
+  final List<HomeServiceCard> items;
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      height: 168,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        itemCount: _items.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 12),
-        itemBuilder: (context, i) {
-          final item = _items[i];
-          final selected = i == selectedIndex;
-          return GestureDetector(
-            onTap: () => onSelect(i),
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 180),
-              width: 122,
-              decoration: BoxDecoration(
-                color: selected ? Theme.of(context).colorScheme.primaryContainer : Colors.white,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(
-                  color: selected ? Theme.of(context).colorScheme.primary : Colors.black12,
-                  width: selected ? 1.5 : 1,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.04),
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-              clipBehavior: Clip.antiAlias,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  SizedBox(
-                    height: 108,
-                    width: double.infinity,
-                    child: AppNetworkImage(
-                      imageUrl: item.imageUrl,
-                      fit: BoxFit.cover,
-                      placeholderIcon: Icons.store,
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.all(10),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          item.title,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            fontWeight: FontWeight.w700,
-                            fontSize: 13,
-                            color: Theme.of(context).colorScheme.onSurface,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          item.eta,
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Theme.of(context).colorScheme.outline,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Row(
+        children: [
+          for (var i = 0; i < items.length; i++) ...[
+            if (i > 0) const SizedBox(width: 12),
+            Expanded(
+              child: _ServiceTypeCard(
+                item: items[i],
+                selected: i == selectedIndex,
+                onTap: () => onSelect(i),
               ),
             ),
-          );
-        },
+          ],
+        ],
       ),
     );
   }
 }
 
-class _ServiceItem {
-  const _ServiceItem(this.title, this.eta, this.imageUrl);
-  final String title;
-  final String eta;
-  final String imageUrl;
-}
+class _ServiceTypeCard extends StatelessWidget {
+  const _ServiceTypeCard({
+    required this.item,
+    required this.selected,
+    required this.onTap,
+  });
 
-class HomePromoBannerCarousel extends StatelessWidget {
-  const HomePromoBannerCarousel({super.key});
+  final HomeServiceCard item;
+  final bool selected;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
+    return AspectRatio(
+      aspectRatio: 1,
+      child: GestureDetector(
+        onTap: onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          decoration: BoxDecoration(
+            color: selected ? Theme.of(context).colorScheme.primaryContainer : Colors.white,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: selected ? Theme.of(context).colorScheme.primary : Colors.black12,
+              width: selected ? 1.5 : 1,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.04),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: AppNetworkImage(
+            imageUrl: item.imageUrl,
+            fit: BoxFit.cover,
+            placeholderIcon: Icons.store,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class HomePromoBannerCarousel extends StatelessWidget {
+  const HomePromoBannerCarousel({
+    super.key,
+    required this.banners,
+  });
+
+  final List<HomeBanner> banners;
+
+  @override
+  Widget build(BuildContext context) {
+    if (banners.isEmpty) return const SizedBox.shrink();
     return SizedBox(
       height: 132,
       child: ListView(
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: 16),
         children: [
-          _PromoCard(
-            title: "300 so'm chegirma",
-            subtitle: 'Restorandan LOVE promokodi bilan',
-            buttonLabel: "Taklifga o'tish",
-            imageUrl: 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=600&q=80',
-            onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Promo tez orada backendga ulanadi')),
-              );
-            },
-          ),
-          const SizedBox(width: 12),
-          _PromoCard(
-            title: 'Bepul yetkazib berish',
-            subtitle: "Tanlangan joylarda 1500 so'mdan",
-            buttonLabel: "Ko'rish",
-            imageUrl: 'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=600&q=80',
-            onPressed: () {},
-          ),
+          for (var i = 0; i < banners.length; i++) ...[
+            if (i > 0) const SizedBox(width: 12),
+            _PromoCard(
+              title: banners[i].title,
+              subtitle: banners[i].subtitle ?? '',
+              buttonLabel: banners[i].buttonText?.isNotEmpty == true ? banners[i].buttonText! : "Ko'rish",
+              imageUrl: banners[i].imageUrl,
+              onPressed: () {
+                final path = banners[i].actionPath?.trim();
+                if (path == null || path.isEmpty) return;
+                if (path.startsWith('/')) {
+                  context.push(path);
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Faqat ichki yo‘nalishlar qo‘llab-quvvatlanadi')),
+                  );
+                }
+              },
+            ),
+          ],
         ],
       ),
     );
@@ -255,96 +246,48 @@ class _PromoCard extends StatelessWidget {
 
 /// Квадратные карточки «рядом» (цвета как на макете).
 class HomeNearbyStoresRow extends StatelessWidget {
-  const HomeNearbyStoresRow({super.key, required this.restaurants});
+  const HomeNearbyStoresRow({super.key, required this.cards});
 
-  final List<Restaurant> restaurants;
-
-  static const _fallback = [
-    _FallbackStore('FoodMaster', '20 – 30 daqiqa', Color(0xFFE53935)),
-    _FallbackStore('Gurman', '25 – 40 daqiqa', Color(0xFF43A047)),
-    _FallbackStore("Ta'm oroli", '40 – 45 daqiqa', Color(0xFF1E88E5)),
-  ];
-
-  static const _accentColors = [Color(0xFFE53935), Color(0xFF43A047), Color(0xFF1E88E5)];
+  final List<HomeNearbyCard> cards;
 
   @override
   Widget build(BuildContext context) {
-    final tiles = <Widget>[];
-    if (restaurants.length >= 3) {
-      for (var i = 0; i < 3; i++) {
-        final r = restaurants[i];
-        tiles.add(_StoreSquare(name: r.name, eta: _etaForIndex(i), color: _accentColors[i % 3], restaurantId: r.id));
-      }
-    } else {
-      for (var i = 0; i < _fallback.length; i++) {
-        final f = _fallback[i];
-        tiles.add(
-          _StoreSquare(name: f.name, eta: f.eta, color: f.color, restaurantId: restaurants.isNotEmpty ? restaurants[i % restaurants.length].id : null),
-        );
-      }
-    }
+    if (cards.isEmpty) return const SizedBox.shrink();
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Row(
         children: [
-          for (var i = 0; i < tiles.length; i++) ...[
+          for (var i = 0; i < cards.length; i++) ...[
             if (i > 0) const SizedBox(width: 10),
-            Expanded(child: tiles[i]),
+            Expanded(child: _StoreSquare(card: cards[i])),
           ],
         ],
       ),
     );
   }
-
-  static String _etaForIndex(int i) {
-    const etas = ['20 – 30 daqiqa', '25 – 40 daqiqa', '40 – 45 daqiqa'];
-    return etas[i % etas.length];
-  }
-}
-
-class _FallbackStore {
-  const _FallbackStore(this.name, this.eta, this.color);
-  final String name;
-  final String eta;
-  final Color color;
 }
 
 class _StoreSquare extends StatelessWidget {
-  const _StoreSquare({required this.name, required this.eta, required this.color, this.restaurantId});
-
-  final String name;
-  final String eta;
-  final Color color;
-  final String? restaurantId;
+  const _StoreSquare({required this.card});
+  final HomeNearbyCard card;
 
   @override
   Widget build(BuildContext context) {
     return AspectRatio(
       aspectRatio: 1.4,
       child: Material(
-        color: color,
+        color: Colors.white,
         borderRadius: BorderRadius.circular(16),
         clipBehavior: Clip.antiAlias,
         child: InkWell(
-          onTap: restaurantId == null
+          onTap: card.restaurantId == null
               ? null
-              : () => context.push('/home/restaurant/$restaurantId'),
-          child: Padding(
-            padding: const EdgeInsets.all(10),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  name,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 14),
-                ),
-                const Spacer(),
-                Text(eta, style: TextStyle(color: Colors.white.withOpacity(0.92), fontSize: 11)),
-              ],
-            ),
+              : () => context.push('/home/restaurant/${card.restaurantId}'),
+          child: AppNetworkImage(
+            imageUrl: card.imageUrl,
+            fit: BoxFit.cover,
+            placeholderIcon: Icons.store,
           ),
         ),
       ),
@@ -355,16 +298,16 @@ class _StoreSquare extends StatelessWidget {
 class _DealData {
   const _DealData({
     required this.menuItemId,
+    required this.restaurantId,
     required this.name,
-    required this.weight,
     required this.imageUrl,
     required this.priceCents,
     required this.oldPriceCents,
     required this.discountPercent,
   });
   final String menuItemId;
+  final String restaurantId;
   final String name;
-  final String weight;
   final String imageUrl;
   final int priceCents;
   final int oldPriceCents;
@@ -373,21 +316,18 @@ class _DealData {
 
 /// Горизонтальные карточки акций (демо-данные под макет).
 class HomeDealsRow extends ConsumerWidget {
-  const HomeDealsRow({super.key, required this.restaurants});
+  const HomeDealsRow({super.key});
 
-  final List<Restaurant> restaurants;
-  
-  List<_DealData> _buildDeals(List<MenuItem> items) {
-    return items.where((m) => m.isAvailable).take(8).map((m) {
-      final oldPrice = (m.priceCents * 1.2).round();
+  List<_DealData> _buildDeals(List<HomeDealItem> items) {
+    return items.take(8).map((m) {
       return _DealData(
-        menuItemId: m.id,
+        menuItemId: m.menuItemId,
+        restaurantId: m.restaurantId,
         name: m.name,
-        weight: 'Aksiya',
-        imageUrl: m.imageUrl ?? '',
-        priceCents: m.priceCents,
-        oldPriceCents: oldPrice,
-        discountPercent: ((1 - (m.priceCents / oldPrice)).abs() * 100).round(),
+        imageUrl: m.imageUrl,
+        priceCents: m.dealPriceCents,
+        oldPriceCents: m.basePriceCents,
+        discountPercent: m.discountPercent,
       );
     }).toList();
   }
@@ -395,22 +335,20 @@ class HomeDealsRow extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final money = NumberFormat.currency(locale: 'ru_RU', symbol: '₽', decimalDigits: 0);
-    final targetRestaurantId = restaurants.isNotEmpty ? restaurants.first.id : null;
-    if (targetRestaurantId == null) return const SizedBox.shrink();
-    final menuAsync = ref.watch(restaurantMenuProvider(targetRestaurantId));
+    final dealsAsync = ref.watch(homeDealsProvider);
 
-    return menuAsync.when(
+    return dealsAsync.when(
       loading: () => const SizedBox(
-        height: 206,
+        height: 188,
         child: Center(child: CircularProgressIndicator()),
       ),
       error: (_, __) => const SizedBox.shrink(),
-      data: (menu) {
-        final deals = _buildDeals(menu);
+      data: (items) {
+        final deals = _buildDeals(items);
         if (deals.isEmpty) return const SizedBox.shrink();
 
         return SizedBox(
-          height: 206,
+          height: 188,
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -421,7 +359,6 @@ class HomeDealsRow extends ConsumerWidget {
               return _DealCard(
                 deal: d,
                 money: money,
-                restaurantId: targetRestaurantId,
               );
             },
           ),
@@ -435,12 +372,10 @@ class _DealCard extends ConsumerWidget {
   const _DealCard({
     required this.deal,
     required this.money,
-    required this.restaurantId,
   });
 
   final _DealData deal;
   final NumberFormat money;
-  final String? restaurantId;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -449,7 +384,7 @@ class _DealCard extends ConsumerWidget {
         .where((l) => l.menuItemId == deal.menuItemId)
         .fold<int>(0, (sum, line) => sum + line.quantity);
     return Container(
-      width: 140,
+      width: 132,
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
@@ -465,7 +400,7 @@ class _DealCard extends ConsumerWidget {
           Stack(
             children: [
               SizedBox(
-                height: 86,
+                height: 80,
                 child: AppNetworkImage(imageUrl: deal.imageUrl, fit: BoxFit.cover, placeholderIcon: Icons.shopping_bag),
               ),
               Positioned(
@@ -486,12 +421,8 @@ class _DealCard extends ConsumerWidget {
             ],
           ),
           Padding(
-            padding: const EdgeInsets.fromLTRB(10, 6, 10, 2),
-            child: Text(deal.weight, style: TextStyle(fontSize: 11, color: Theme.of(context).colorScheme.outline)),
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 10),
-            child: Text(deal.name, maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
+            padding: const EdgeInsets.fromLTRB(10, 8, 10, 0),
+            child: Text(deal.name, maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 12)),
           ),
           const Spacer(),
           Padding(
@@ -505,7 +436,7 @@ class _DealCard extends ConsumerWidget {
                     children: [
                       Text(
                         money.format(deal.priceCents / 100),
-                        style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15),
+                        style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 14),
                       ),
                       Text(
                         money.format(deal.oldPriceCents / 100),
@@ -525,11 +456,10 @@ class _DealCard extends ConsumerWidget {
                     child: InkWell(
                       customBorder: const CircleBorder(),
                       onTap: () async {
-                        if (restaurantId == null) return;
-                        final ok = await ensureCartRestaurantOrConfirmSwitch(context, ref, restaurantId!);
+                        final ok = await ensureCartRestaurantOrConfirmSwitch(context, ref, deal.restaurantId);
                         if (!ok || !context.mounted) return;
                         try {
-                          final menu = await ref.read(restaurantMenuProvider(restaurantId!).future);
+                          final menu = await ref.read(restaurantMenuProvider(deal.restaurantId).future);
                           final item = menu.firstWhere((m) => m.id == deal.menuItemId && m.isAvailable);
                           ref.read(cartNotifierProvider.notifier).addItem(item);
                           if (!context.mounted) return;
@@ -550,19 +480,24 @@ class _DealCard extends ConsumerWidget {
                     ),
                   )
                 else
-                  CartQuantityControl(
-                    quantity: qty,
-                    compact: true,
-                    onDecrement: () {
-                      final line = cart.lines.firstWhere((l) => l.menuItemId == deal.menuItemId);
-                      ref.read(cartNotifierProvider.notifier).setQuantity(line.lineId, line.quantity - 1);
-                    },
-                    onIncrement: () async {
-                      if (restaurantId == null) return;
-                      final menu = await ref.read(restaurantMenuProvider(restaurantId!).future);
-                      final item = menu.firstWhere((m) => m.id == deal.menuItemId && m.isAvailable);
-                      ref.read(cartNotifierProvider.notifier).addItem(item);
-                    },
+                  Flexible(
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      alignment: Alignment.centerRight,
+                      child: CartQuantityControl(
+                        quantity: qty,
+                        compact: true,
+                        onDecrement: () {
+                          final line = cart.lines.firstWhere((l) => l.menuItemId == deal.menuItemId);
+                          ref.read(cartNotifierProvider.notifier).setQuantity(line.lineId, line.quantity - 1);
+                        },
+                        onIncrement: () async {
+                          final menu = await ref.read(restaurantMenuProvider(deal.restaurantId).future);
+                          final item = menu.firstWhere((m) => m.id == deal.menuItemId && m.isAvailable);
+                          ref.read(cartNotifierProvider.notifier).addItem(item);
+                        },
+                      ),
+                    ),
                   ),
               ],
             ),

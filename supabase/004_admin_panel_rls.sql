@@ -35,6 +35,8 @@ alter table if exists public.orders enable row level security;
 alter table if exists public.order_items enable row level security;
 alter table if exists public.promocodes enable row level security;
 alter table if exists public.banners enable row level security;
+alter table if exists public.home_service_cards enable row level security;
+alter table if exists public.home_nearby_cards enable row level security;
 
 drop policy if exists "profiles_self_or_admin_read" on public.profiles;
 create policy "profiles_self_or_admin_read" on public.profiles
@@ -125,6 +127,16 @@ with check (public.current_role() = 'admin');
 
 drop policy if exists "banners_admin_manage" on public.banners;
 create policy "banners_admin_manage" on public.banners
+for all using (public.current_role() = 'admin')
+with check (public.current_role() = 'admin');
+
+drop policy if exists "home_service_cards_admin_manage" on public.home_service_cards;
+create policy "home_service_cards_admin_manage" on public.home_service_cards
+for all using (public.current_role() = 'admin')
+with check (public.current_role() = 'admin');
+
+drop policy if exists "home_nearby_cards_admin_manage" on public.home_nearby_cards;
+create policy "home_nearby_cards_admin_manage" on public.home_nearby_cards
 for all using (public.current_role() = 'admin')
 with check (public.current_role() = 'admin');
 

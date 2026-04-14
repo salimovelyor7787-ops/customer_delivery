@@ -2,6 +2,7 @@ import 'package:customer_delivery/core/widgets/app_network_image.dart';
 import 'package:customer_delivery/features/cart/presentation/notifiers/cart_notifier.dart';
 import 'package:customer_delivery/features/cart/presentation/utils/cart_helpers.dart';
 import 'package:customer_delivery/features/cart/presentation/widgets/cart_quantity_control.dart';
+import 'package:customer_delivery/features/home/domain/utils/restaurant_schedule.dart';
 import 'package:customer_delivery/features/home/presentation/providers/home_providers.dart';
 import 'package:customer_delivery/features/restaurant/domain/entities/menu_item.dart';
 import 'package:customer_delivery/features/restaurant/presentation/providers/menu_providers.dart';
@@ -26,6 +27,7 @@ class RestaurantDetailScreen extends ConsumerWidget {
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => Center(child: Text('$e')),
         data: (r) {
+          final canOrder = isRestaurantOpenNow(r);
           return CustomScrollView(
             slivers: [
               SliverAppBar(
@@ -83,18 +85,18 @@ class RestaurantDetailScreen extends ConsumerWidget {
                       Row(
                         children: [
                           Chip(
-                            label: Text(r.isOpen ? 'Ochiq' : 'Yopiq'),
-                            backgroundColor: r.isOpen ? Colors.green.shade100 : null,
+                            label: Text(canOrder ? 'Ochiq' : 'Yopiq'),
+                            backgroundColor: canOrder ? Colors.green.shade100 : null,
                           ),
                           const SizedBox(width: 8),
-                          Text("Yetkazib berish ${money.format(r.deliveryFeeCents / 100)} dan"),
+                          Text("Ish vaqti: ${restaurantWorkingHoursLabel(r)}"),
                         ],
                       ),
-                      if (!r.isOpen)
+                      if (!canOrder)
                         Padding(
                           padding: const EdgeInsets.only(top: 8),
                           child: Text(
-                            "Restoran hozir yopiq. Menyuni ko'rish mumkin, buyurtma berish vaqtincha cheklangan bo'lishi mumkin.",
+                            "Restoran hozir ishlamayapti. Ish vaqtida buyurtma berish mumkin.",
                             style: TextStyle(color: Theme.of(context).colorScheme.error),
                           ),
                         ),
@@ -116,6 +118,7 @@ class RestaurantDetailScreen extends ConsumerWidget {
                           item: item,
                           restaurantId: restaurantId,
                           money: money,
+                          canOrder: canOrder,
                         );
                       },
                       childCount: items.length,
@@ -136,11 +139,13 @@ class _MenuItemListTile extends ConsumerWidget {
     required this.item,
     required this.restaurantId,
     required this.money,
+    required this.canOrder,
   });
 
   final MenuItem item;
   final String restaurantId;
   final NumberFormat money;
+  final bool canOrder;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -168,42 +173,51 @@ class _MenuItemListTile extends ConsumerWidget {
       title: Text(item.name),
       subtitle: Text(
         item.description ?? '',
-        maxLines: 2,
+        maxLines: 3,
         overflow: TextOverflow.ellipsis,
       ),
-      trailing: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(money.format(item.priceCents / 100)),
-          const SizedBox(width: 6),
-          if (qty == 0)
-            IconButton(
-              tooltip: 'Savatga',
-              icon: const Icon(Icons.add_shopping_cart_outlined),
-              onPressed: item.isAvailable
-                  ? () async {
-                      final ok = await ensureCartRestaurantOrConfirmSwitch(context, ref, restaurantId);
-                      if (!ok || !context.mounted) return;
-                      ref.read(cartNotifierProvider.notifier).addItem(item);
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('«${item.name}» savatga qo‘shildi')),
-                      );
-                    }
-                  : null,
-            )
-          else
-            CartQuantityControl(
-              quantity: qty,
-              compact: true,
-              onDecrement: () {
-                if (plainLineId == null) return;
-                ref.read(cartNotifierProvider.notifier).setQuantity(plainLineId, qty - 1);
-              },
-              onIncrement: () {
-                ref.read(cartNotifierProvider.notifier).addItem(item);
-              },
+      trailing: SizedBox(
+        width: 92,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            Text(
+              money.format(item.priceCents / 100),
+              style: const TextStyle(fontWeight: FontWeight.w700),
             ),
-        ],
+            const SizedBox(height: 6),
+            if (qty == 0)
+              IconButton(
+                tooltip: 'Savatga',
+                visualDensity: VisualDensity.compact,
+                icon: const Icon(Icons.add_rounded),
+                onPressed: item.isAvailable && canOrder
+                    ? () async {
+                        final ok = await ensureCartRestaurantOrConfirmSwitch(context, ref, restaurantId);
+                        if (!ok || !context.mounted) return;
+                        ref.read(cartNotifierProvider.notifier).addItem(item);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('«${item.name}» savatga qo‘shildi')),
+                        );
+                      }
+                    : null,
+              )
+            else
+              CartQuantityControl(
+                quantity: qty,
+                compact: true,
+                onDecrement: () {
+                  if (plainLineId == null) return;
+                  ref.read(cartNotifierProvider.notifier).setQuantity(plainLineId, qty - 1);
+                },
+                onIncrement: () {
+                  if (!canOrder) return;
+                  ref.read(cartNotifierProvider.notifier).addItem(item);
+                },
+              ),
+          ],
+        ),
       ),
       onTap: () => context.push(
         '/home/restaurant/$restaurantId/item/${item.id}',
