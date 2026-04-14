@@ -26,7 +26,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     final listState = ref.watch(restaurantListNotifierProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Поиск')),
+      appBar: AppBar(title: const Text('Qidiruv')),
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -35,7 +35,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
             child: TextField(
               controller: _controller,
               decoration: InputDecoration(
-                hintText: 'Поиск еды, ресторанов…',
+                hintText: "Taomlar va restoranlarni qidiring...",
                 prefixIcon: const Icon(Icons.search_rounded),
                 filled: true,
                 fillColor: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.5),
@@ -65,7 +65,7 @@ class _Results extends ConsumerWidget {
       return Center(child: Padding(padding: const EdgeInsets.all(24), child: Text(listState.error!)));
     }
     if (listState.items.isEmpty) {
-      return const Center(child: Text('Ничего не найдено'));
+      return const Center(child: Text("Hech narsa topilmadi"));
     }
     return ListView.separated(
       padding: const EdgeInsets.all(16),

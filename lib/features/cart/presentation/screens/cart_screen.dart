@@ -39,7 +39,7 @@ class _CartScreenState extends ConsumerState<CartScreen> {
     final money = NumberFormat.simpleCurrency();
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Корзина')),
+      appBar: AppBar(title: const Text('Savat')),
       body: cart.lines.isEmpty
           ? Center(
               child: Padding(
@@ -54,20 +54,20 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                     ),
                     const SizedBox(height: 16),
                     Text(
-                      'Корзина пуста',
+                      "Savat bo'sh",
                       style: Theme.of(context).textTheme.titleLarge,
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'Выберите ресторан на главной и добавьте блюда в корзину.',
+                      "Bosh sahifadan restoran tanlang va taomlarni savatga qo'shing.",
                       style: Theme.of(context).textTheme.bodyMedium,
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 24),
                     FilledButton(
                       onPressed: () => context.go('/home'),
-                      child: const Text('На главную'),
+                      child: const Text('Bosh sahifaga'),
                     ),
                   ],
                 ),
@@ -83,7 +83,7 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                             dense: true,
                             leading: const Icon(Icons.storefront_outlined),
                             title: Text(r.name),
-                            subtitle: const Text('Заказ из этого заведения'),
+                            subtitle: const Text('Buyurtma shu muassasadan'),
                           ),
                         ),
                         loading: () => const SizedBox.shrink(),
@@ -101,7 +101,7 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             IconButton(
-                              tooltip: 'Удалить',
+                              tooltip: "O'chirish",
                               icon: Icon(Icons.delete_outline, color: Theme.of(context).colorScheme.error),
                               onPressed: () =>
                                   ref.read(cartNotifierProvider.notifier).removeLine(l.lineId),
@@ -130,7 +130,7 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                   Padding(
                     padding: const EdgeInsets.all(8),
                     child: Text(
-                      'Расчёт стоимости: ${cart.quoteError}',
+                      "Narx hisoblash: ${cart.quoteError}",
                       style: TextStyle(color: Theme.of(context).colorScheme.error),
                     ),
                   ),
@@ -142,14 +142,14 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          const Text('Сумма по позициям'),
+                          const Text('Mahsulotlar summasi'),
                           Text(money.format(cart.clientSubtotalCents / 100)),
                         ],
                       ),
                       if (guest) ...[
                         const SizedBox(height: 8),
                         Text(
-                          'После входа в аккаунт появятся доставка, налоги и итог с сервера.',
+                          "Hisobga kirgandan so'ng yetkazib berish, soliq va yakuniy summa ko'rinadi.",
                           style: Theme.of(context).textTheme.bodySmall,
                         ),
                       ],
@@ -158,14 +158,14 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            const Text('Доставка'),
+                            const Text('Yetkazib berish'),
                             Text(money.format(cart.quote!.deliveryFeeCents / 100)),
                           ],
                         ),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            const Text('Налог'),
+                            const Text('Soliq'),
                             Text(money.format(cart.quote!.taxCents / 100)),
                           ],
                         ),
@@ -173,7 +173,7 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Text('Итого', style: Theme.of(context).textTheme.titleMedium),
+                            Text('Jami', style: Theme.of(context).textTheme.titleMedium),
                             Text(
                               money.format(cart.quote!.totalCents / 100),
                               style: Theme.of(context).textTheme.titleMedium,
@@ -184,7 +184,7 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                       const SizedBox(height: 16),
                       FilledButton(
                         onPressed: cart.lines.isEmpty ? null : () => context.push('/checkout'),
-                        child: const Text('Оформить заказ'),
+                        child: const Text("Buyurtmani rasmiylashtirish"),
                       ),
                     ],
                   ),

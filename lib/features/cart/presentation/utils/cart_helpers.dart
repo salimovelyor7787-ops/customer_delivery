@@ -18,13 +18,13 @@ Future<bool> ensureCartRestaurantOrConfirmSwitch(
   final ok = await showDialog<bool>(
         context: context,
         builder: (ctx) => AlertDialog(
-          title: const Text('Другой ресторан'),
+          title: const Text('Boshqa restoran'),
           content: const Text(
-            'В корзине блюда из другого заведения. Очистить корзину и добавить это блюдо?',
+            "Savatda boshqa restorandan taomlar bor. Savatni tozalab, bu taomni qo'shasizmi?",
           ),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Отмена')),
-            FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Очистить и добавить')),
+            TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Bekor qilish')),
+            FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text("Tozalash va qo'shish")),
           ],
         ),
       ) ??

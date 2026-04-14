@@ -7,7 +7,7 @@ class SupportChatScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Поддержка')),
+      appBar: AppBar(title: const Text("Qo'llab-quvvatlash")),
       body: Center(
         child: Padding(
           padding: const EdgeInsets.all(32),
@@ -17,7 +17,7 @@ class SupportChatScreen extends StatelessWidget {
               Icon(Icons.chat_bubble_outline_rounded, size: 64, color: Theme.of(context).colorScheme.outline),
               const SizedBox(height: 16),
               Text(
-                'Чат с поддержкой скоро появится здесь',
+                "Qo'llab-quvvatlash chati tez orada shu yerda bo'ladi",
                 textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.titleMedium,
               ),

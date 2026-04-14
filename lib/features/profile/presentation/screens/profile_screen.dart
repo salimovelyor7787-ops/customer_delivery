@@ -16,7 +16,7 @@ class ProfileScreen extends ConsumerWidget {
 
     if (session == null) {
       return Scaffold(
-        appBar: AppBar(title: const Text('Профиль')),
+        appBar: AppBar(title: const Text('Profil')),
         body: Center(
           child: Padding(
             padding: const EdgeInsets.all(24),
@@ -24,31 +24,31 @@ class ProfileScreen extends ConsumerWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(
-                  'Войдите, чтобы видеть профиль и сохранённые адреса.',
+                  "Profil va saqlangan manzillarni ko'rish uchun kiring.",
                   textAlign: TextAlign.center,
                   style: Theme.of(context).textTheme.bodyLarge,
                 ),
                 const SizedBox(height: 24),
                 ListTile(
                   leading: const Icon(Icons.receipt_long_rounded),
-                  title: const Text('Мои заказы'),
+                  title: const Text('Buyurtmalarim'),
                   trailing: const Icon(Icons.chevron_right_rounded),
                   onTap: () => context.push('/orders'),
                 ),
                 ListTile(
                   leading: const Icon(Icons.support_agent_rounded),
-                  title: const Text('Чат с поддержкой'),
+                  title: const Text("Qo'llab-quvvatlash chati"),
                   trailing: const Icon(Icons.chevron_right_rounded),
                   onTap: () => context.push('/support'),
                 ),
                 const SizedBox(height: 8),
                 FilledButton(
                   onPressed: () => context.push(withNextQuery('/login', '/profile')),
-                  child: const Text('Войти'),
+                  child: const Text('Kirish'),
                 ),
                 TextButton(
                   onPressed: () => context.push(withNextQuery('/register', '/profile')),
-                  child: const Text('Создать аккаунт'),
+                  child: const Text('Hisob yaratish'),
                 ),
               ],
             ),
@@ -61,7 +61,7 @@ class ProfileScreen extends ConsumerWidget {
     final addressesAsync = ref.watch(addressesProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Профиль')),
+      appBar: AppBar(title: const Text('Profil')),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
@@ -72,23 +72,23 @@ class ProfileScreen extends ConsumerWidget {
           ),
           ListTile(
             leading: const Icon(Icons.receipt_long_rounded),
-            title: const Text('Мои заказы'),
+            title: const Text('Buyurtmalarim'),
             trailing: const Icon(Icons.chevron_right_rounded),
             onTap: () => context.push('/orders'),
           ),
           ListTile(
             leading: const Icon(Icons.support_agent_rounded),
-            title: const Text('Чат с поддержкой'),
+            title: const Text("Qo'llab-quvvatlash chati"),
             trailing: const Icon(Icons.chevron_right_rounded),
             onTap: () => context.push('/support'),
           ),
           const Divider(),
-          Text('Сохранённые адреса', style: Theme.of(context).textTheme.titleMedium),
+          Text('Saqlangan manzillar', style: Theme.of(context).textTheme.titleMedium),
           const SizedBox(height: 8),
           addressesAsync.when(
             data: (list) {
               if (list.isEmpty) {
-                return const Text('Адресов пока нет. Добавьте в кабинете или через API.');
+                return const Text("Hozircha manzil yo'q. Kabinet yoki API orqali qo'shing.");
               }
               return Column(
                 children: list
@@ -97,7 +97,7 @@ class ProfileScreen extends ConsumerWidget {
                         child: ListTile(
                           title: Text(a.label),
                           subtitle: Text(a.singleLine),
-                          trailing: a.isDefault ? const Chip(label: Text('По умолчанию')) : null,
+                          trailing: a.isDefault ? const Chip(label: Text('Asosiy')) : null,
                         ),
                       ),
                     )
@@ -105,7 +105,7 @@ class ProfileScreen extends ConsumerWidget {
               );
             },
             loading: () => const Center(child: Padding(padding: EdgeInsets.all(24), child: CircularProgressIndicator())),
-            error: (e, _) => Text('Адреса: $e'),
+            error: (e, _) => Text('Manzillar: $e'),
           ),
           const SizedBox(height: 24),
           FilledButton.tonal(
@@ -113,7 +113,7 @@ class ProfileScreen extends ConsumerWidget {
               await ref.read(authActionNotifierProvider.notifier).signOut();
               if (context.mounted) context.go('/home');
             },
-            child: const Text('Выйти'),
+            child: const Text('Chiqish'),
           ),
         ],
       ),

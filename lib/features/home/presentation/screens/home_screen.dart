@@ -44,14 +44,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   void _onServiceSelect(int i) {
     if (i != 1) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Раздел скоро будет доступен')),
+        const SnackBar(content: Text("Bo'lim tez orada mavjud bo'ladi")),
       );
     }
     setState(() => _serviceTypeIndex = i);
   }
 
-  static const _etaPopular = ['20 – 30 минут', '15 – 45 минут', '25 – 30 минут', '40 – 45 минут'];
-  static const _etaReorder = ['25 – 30 минут', '40 – 45 минут', '25 – 30 минут'];
+  static const _etaPopular = ['20 – 30 daqiqa', '15 – 45 daqiqa', '25 – 30 daqiqa', '40 – 45 daqiqa'];
+  static const _etaReorder = ['25 – 30 daqiqa', '40 – 45 daqiqa', '25 – 30 daqiqa'];
 
   List<Restaurant> _reorderSlice(List<Restaurant> items) {
     if (items.length <= 1) return items;
@@ -92,7 +92,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   },
                   orElse: () {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Категории загружаются…')),
+                      const SnackBar(content: Text('Kategoriyalar yuklanmoqda...')),
                     );
                   },
                 );
@@ -106,22 +106,22 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             const SliverToBoxAdapter(child: HomePromoBannerCarousel()),
             SliverToBoxAdapter(
               child: HomeSectionHeader(
-                title: 'Магазины рядом',
-                onSeeAll: () => context.go('/search'),
+                title: "Yaqin do'konlar",
+                onSeeAll: () => context.push('/home/stores'),
               ),
             ),
             SliverToBoxAdapter(child: HomeNearbyStoresRow(restaurants: listState.items)),
-            const SliverToBoxAdapter(child: HomeSectionHeader(title: 'Скидки и акции')),
-            const SliverToBoxAdapter(child: HomeDealsRow()),
+            const SliverToBoxAdapter(child: HomeSectionHeader(title: 'Chegirmalar va aksiyalar')),
+            SliverToBoxAdapter(child: HomeDealsRow(restaurants: listState.items)),
             if (listState.items.isNotEmpty) ...[
-              const SliverToBoxAdapter(child: HomeSectionHeader(title: 'Популярные рестораны')),
+              const SliverToBoxAdapter(child: HomeSectionHeader(title: 'Ommabop restoranlar')),
               SliverToBoxAdapter(
                 child: HomeRestaurantCarousel(
                   restaurants: listState.items.take(8).toList(),
                   etaLabels: _etaPopular,
                 ),
               ),
-              const SliverToBoxAdapter(child: HomeSectionHeader(title: 'Вы заказывали')),
+              const SliverToBoxAdapter(child: HomeSectionHeader(title: "Siz buyurtma qilgansiz")),
               SliverToBoxAdapter(
                 child: HomeRestaurantCarousel(
                   restaurants: _reorderSlice(listState.items),
@@ -154,7 +154,7 @@ class _TopAddressBar extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    const demoLine = 'Невский проспект 51, к 2';
+    const demoLine = "Navoiy ko'chasi 51, 2-uy";
 
     Widget line;
     if (session == null) {
@@ -164,7 +164,7 @@ class _TopAddressBar extends ConsumerWidget {
       line = async.when(
         data: (List<Address> list) {
           if (list.isEmpty) {
-            return const Text('Укажите адрес в профиле');
+            return const Text("Profilingizda manzilni kiriting");
           }
           final d = list.firstWhere((a) => a.isDefault, orElse: () => list.first);
           return Text(d.singleLine, maxLines: 1, overflow: TextOverflow.ellipsis);
@@ -192,7 +192,7 @@ class _TopAddressBar extends ConsumerWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Доставка',
+                        'Yetkazib berish',
                         style: TextStyle(fontSize: 11, color: Theme.of(context).colorScheme.outline),
                       ),
                       DefaultTextStyle.merge(
@@ -240,7 +240,7 @@ class _SearchRow extends StatelessWidget {
               controller: controller,
               onChanged: onChanged,
               decoration: InputDecoration(
-                hintText: 'Поиск еды, ресторанов…',
+                hintText: "Taomlar va restoranlarni qidiring...",
                 prefixIcon: const Icon(Icons.search_rounded),
                 filled: true,
                 fillColor: Colors.white,

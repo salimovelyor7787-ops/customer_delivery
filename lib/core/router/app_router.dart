@@ -2,11 +2,13 @@ import 'package:customer_delivery/core/router/auth_refresh_notifier.dart';
 import 'package:customer_delivery/core/router/navigation_utils.dart';
 import 'package:customer_delivery/features/auth/presentation/screens/login_screen.dart';
 import 'package:customer_delivery/features/auth/presentation/screens/register_screen.dart';
+import 'package:customer_delivery/features/cart/presentation/notifiers/cart_notifier.dart';
 import 'package:customer_delivery/features/cart/presentation/screens/cart_screen.dart';
 import 'package:customer_delivery/features/checkout/presentation/screens/checkout_screen.dart';
 import 'package:customer_delivery/features/home/presentation/screens/home_screen.dart';
 import 'package:customer_delivery/features/home/presentation/screens/messages_placeholder_screen.dart';
 import 'package:customer_delivery/features/home/presentation/screens/search_screen.dart';
+import 'package:customer_delivery/features/home/presentation/screens/stores_screen.dart';
 import 'package:customer_delivery/features/orders/presentation/screens/order_detail_screen.dart';
 import 'package:customer_delivery/features/orders/presentation/screens/orders_screen.dart';
 import 'package:customer_delivery/features/profile/presentation/screens/profile_screen.dart';
@@ -14,6 +16,7 @@ import 'package:customer_delivery/features/restaurant/domain/entities/menu_item.
 import 'package:customer_delivery/features/restaurant/presentation/screens/product_detail_screen.dart';
 import 'package:customer_delivery/features/restaurant/presentation/screens/restaurant_detail_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -65,6 +68,10 @@ GoRouter createAppRouter({
                 path: '/home',
                 builder: (_, __) => const HomeScreen(),
                 routes: [
+                  GoRoute(
+                    path: 'stores',
+                    builder: (_, __) => const StoresScreen(),
+                  ),
                   GoRoute(
                     path: 'restaurant/:id',
                     builder: (c, s) => RestaurantDetailScreen(restaurantId: s.pathParameters['id']!),
@@ -139,44 +146,98 @@ GoRouter createAppRouter({
   );
 }
 
-class ScaffoldWithNavBar extends StatelessWidget {
+class ScaffoldWithNavBar extends ConsumerWidget {
   const ScaffoldWithNavBar({super.key, required this.navigationShell});
 
   final StatefulNavigationShell navigationShell;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final cart = ref.watch(cartNotifierProvider);
+    final cartItemsCount = cart.lines.fold<int>(0, (sum, line) => sum + line.quantity);
+    void onTabSelected(int index) {
+      navigationShell.goBranch(
+        index,
+        // Повторный тап по текущему табу возвращает на корневой экран вкладки.
+        initialLocation: index == navigationShell.currentIndex,
+      );
+    }
+
     return Scaffold(
       body: navigationShell,
       bottomNavigationBar: NavigationBar(
         surfaceTintColor: Colors.transparent,
         backgroundColor: Colors.white,
         elevation: 8,
+        height: 70,
+        labelBehavior: NavigationDestinationLabelBehavior.alwaysHide,
         selectedIndex: navigationShell.currentIndex,
-        onDestinationSelected: navigationShell.goBranch,
-        destinations: const [
-          NavigationDestination(
-            icon: Icon(Icons.home_outlined),
-            selectedIcon: Icon(Icons.home_rounded),
-            label: 'Главная',
+        onDestinationSelected: onTabSelected,
+        destinations: [
+          const NavigationDestination(
+            icon: Icon(Icons.home_filled, size: 28),
+            selectedIcon: Icon(Icons.home_filled, size: 30),
+            label: 'Bosh sahifa',
+          ),
+          const NavigationDestination(
+            icon: Icon(Icons.manage_search_rounded, size: 28),
+            selectedIcon: Icon(Icons.manage_search_rounded, size: 30),
+            label: 'Qidiruv',
           ),
           NavigationDestination(
-            icon: Icon(Icons.search_rounded),
-            selectedIcon: Icon(Icons.search_rounded),
-            label: 'Поиск',
+            icon: _CartIconWithBadge(count: cartItemsCount, selected: false),
+            selectedIcon: _CartIconWithBadge(count: cartItemsCount, selected: true),
+            label: 'Savat',
           ),
-          NavigationDestination(
-            icon: Icon(Icons.shopping_bag_outlined),
-            selectedIcon: Icon(Icons.shopping_bag_rounded),
-            label: 'Корзина',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.person_outline_rounded),
-            selectedIcon: Icon(Icons.person_rounded),
-            label: 'Профиль',
+          const NavigationDestination(
+            icon: Icon(Icons.account_circle_outlined, size: 28),
+            selectedIcon: Icon(Icons.account_circle_rounded, size: 30),
+            label: 'Profil',
           ),
         ],
       ),
+    );
+  }
+}
+
+class _CartIconWithBadge extends StatelessWidget {
+  const _CartIconWithBadge({required this.count, required this.selected});
+
+  final int count;
+  final bool selected;
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        Icon(
+          selected ? Icons.shopping_bag_rounded : Icons.shopping_bag_outlined,
+          size: selected ? 30 : 28,
+        ),
+        if (count > 0)
+          Positioned(
+            right: -10,
+            top: -7,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.primary,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              constraints: const BoxConstraints(minWidth: 18),
+              child: Text(
+                count > 99 ? '99+' : '$count',
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 10,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+          ),
+      ],
     );
   }
 }

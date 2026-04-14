@@ -1,11 +1,12 @@
 import 'package:customer_delivery/core/widgets/app_network_image.dart';
+import 'package:collection/collection.dart';
 import 'package:customer_delivery/features/cart/presentation/notifiers/cart_notifier.dart';
 import 'package:customer_delivery/features/cart/presentation/utils/cart_helpers.dart';
+import 'package:customer_delivery/features/cart/presentation/widgets/cart_quantity_control.dart';
 import 'package:customer_delivery/features/restaurant/domain/entities/menu_item.dart';
 import 'package:customer_delivery/features/restaurant/presentation/providers/menu_providers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 class ProductDetailScreen extends ConsumerStatefulWidget {
@@ -39,9 +40,19 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
         ? AsyncValue<MenuItem>.data(widget.preloaded!)
         : ref.watch(singleMenuItemProvider(cacheKey));
     final itemForCart = asyncItem.asData?.value;
+    final cart = ref.watch(cartNotifierProvider);
+    final selectedSet = Set<String>.from(_selected);
+    final matchingLine = itemForCart == null
+        ? null
+        : cart.lines.firstWhereOrNull(
+            (l) =>
+                l.menuItemId == itemForCart.id &&
+                const SetEquality<String>().equals(l.selectedOptionIds, selectedSet),
+          );
+    final qty = matchingLine?.quantity ?? 0;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Блюдо')),
+      appBar: AppBar(title: const Text('Taom')),
       body: asyncItem.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => Center(child: Text('$e')),
@@ -66,10 +77,10 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
               const SizedBox(height: 8),
               Text(item.description ?? '', style: Theme.of(context).textTheme.bodyLarge),
               const SizedBox(height: 16),
-              Text('От ${money.format(unit / 100)}', style: Theme.of(context).textTheme.titleMedium),
+              Text("${money.format(unit / 100)} dan boshlab", style: Theme.of(context).textTheme.titleMedium),
               if (item.options.isNotEmpty) ...[
                 const SizedBox(height: 24),
-                Text('Опции', style: Theme.of(context).textTheme.titleMedium),
+                Text("Qo'shimchalar", style: Theme.of(context).textTheme.titleMedium),
                 const SizedBox(height: 8),
                 ...item.options.map(
                   (o) => CheckboxListTile(
@@ -91,7 +102,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
               if (!item.isAvailable)
                 Padding(
                   padding: const EdgeInsets.only(top: 16),
-                  child: Text('Сейчас недоступно', style: TextStyle(color: Theme.of(context).colorScheme.error)),
+                  child: Text('Hozir mavjud emas', style: TextStyle(color: Theme.of(context).colorScheme.error)),
                 ),
             ],
           );
@@ -100,27 +111,44 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
       bottomNavigationBar: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(16),
-          child: FilledButton(
-            onPressed: itemForCart != null && itemForCart.isAvailable
-                ? () async {
-                    final ok = await ensureCartRestaurantOrConfirmSwitch(
-                      context,
-                      ref,
-                      widget.restaurantId,
-                    );
-                    if (!ok || !context.mounted) return;
-                    ref.read(cartNotifierProvider.notifier).addItem(
-                          itemForCart,
-                          selectedOptionIds: Set.from(_selected),
+          child: itemForCart == null || !itemForCart.isAvailable
+              ? const FilledButton(onPressed: null, child: Text('Savatga'))
+              : qty == 0
+                  ? FilledButton(
+                      onPressed: () async {
+                        final ok = await ensureCartRestaurantOrConfirmSwitch(
+                          context,
+                          ref,
+                          widget.restaurantId,
                         );
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Добавлено в корзину')),
-                    );
-                    context.pop();
-                  }
-                : null,
-            child: const Text('В корзину'),
-          ),
+                        if (!ok || !context.mounted) return;
+                        ref.read(cartNotifierProvider.notifier).addItem(
+                              itemForCart,
+                              selectedOptionIds: selectedSet,
+                            );
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text("Savatga qo'shildi")),
+                        );
+                      },
+                      child: const Text('Savatga'),
+                    )
+                  : Container(
+                      child: CartQuantityControl(
+                        quantity: qty,
+                        onDecrement: () {
+                          if (matchingLine == null) return;
+                          ref
+                              .read(cartNotifierProvider.notifier)
+                              .setQuantity(matchingLine.lineId, matchingLine.quantity - 1);
+                        },
+                        onIncrement: () {
+                          ref.read(cartNotifierProvider.notifier).addItem(
+                                itemForCart,
+                                selectedOptionIds: selectedSet,
+                              );
+                        },
+                      ),
+                    ),
         ),
       ),
     );
