@@ -397,55 +397,68 @@ class _DealCard extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Stack(
-            children: [
-              SizedBox(
-                height: 80,
-                child: AppNetworkImage(imageUrl: deal.imageUrl, fit: BoxFit.cover, placeholderIcon: Icons.shopping_bag),
-              ),
-              Positioned(
-                top: 8,
-                left: 8,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFFF6B35),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Text(
-                    '-${deal.discountPercent}%',
-                    style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w700),
+          Expanded(
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                Positioned.fill(
+                  child: AppNetworkImage(
+                    imageUrl: deal.imageUrl,
+                    fit: BoxFit.cover,
+                    placeholderIcon: Icons.shopping_bag,
                   ),
                 ),
-              ),
-            ],
+                Positioned(
+                  top: 8,
+                  left: 8,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFF6B35),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      '-${deal.discountPercent}%',
+                      style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w700),
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
           Padding(
             padding: const EdgeInsets.fromLTRB(10, 8, 10, 0),
             child: Text(deal.name, maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 12)),
           ),
-          const Spacer(),
           Padding(
             padding: const EdgeInsets.fromLTRB(10, 0, 10, 8),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                  child: Wrap(
+                    crossAxisAlignment: WrapCrossAlignment.end,
+                    spacing: 6,
+                    runSpacing: 2,
                     children: [
                       Text(
                         money.format(deal.priceCents / 100),
-                        style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 14),
-                      ),
-                      Text(
-                        money.format(deal.oldPriceCents / 100),
                         style: TextStyle(
-                          fontSize: 11,
-                          decoration: TextDecoration.lineThrough,
-                          color: Theme.of(context).colorScheme.outline,
+                          fontWeight: FontWeight.w800,
+                          fontSize: 14,
+                          color: Theme.of(context).colorScheme.primary,
                         ),
                       ),
+                      if (deal.oldPriceCents > deal.priceCents)
+                        Text(
+                          money.format(deal.oldPriceCents / 100),
+                          style: TextStyle(
+                            fontSize: 12,
+                            height: 1.1,
+                            decoration: TextDecoration.lineThrough,
+                            color: Theme.of(context).colorScheme.outline,
+                          ),
+                        ),
                     ],
                   ),
                 ),
