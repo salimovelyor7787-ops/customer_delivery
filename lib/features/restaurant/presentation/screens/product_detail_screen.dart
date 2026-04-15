@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:collection/collection.dart';
 import 'package:customer_delivery/core/widgets/app_network_image.dart';
 import 'package:customer_delivery/features/cart/domain/entities/cart_line.dart';
@@ -64,10 +66,10 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
       appBar: AppBar(title: const Text('Taom')),
       body: asyncItem.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('$e')),
+        error: (e, _) => _buildErrorView(e),
         data: (item) {
           _syncOptionsForItem(item);
-          final money = NumberFormat.simpleCurrency();
+          final money = NumberFormat.currency(locale: 'uz_UZ', symbol: "so'm ", decimalDigits: 0);
           final cart = ref.watch(cartNotifierProvider);
           const eq = SetEquality<String>();
           CartLine? line;
@@ -257,4 +259,26 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
       ),
     );
   }
+}
+
+bool _isOfflineError(Object error) {
+  if (error is SocketException) return true;
+  final text = error.toString().toLowerCase();
+  return text.contains('failed host lookup') || text.contains('socketexception');
+}
+
+Widget _buildErrorView(Object error) {
+  if (_isOfflineError(error)) {
+    return const Center(
+      child: Padding(
+        padding: EdgeInsets.all(24),
+        child: Text(
+          'Iltimos internet ulanishini tekshiring',
+          textAlign: TextAlign.center,
+          style: TextStyle(fontSize: 28, fontWeight: FontWeight.w700),
+        ),
+      ),
+    );
+  }
+  return Center(child: Text('$error'));
 }

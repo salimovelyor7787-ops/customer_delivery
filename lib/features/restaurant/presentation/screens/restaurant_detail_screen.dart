@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:customer_delivery/core/widgets/app_network_image.dart';
 import 'package:customer_delivery/features/cart/presentation/notifiers/cart_notifier.dart';
 import 'package:customer_delivery/features/cart/presentation/utils/cart_helpers.dart';
@@ -20,12 +22,12 @@ class RestaurantDetailScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final restaurantAsync = ref.watch(restaurantDetailProvider(restaurantId));
     final menuAsync = ref.watch(restaurantMenuProvider(restaurantId));
-    final money = NumberFormat.simpleCurrency();
+    final money = NumberFormat.currency(locale: 'uz_UZ', symbol: "so'm ", decimalDigits: 0);
 
     return Scaffold(
       body: restaurantAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('$e')),
+        error: (e, _) => _buildErrorView(context, e),
         data: (r) {
           final canOrder = isRestaurantOpenNow(r);
           return CustomScrollView(
@@ -108,20 +110,46 @@ class RestaurantDetailScreen extends ConsumerWidget {
                 loading: () => const SliverFillRemaining(
                   child: Center(child: CircularProgressIndicator()),
                 ),
-                error: (e, _) => SliverFillRemaining(child: Center(child: Text('$e'))),
+                error: (e, _) => SliverFillRemaining(child: _buildErrorView(context, e)),
                 data: (items) {
+                  final grouped = <String, List<MenuItem>>{};
+                  for (final item in items) {
+                    final rawCategory = item.category?.trim() ?? '';
+                    final category = rawCategory.isEmpty ? 'Boshqa' : rawCategory;
+                    grouped.putIfAbsent(category, () => <MenuItem>[]).add(item);
+                  }
+                  final sections = grouped.entries.toList();
                   return SliverList(
                     delegate: SliverChildBuilderDelegate(
                       (context, i) {
-                        final item = items[i];
-                        return _MenuItemListTile(
-                          item: item,
-                          restaurantId: restaurantId,
-                          money: money,
-                          canOrder: canOrder,
+                        final section = sections[i];
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 8),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Padding(
+                                padding: const EdgeInsets.fromLTRB(16, 12, 16, 6),
+                                child: Text(
+                                  section.key,
+                                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                        fontWeight: FontWeight.w700,
+                                      ),
+                                ),
+                              ),
+                              ...section.value.map(
+                                (item) => _MenuItemListTile(
+                                  item: item,
+                                  restaurantId: restaurantId,
+                                  money: money,
+                                  canOrder: canOrder,
+                                ),
+                              ),
+                            ],
+                          ),
                         );
                       },
-                      childCount: items.length,
+                      childCount: sections.length,
                     ),
                   );
                 },
@@ -132,6 +160,28 @@ class RestaurantDetailScreen extends ConsumerWidget {
       ),
     );
   }
+}
+
+bool _isOfflineError(Object error) {
+  if (error is SocketException) return true;
+  final text = error.toString().toLowerCase();
+  return text.contains('failed host lookup') || text.contains('socketexception');
+}
+
+Widget _buildErrorView(BuildContext context, Object error) {
+  if (_isOfflineError(error)) {
+    return const Center(
+      child: Padding(
+        padding: EdgeInsets.all(24),
+        child: Text(
+          'Iltimos internet ulanishini tekshiring',
+          textAlign: TextAlign.center,
+          style: TextStyle(fontSize: 28, fontWeight: FontWeight.w700),
+        ),
+      ),
+    );
+  }
+  return Center(child: Text('$error'));
 }
 
 class _MenuItemListTile extends ConsumerWidget {
@@ -194,10 +244,11 @@ class _MenuItemListTile extends ConsumerWidget {
                 icon: const Icon(Icons.add_rounded),
                 onPressed: item.isAvailable && canOrder
                     ? () async {
+                        final messenger = ScaffoldMessenger.of(context);
                         final ok = await ensureCartRestaurantOrConfirmSwitch(context, ref, restaurantId);
-                        if (!ok || !context.mounted) return;
+                        if (!ok) return;
                         ref.read(cartNotifierProvider.notifier).addItem(item);
-                        ScaffoldMessenger.of(context).showSnackBar(
+                        messenger.showSnackBar(
                           SnackBar(content: Text('«${item.name}» savatga qo‘shildi')),
                         );
                       }

@@ -37,7 +37,7 @@ class _CartScreenState extends ConsumerState<CartScreen> {
 
     final cart = ref.watch(cartNotifierProvider);
     final guest = ref.watch(supabaseClientProvider).auth.currentSession == null;
-    final money = NumberFormat.simpleCurrency();
+    final money = NumberFormat.currency(locale: 'uz_UZ', symbol: "so'm ", decimalDigits: 0);
     final restaurantAsync = cart.restaurantId == null ? null : ref.watch(restaurantDetailProvider(cart.restaurantId!));
     final canCheckoutBySchedule = restaurantAsync?.maybeWhen(
           data: (r) => isRestaurantOpenNow(r),

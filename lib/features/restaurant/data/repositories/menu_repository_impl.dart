@@ -16,6 +16,7 @@ class MenuRepositoryImpl implements MenuRepository {
           .from('menu_items')
           .select('*, menu_item_options(*)')
           .eq('restaurant_id', restaurantId)
+          .order('category', ascending: true)
           .order('sort_order');
       final list = (rows as List)
           .map((e) => MenuItem.fromJson(Map<String, dynamic>.from(e as Map), restaurantId: restaurantId))

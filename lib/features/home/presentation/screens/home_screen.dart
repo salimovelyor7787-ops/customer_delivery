@@ -256,7 +256,7 @@ class _TopAddressBar extends ConsumerWidget {
                     children: [
                       Text(
                         'Yetkazib berish',
-                        style: TextStyle(fontSize: 11, color: Theme.of(context).colorScheme.outline),
+                        style: TextStyle(fontSize: 11, color: Theme.of(context).colorScheme.onSurfaceVariant),
                       ),
                       DefaultTextStyle.merge(
                         style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15),

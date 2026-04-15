@@ -74,7 +74,7 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
     }
 
     final asyncOrder = ref.watch(orderDetailProvider(widget.orderId));
-    final money = NumberFormat.simpleCurrency();
+    final money = NumberFormat.currency(locale: 'uz_UZ', symbol: "so'm ", decimalDigits: 0);
     final dateFmt = DateFormat.yMMMd().add_jm();
 
     return Scaffold(

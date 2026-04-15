@@ -11,7 +11,7 @@ class AppTheme {
     const backgroundSoft = Color(0xFFF8F9FB);
 
     const textPrimary = Color(0xFF1A1A1A);
-    const textSecondary = Color(0xFF6B6B6B);
+    const textSecondary = Color(0xFF666666);
     const textLight = Color(0xFF666666);
     const border = Color(0xFFEDEDED);
 

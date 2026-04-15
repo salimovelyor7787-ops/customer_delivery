@@ -1,14 +1,10 @@
 import 'package:customer_delivery/core/widgets/app_network_image.dart';
-import 'package:customer_delivery/features/cart/presentation/notifiers/cart_notifier.dart';
-import 'package:customer_delivery/features/cart/presentation/utils/cart_helpers.dart';
-import 'package:customer_delivery/features/cart/presentation/widgets/cart_quantity_control.dart';
 import 'package:customer_delivery/features/home/domain/entities/category.dart';
 import 'package:customer_delivery/features/home/domain/entities/home_banner.dart';
 import 'package:customer_delivery/features/home/domain/entities/home_deal_item.dart';
 import 'package:customer_delivery/features/home/domain/entities/home_nearby_card.dart';
 import 'package:customer_delivery/features/home/domain/entities/home_service_card.dart';
 import 'package:customer_delivery/features/home/domain/entities/restaurant.dart';
-import 'package:customer_delivery/features/restaurant/presentation/providers/menu_providers.dart';
 import 'package:customer_delivery/features/home/presentation/providers/home_providers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -91,7 +87,8 @@ class _ServiceTypeCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AspectRatio(
-      aspectRatio: 1,
+      // Smaller card under search row: keep width, reduce height.
+      aspectRatio: 1.22,
       child: GestureDetector(
         onTap: onTap,
         child: AnimatedContainer(
@@ -334,7 +331,7 @@ class HomeDealsRow extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final money = NumberFormat.currency(locale: 'ru_RU', symbol: '₽', decimalDigits: 0);
+    final money = NumberFormat.currency(locale: 'uz_UZ', symbol: "so'm ", decimalDigits: 0);
     final dealsAsync = ref.watch(homeDealsProvider);
 
     return dealsAsync.when(
@@ -368,7 +365,7 @@ class HomeDealsRow extends ConsumerWidget {
   }
 }
 
-class _DealCard extends ConsumerWidget {
+class _DealCard extends StatelessWidget {
   const _DealCard({
     required this.deal,
     required this.money,
@@ -378,144 +375,89 @@ class _DealCard extends ConsumerWidget {
   final NumberFormat money;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final cart = ref.watch(cartNotifierProvider);
-    final qty = cart.lines
-        .where((l) => l.menuItemId == deal.menuItemId)
-        .fold<int>(0, (sum, line) => sum + line.quantity);
-    return Container(
-      width: 132,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.black.withOpacity(0.06)),
-        boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 8, offset: const Offset(0, 2)),
-        ],
-      ),
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(16),
       clipBehavior: Clip.antiAlias,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Expanded(
-            child: Stack(
-              fit: StackFit.expand,
-              children: [
-                Positioned.fill(
-                  child: AppNetworkImage(
-                    imageUrl: deal.imageUrl,
-                    fit: BoxFit.cover,
-                    placeholderIcon: Icons.shopping_bag,
-                  ),
-                ),
-                Positioned(
-                  top: 8,
-                  left: 8,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFFF6B35),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Text(
-                      '-${deal.discountPercent}%',
-                      style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w700),
-                    ),
-                  ),
-                ),
-              ],
-            ),
+      child: InkWell(
+        onTap: () => context.push('/home/restaurant/${deal.restaurantId}'),
+        child: Container(
+          width: 132,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: Colors.black.withOpacity(0.06)),
+            boxShadow: [
+              BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 8, offset: const Offset(0, 2)),
+            ],
           ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(10, 8, 10, 0),
-            child: Text(deal.name, maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 12)),
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(10, 0, 10, 8),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Expanded(
-                  child: Wrap(
-                    crossAxisAlignment: WrapCrossAlignment.end,
-                    spacing: 6,
-                    runSpacing: 2,
-                    children: [
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Expanded(
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    Positioned.fill(
+                      child: AppNetworkImage(
+                        imageUrl: deal.imageUrl,
+                        fit: BoxFit.cover,
+                        placeholderIcon: Icons.shopping_bag,
+                      ),
+                    ),
+                    Positioned(
+                      top: 8,
+                      left: 8,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFFF6B35),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          '-${deal.discountPercent}%',
+                          style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w700),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(10, 8, 10, 0),
+                child: Text(deal.name, maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 12)),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(10, 0, 10, 8),
+                child: Wrap(
+                  crossAxisAlignment: WrapCrossAlignment.end,
+                  spacing: 6,
+                  runSpacing: 2,
+                  children: [
+                    Text(
+                      money.format(deal.priceCents / 100),
+                      style: TextStyle(
+                        fontWeight: FontWeight.w800,
+                        fontSize: 14,
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
+                    ),
+                    if (deal.oldPriceCents > deal.priceCents)
                       Text(
-                        money.format(deal.priceCents / 100),
+                        money.format(deal.oldPriceCents / 100),
                         style: TextStyle(
-                          fontWeight: FontWeight.w800,
-                          fontSize: 14,
-                          color: Theme.of(context).colorScheme.primary,
+                          fontSize: 12,
+                          height: 1.1,
+                          decoration: TextDecoration.lineThrough,
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
                         ),
                       ),
-                      if (deal.oldPriceCents > deal.priceCents)
-                        Text(
-                          money.format(deal.oldPriceCents / 100),
-                          style: TextStyle(
-                            fontSize: 12,
-                            height: 1.1,
-                            decoration: TextDecoration.lineThrough,
-                            color: Theme.of(context).colorScheme.outline,
-                          ),
-                        ),
-                    ],
-                  ),
+                  ],
                 ),
-                if (qty == 0)
-                  Material(
-                    color: Theme.of(context).colorScheme.primaryContainer,
-                    shape: const CircleBorder(),
-                    child: InkWell(
-                      customBorder: const CircleBorder(),
-                      onTap: () async {
-                        final ok = await ensureCartRestaurantOrConfirmSwitch(context, ref, deal.restaurantId);
-                        if (!ok || !context.mounted) return;
-                        try {
-                          final menu = await ref.read(restaurantMenuProvider(deal.restaurantId).future);
-                          final item = menu.firstWhere((m) => m.id == deal.menuItemId && m.isAvailable);
-                          ref.read(cartNotifierProvider.notifier).addItem(item);
-                          if (!context.mounted) return;
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text('«${item.name}» savatga qo‘shildi')),
-                          );
-                        } catch (_) {
-                          if (!context.mounted) return;
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Mahsulot mavjud emas')),
-                          );
-                        }
-                      },
-                      child: const Padding(
-                        padding: EdgeInsets.all(6),
-                        child: Icon(Icons.add, size: 20),
-                      ),
-                    ),
-                  )
-                else
-                  Flexible(
-                    child: FittedBox(
-                      fit: BoxFit.scaleDown,
-                      alignment: Alignment.centerRight,
-                      child: CartQuantityControl(
-                        quantity: qty,
-                        compact: true,
-                        onDecrement: () {
-                          final line = cart.lines.firstWhere((l) => l.menuItemId == deal.menuItemId);
-                          ref.read(cartNotifierProvider.notifier).setQuantity(line.lineId, line.quantity - 1);
-                        },
-                        onIncrement: () async {
-                          final menu = await ref.read(restaurantMenuProvider(deal.restaurantId).future);
-                          final item = menu.firstWhere((m) => m.id == deal.menuItemId && m.isAvailable);
-                          ref.read(cartNotifierProvider.notifier).addItem(item);
-                        },
-                      ),
-                    ),
-                  ),
-              ],
-            ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
@@ -560,7 +502,7 @@ class HomeRestaurantCarouselCard extends StatelessWidget {
                     Expanded(
                       child: Text(
                         etaLabel,
-                        style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.outline),
+                        style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSurfaceVariant),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
