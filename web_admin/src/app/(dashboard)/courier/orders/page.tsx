@@ -4,7 +4,14 @@ import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { createSupabaseBrowserClient } from "@/lib/supabase";
 
-type CourierOrder = { id: string; status: string; total_cents: number; courier_id: string | null };
+type CourierOrder = {
+  id: string;
+  status: string;
+  total_cents: number;
+  courier_id: string | null;
+  guest_lat: number | null;
+  guest_lng: number | null;
+};
 const supabase = createSupabaseBrowserClient();
 
 export default function CourierOrdersPage() {
@@ -21,7 +28,7 @@ export default function CourierOrdersPage() {
 
       const { data } = await supabase
         .from("orders")
-        .select("id,status,total_cents,courier_id")
+        .select("id,status,total_cents,courier_id,guest_lat,guest_lng")
         .or(`courier_id.eq.${user.id},courier_id.is.null`)
         .in("status", ["ready", "picked_up", "delivered"]);
 
@@ -36,7 +43,7 @@ export default function CourierOrdersPage() {
     toast.success("Buyurtma qabul qilindi");
     const { data } = await supabase
       .from("orders")
-      .select("id,status,total_cents,courier_id")
+      .select("id,status,total_cents,courier_id,guest_lat,guest_lng")
       .or(`courier_id.eq.${userId},courier_id.is.null`)
       .in("status", ["ready", "picked_up", "delivered"]);
     setOrders((data ?? []) as CourierOrder[]);
@@ -52,7 +59,7 @@ export default function CourierOrdersPage() {
     toast.success("Yetkazildi deb belgilandi");
     const { data } = await supabase
       .from("orders")
-      .select("id,status,total_cents,courier_id")
+      .select("id,status,total_cents,courier_id,guest_lat,guest_lng")
       .or(`courier_id.eq.${userId},courier_id.is.null`)
       .in("status", ["ready", "picked_up", "delivered"]);
     setOrders((data ?? []) as CourierOrder[]);
@@ -70,6 +77,16 @@ export default function CourierOrdersPage() {
                 <p className="text-sm text-zinc-500">{order.status}</p>
               </div>
               <div className="flex gap-2">
+                {order.guest_lat != null && order.guest_lng != null ? (
+                  <a
+                    className="rounded-lg border border-zinc-300 px-3 py-1 text-xs"
+                    href={`https://www.google.com/maps?q=${order.guest_lat},${order.guest_lng}`}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    Lokatsiya
+                  </a>
+                ) : null}
                 {!order.courier_id ? (
                   <button className="rounded-lg bg-zinc-900 px-3 py-1 text-xs text-white" onClick={() => acceptOrder(order.id)}>
                     Qabul qilish

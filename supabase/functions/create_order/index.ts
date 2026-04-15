@@ -48,6 +48,9 @@ serve(async (req) => {
     );
 
     if (uid) {
+      if (guestLat == null || guestLng == null) {
+        return json({ error: "Location is required" }, 400);
+      }
       const { data: profile } = await admin.from("profiles").select("role").eq("id", uid).maybeSingle();
       if (!profile || profile.role !== "customer") {
         return json({ error: "Forbidden" }, 403);
@@ -119,8 +122,8 @@ serve(async (req) => {
         status: "placed",
         payment_method: paymentMethod,
         guest_phone: uid ? null : guestPhone ?? null,
-        guest_lat: uid ? null : guestLat ?? null,
-        guest_lng: uid ? null : guestLng ?? null,
+        guest_lat: guestLat ?? null,
+        guest_lng: guestLng ?? null,
         guest_device_id: uid ? null : guestDeviceId ?? null,
         subtotal_cents: price.subtotal_cents,
         delivery_fee_cents: price.delivery_fee_cents,
