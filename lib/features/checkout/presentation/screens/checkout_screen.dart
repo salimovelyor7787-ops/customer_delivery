@@ -88,7 +88,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
       setState(() {
         _lat = position.latitude;
         _lng = position.longitude;
-        _locationHint = '${position.latitude.toStringAsFixed(5)}, ${position.longitude.toStringAsFixed(5)}';
+        _locationHint = "Joylashuvingiz aniqlandi. Buyurtmani rasmiylashtiring, kuryer sizni topadi.";
         _locating = false;
       });
     } catch (_) {
@@ -147,7 +147,11 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
               Expanded(
                 child: Text(
                   _locationHint ?? 'Geolokatsiya aniqlanmoqda...',
-                  style: Theme.of(context).textTheme.bodyMedium,
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: _lat != null && _lng != null
+                            ? const Color(0xFF2E7D32)
+                            : Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
                 ),
               ),
               const SizedBox(width: 12),
