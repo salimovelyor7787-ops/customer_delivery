@@ -5,6 +5,7 @@ import 'package:customer_delivery/features/auth/presentation/providers/auth_prov
 import 'package:customer_delivery/features/orders/presentation/providers/order_providers.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -28,6 +29,8 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
   bool _locating = false;
   bool _submitting = false;
   String? _error;
+
+  String get _fullPhone => '+998${_phoneController.text.trim()}';
 
   @override
   void initState() {
@@ -125,10 +128,16 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
           const SizedBox(height: 8),
           TextField(
             controller: _phoneController,
-            keyboardType: TextInputType.phone,
+            keyboardType: TextInputType.number,
+            inputFormatters: [
+              FilteringTextInputFormatter.digitsOnly,
+              LengthLimitingTextInputFormatter(9),
+            ],
             onChanged: (_) => setState(() {}),
             decoration: const InputDecoration(
-              hintText: '+998 90 123 45 67',
+              prefixText: '+998 ',
+              hintText: '90 123 45 67',
+              hintStyle: TextStyle(color: Color(0xFFB6B6B6)),
               border: OutlineInputBorder(),
             ),
           ),
@@ -178,7 +187,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                     !canPlaceOrderNow ||
                     _lat == null ||
                     _lng == null ||
-                    _phoneController.text.trim().isEmpty ||
+                    _phoneController.text.trim().length != 9 ||
                     (isGuest && (_deviceId == null || _deviceId!.isEmpty))
                 ? null
                 : () async {
@@ -192,7 +201,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                       restaurantId: cart.restaurantId!,
                       paymentMethod: 'cash',
                       lines: cart.lines,
-                      guestPhone: _phoneController.text.trim(),
+                      guestPhone: _fullPhone,
                       guestLat: _lat,
                       guestLng: _lng,
                       guestDeviceId: isGuest ? _deviceId : null,

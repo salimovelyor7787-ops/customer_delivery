@@ -5,8 +5,6 @@ import 'package:customer_delivery/features/home/domain/entities/home_service_car
 import 'package:customer_delivery/features/home/presentation/notifiers/restaurant_list_notifier.dart';
 import 'package:customer_delivery/features/home/presentation/providers/home_providers.dart';
 import 'package:customer_delivery/features/home/presentation/widgets/home_feed_sections.dart';
-import 'package:customer_delivery/features/profile/domain/entities/address.dart';
-import 'package:customer_delivery/features/profile/presentation/providers/profile_providers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -200,29 +198,11 @@ class _TopAddressBar extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    const demoLine = "Navoiy ko'chasi 51, 2-uy";
+    const deliveryLine = "Chust shahri bo'ylab";
     final hasPushDot = ref.watch(hasActivePushNotificationsProvider).maybeWhen(
           data: (v) => v,
           orElse: () => false,
         );
-
-    Widget line;
-    if (session == null) {
-      line = const Text(demoLine);
-    } else {
-      final async = ref.watch(addressesProvider);
-      line = async.when(
-        data: (List<Address> list) {
-          if (list.isEmpty) {
-            return const Text("Profilingizda manzilni kiriting");
-          }
-          final d = list.firstWhere((a) => a.isDefault, orElse: () => list.first);
-          return Text(d.singleLine, maxLines: 1, overflow: TextOverflow.ellipsis);
-        },
-        loading: () => const SizedBox(height: 20, child: LinearProgressIndicator(minHeight: 2)),
-        error: (_, __) => const Text(demoLine),
-      );
-    }
 
     return SafeArea(
       bottom: false,
@@ -247,7 +227,11 @@ class _TopAddressBar extends ConsumerWidget {
                       ),
                       DefaultTextStyle.merge(
                         style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15),
-                        child: line,
+                        child: const Text(
+                          deliveryLine,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
                     ],
                   ),
