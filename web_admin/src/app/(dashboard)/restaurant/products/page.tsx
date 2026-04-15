@@ -13,6 +13,7 @@ type Product = {
   image_url: string | null;
 };
 type MenuCategory = { id: string; name: string; sort_order: number };
+type MenuOption = { id: string; menu_item_id: string; name: string; price_delta_cents: number; sort_order: number };
 const supabase = createSupabaseBrowserClient();
 
 export default function RestaurantProductsPage() {
@@ -25,6 +26,11 @@ export default function RestaurantProductsPage() {
   const [price, setPrice] = useState("0");
   const [imageUrl, setImageUrl] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [selectedOptionItemId, setSelectedOptionItemId] = useState<string>("");
+  const [options, setOptions] = useState<MenuOption[]>([]);
+  const [optionName, setOptionName] = useState("");
+  const [optionPrice, setOptionPrice] = useState("0");
+  const [editingOptionId, setEditingOptionId] = useState<string | null>(null);
 
   const ensureFallbackCategory = useCallback(async (rid: string) => {
     const { data: existing } = await supabase
@@ -50,6 +56,21 @@ export default function RestaurantProductsPage() {
       .order("category", { ascending: true })
       .order("sort_order", { ascending: true });
     setProducts((rows ?? []) as Product[]);
+  }, []);
+
+  const loadOptions = useCallback(async (menuItemId: string) => {
+    if (!menuItemId) {
+      setOptions([]);
+      return;
+    }
+    const { data, error } = await supabase
+      .from("menu_item_options")
+      .select("id,menu_item_id,name,price_delta_cents,sort_order")
+      .eq("menu_item_id", menuItemId)
+      .order("sort_order", { ascending: true })
+      .order("name", { ascending: true });
+    if (error) return toast.error(error.message);
+    setOptions((data ?? []) as MenuOption[]);
   }, []);
 
   const loadCategories = useCallback(async (rid: string) => {
@@ -80,6 +101,14 @@ export default function RestaurantProductsPage() {
     };
     void loadData();
   }, [ensureFallbackCategory, loadCategories, loadProducts]);
+
+  useEffect(() => {
+    if (!selectedOptionItemId) return;
+    const timer = setTimeout(() => {
+      void loadOptions(selectedOptionItemId);
+    }, 0);
+    return () => clearTimeout(timer);
+  }, [selectedOptionItemId, loadOptions]);
 
   const onCreate = async (event: FormEvent) => {
     event.preventDefault();
@@ -135,6 +164,97 @@ export default function RestaurantProductsPage() {
     if (error) return toast.error(error.message);
     toast.success("Mahsulot o'chirildi");
     setProducts((prev) => prev.filter((item) => item.id !== id));
+    if (selectedOptionItemId === id) {
+      setSelectedOptionItemId("");
+      setOptions([]);
+    }
+  };
+
+  const onCreateOption = async (event: FormEvent) => {
+    event.preventDefault();
+    if (!selectedOptionItemId) {
+      toast.error("Avval mahsulotni tanlang");
+      return;
+    }
+    const cleanName = optionName.trim();
+    if (!cleanName) return;
+    const { error } = await supabase.from("menu_item_options").insert({
+      menu_item_id: selectedOptionItemId,
+      name: cleanName,
+      price_delta_cents: Math.round(Number(optionPrice) * 100),
+      sort_order: options.length,
+    });
+    if (error) return toast.error(error.message);
+    toast.success("Qo'shimcha qo'shildi");
+    setOptionName("");
+    setOptionPrice("0");
+    setEditingOptionId(null);
+    await loadOptions(selectedOptionItemId);
+  };
+
+  const onDeleteOption = async (id: string) => {
+    const { error } = await supabase.from("menu_item_options").delete().eq("id", id);
+    if (error) return toast.error(error.message);
+    setOptions((prev) => prev.filter((o) => o.id !== id));
+    toast.success("Qo'shimcha o'chirildi");
+  };
+
+  const onEditOption = (opt: MenuOption) => {
+    setEditingOptionId(opt.id);
+    setOptionName(opt.name);
+    setOptionPrice((opt.price_delta_cents / 100).toFixed(2));
+  };
+
+  const onSaveOption = async (event: FormEvent) => {
+    event.preventDefault();
+    if (!editingOptionId) return;
+    const cleanName = optionName.trim();
+    if (!cleanName) return;
+    const { error } = await supabase
+      .from("menu_item_options")
+      .update({
+        name: cleanName,
+        price_delta_cents: Math.round(Number(optionPrice) * 100),
+      })
+      .eq("id", editingOptionId);
+    if (error) return toast.error(error.message);
+    toast.success("Qo'shimcha yangilandi");
+    setEditingOptionId(null);
+    setOptionName("");
+    setOptionPrice("0");
+    await loadOptions(selectedOptionItemId);
+  };
+
+  const onCancelOptionEdit = () => {
+    setEditingOptionId(null);
+    setOptionName("");
+    setOptionPrice("0");
+  };
+
+  const onMoveOption = async (id: string, direction: "up" | "down") => {
+    const index = options.findIndex((opt) => opt.id === id);
+    if (index < 0) return;
+    const targetIndex = direction === "up" ? index - 1 : index + 1;
+    if (targetIndex < 0 || targetIndex >= options.length) return;
+
+    const next = [...options];
+    const tmp = next[index];
+    next[index] = next[targetIndex];
+    next[targetIndex] = tmp;
+
+    const normalized = next.map((opt, idx) => ({ ...opt, sort_order: idx }));
+    setOptions(normalized);
+
+    const updates = normalized.map((opt) =>
+      supabase.from("menu_item_options").update({ sort_order: opt.sort_order }).eq("id", opt.id),
+    );
+    const results = await Promise.all(updates);
+    const failed = results.find((r) => r.error);
+    if (failed?.error) {
+      toast.error(failed.error.message);
+      await loadOptions(selectedOptionItemId);
+      return;
+    }
   };
 
   const onAddCategory = async () => {
@@ -267,6 +387,119 @@ export default function RestaurantProductsPage() {
             </div>
           </div>
         ))}
+      </div>
+
+      <div className="space-y-4 rounded-2xl border border-zinc-200 bg-white p-4">
+        <h2 className="text-sm font-semibold text-zinc-900">Qo&apos;shimchalar (соус, имбирь, ...)</h2>
+        <div className="grid gap-3 md:grid-cols-[minmax(220px,320px)_1fr]">
+          <select
+            value={selectedOptionItemId}
+            onChange={(e) => {
+              const nextId = e.target.value;
+              setSelectedOptionItemId(nextId);
+              if (!nextId) setOptions([]);
+            }}
+            className="rounded-lg border border-zinc-300 px-3 py-2"
+          >
+            <option value="">Mahsulotni tanlang</option>
+            {products.map((product) => (
+              <option key={product.id} value={product.id}>
+                {product.name}
+              </option>
+            ))}
+          </select>
+          <form onSubmit={editingOptionId ? onSaveOption : onCreateOption} className="grid gap-2 sm:grid-cols-[1fr_120px_auto_auto]">
+            <input
+              value={optionName}
+              onChange={(e) => setOptionName(e.target.value)}
+              placeholder="Masalan: Soeviy sous"
+              className="rounded-lg border border-zinc-300 px-3 py-2"
+              required
+            />
+            <input
+              value={optionPrice}
+              onChange={(e) => setOptionPrice(e.target.value)}
+              type="number"
+              min="0"
+              step="0.01"
+              placeholder="Narx"
+              className="rounded-lg border border-zinc-300 px-3 py-2"
+              required
+            />
+            <button className="rounded-lg bg-zinc-900 px-4 py-2 text-white">
+              {editingOptionId ? "Saqlash" : "Qo&apos;shish"}
+            </button>
+            {editingOptionId ? (
+              <button type="button" onClick={onCancelOptionEdit} className="rounded-lg border border-zinc-300 px-4 py-2 text-zinc-700">
+                Bekor qilish
+              </button>
+            ) : null}
+          </form>
+        </div>
+
+        {selectedOptionItemId ? (
+          options.length > 0 ? (
+            <div className="overflow-hidden rounded-xl border border-zinc-200">
+              <table className="min-w-full text-sm">
+                <thead className="bg-zinc-50 text-left text-zinc-500">
+                  <tr>
+                    <th className="px-3 py-2">Nomi</th>
+                    <th className="px-3 py-2">Narx</th>
+                    <th className="px-3 py-2">Tartib</th>
+                    <th className="px-3 py-2">Amallar</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {options.map((opt, idx) => (
+                    <tr key={opt.id} className="border-t border-zinc-100">
+                      <td className="px-3 py-2">{opt.name}</td>
+                      <td className="px-3 py-2">so&apos;m {(opt.price_delta_cents / 100).toFixed(0)}</td>
+                      <td className="px-3 py-2">{idx + 1}</td>
+                      <td className="px-3 py-2">
+                        <div className="flex flex-wrap gap-2">
+                          <button
+                            type="button"
+                            className="rounded border border-zinc-300 px-2 py-1 text-xs"
+                            onClick={() => void onMoveOption(opt.id, "up")}
+                            disabled={idx === 0}
+                          >
+                            ↑
+                          </button>
+                          <button
+                            type="button"
+                            className="rounded border border-zinc-300 px-2 py-1 text-xs"
+                            onClick={() => void onMoveOption(opt.id, "down")}
+                            disabled={idx === options.length - 1}
+                          >
+                            ↓
+                          </button>
+                          <button
+                            type="button"
+                            className="rounded border border-zinc-300 px-2 py-1 text-xs"
+                            onClick={() => onEditOption(opt)}
+                          >
+                            Tahrirlash
+                          </button>
+                          <button
+                            type="button"
+                            className="rounded border border-red-300 px-2 py-1 text-xs text-red-600"
+                            onClick={() => void onDeleteOption(opt.id)}
+                          >
+                            O&apos;chirish
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <p className="text-sm text-zinc-500">Bu mahsulot uchun qo&apos;shimcha hali qo&apos;shilmagan.</p>
+          )
+        ) : (
+          <p className="text-sm text-zinc-500">Qo&apos;shimchalarni boshqarish uchun avval mahsulotni tanlang.</p>
+        )}
       </div>
     </section>
   );
