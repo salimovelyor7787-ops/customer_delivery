@@ -34,10 +34,6 @@ GoRouter createAppRouter({
       final loc = state.matchedLocation;
       final loggingIn = loc == '/login' || loc == '/register';
 
-      if (loc == '/checkout' && session == null) {
-        return '/login?next=${Uri.encodeComponent('/checkout')}';
-      }
-
       if (session != null && loggingIn) {
         final next = safeRedirectPath(state.uri.queryParameters['next']);
         if (next != null) return next;

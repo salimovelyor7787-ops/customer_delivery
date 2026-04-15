@@ -1,12 +1,14 @@
-import 'package:collection/collection.dart';
 import 'package:customer_delivery/features/cart/presentation/notifiers/cart_notifier.dart';
 import 'package:customer_delivery/features/home/domain/utils/restaurant_schedule.dart';
 import 'package:customer_delivery/features/home/presentation/providers/home_providers.dart';
+import 'package:customer_delivery/features/auth/presentation/providers/auth_providers.dart';
 import 'package:customer_delivery/features/orders/presentation/providers/order_providers.dart';
-import 'package:customer_delivery/features/profile/presentation/providers/profile_providers.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:uuid/uuid.dart';
 
 class CheckoutScreen extends ConsumerStatefulWidget {
   const CheckoutScreen({super.key});
@@ -16,15 +18,90 @@ class CheckoutScreen extends ConsumerStatefulWidget {
 }
 
 class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
-  String _payment = 'cash';
-  String? _addressId;
+  static const _deviceIdKey = 'guest_checkout_device_id';
+  final _phoneController = TextEditingController();
+
+  String? _deviceId;
+  double? _lat;
+  double? _lng;
+  String? _locationHint;
+  bool _locating = false;
   bool _submitting = false;
   String? _error;
 
   @override
+  void initState() {
+    super.initState();
+    _prepareGuestDeviceId();
+    _detectLocation();
+  }
+
+  @override
+  void dispose() {
+    _phoneController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _prepareGuestDeviceId() async {
+    final prefs = await SharedPreferences.getInstance();
+    var id = prefs.getString(_deviceIdKey);
+    if (id == null || id.isEmpty) {
+      id = const Uuid().v4();
+      await prefs.setString(_deviceIdKey, id);
+    }
+    if (!mounted) return;
+    setState(() => _deviceId = id);
+  }
+
+  Future<void> _detectLocation() async {
+    setState(() {
+      _locating = true;
+      _error = null;
+    });
+    try {
+      var serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) {
+        setState(() {
+          _locationHint = 'Geolokatsiya o‘chiq. Iltimos yoqing.';
+          _locating = false;
+        });
+        return;
+      }
+
+      var permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+      }
+      if (permission == LocationPermission.denied || permission == LocationPermission.deniedForever) {
+        setState(() {
+          _locationHint = 'Geolokatsiyaga ruxsat berilmadi.';
+          _locating = false;
+        });
+        return;
+      }
+
+      final position = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
+      if (!mounted) return;
+      setState(() {
+        _lat = position.latitude;
+        _lng = position.longitude;
+        _locationHint = '${position.latitude.toStringAsFixed(5)}, ${position.longitude.toStringAsFixed(5)}';
+        _locating = false;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _locationHint = 'Joylashuv aniqlanmadi. Qayta urinib ko‘ring.';
+        _locating = false;
+      });
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     final cart = ref.watch(cartNotifierProvider);
-    final addressesAsync = ref.watch(addressesProvider);
+    final currentUser = ref.watch(currentUserProvider);
+    final isGuest = currentUser == null;
     final restaurantAsync = cart.restaurantId == null ? null : ref.watch(restaurantDetailProvider(cart.restaurantId!));
     final canPlaceOrderNow = restaurantAsync?.maybeWhen(
           data: (r) => isRestaurantOpenNow(r),
@@ -41,94 +118,111 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
 
     return Scaffold(
       appBar: AppBar(title: const Text('Checkout')),
-      body: addressesAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('$e')),
-        data: (addresses) {
-          final effectiveAddressId = addresses.isEmpty
-              ? null
-              : (_addressId != null && addresses.any((a) => a.id == _addressId))
-                  ? _addressId!
-                  : (addresses.firstWhereOrNull((a) => a.isDefault)?.id ?? addresses.first.id);
-          return ListView(
-            padding: const EdgeInsets.all(16),
+      body: ListView(
+        padding: const EdgeInsets.all(16),
+        children: [
+          Text('Telefon raqami', style: Theme.of(context).textTheme.titleMedium),
+          const SizedBox(height: 8),
+          TextField(
+            controller: _phoneController,
+            keyboardType: TextInputType.phone,
+            onChanged: (_) => setState(() {}),
+            decoration: const InputDecoration(
+              hintText: '+998 90 123 45 67',
+              border: OutlineInputBorder(),
+            ),
+          ),
+          const SizedBox(height: 16),
+          Row(
             children: [
-              Text('Address', style: Theme.of(context).textTheme.titleMedium),
-              const SizedBox(height: 8),
-              if (addresses.isEmpty)
-                const Text('Add an address for your user in the database to continue.')
-              else
-                ...addresses.map(
-                  (a) => RadioListTile<String>(
-                    value: a.id,
-                    groupValue: effectiveAddressId,
-                    onChanged: (v) => setState(() => _addressId = v),
-                    title: Text(a.label),
-                    subtitle: Text(a.singleLine),
-                  ),
+              Expanded(
+                child: Text(
+                  _locationHint ?? 'Geolokatsiya aniqlanmoqda...',
+                  style: Theme.of(context).textTheme.bodyMedium,
                 ),
-              const Divider(height: 32),
-              Text('Payment', style: Theme.of(context).textTheme.titleMedium),
-              RadioListTile<String>(
-                value: 'cash',
-                groupValue: _payment,
-                onChanged: (v) => setState(() => _payment = v!),
-                title: const Text('Cash on delivery'),
               ),
-              RadioListTile<String>(
-                value: 'card_placeholder',
-                groupValue: _payment,
-                onChanged: (v) => setState(() => _payment = v!),
-                title: const Text('Card (placeholder — integrate PSP in Edge Function)'),
-              ),
-              if (_error != null) ...[
-                const SizedBox(height: 12),
-                Text(_error!, style: TextStyle(color: Theme.of(context).colorScheme.error)),
-              ],
-              if (!canPlaceOrderNow) ...[
-                const SizedBox(height: 12),
-                Text(
-                  "Restoran hozir yopiq. Buyurtma faqat ish vaqtida qabul qilinadi.",
-                  style: TextStyle(color: Theme.of(context).colorScheme.error),
-                ),
-              ],
-              const SizedBox(height: 24),
-              FilledButton(
-                onPressed: _submitting || effectiveAddressId == null || addresses.isEmpty || !canPlaceOrderNow
-                    ? null
-                    : () async {
-                        setState(() {
-                          _submitting = true;
-                          _error = null;
-                        });
-                        final repo = ref.read(orderRepositoryProvider);
-                        final res = await repo.createOrder(
-                          restaurantId: cart.restaurantId!,
-                          addressId: effectiveAddressId,
-                          paymentMethod: _payment,
-                          lines: cart.lines,
-                        );
-                        if (!mounted) return;
-                        res.fold(
-                          (f) => setState(() {
-                            _submitting = false;
-                            _error = f.message;
-                          }),
-                          (orderId) {
-                            ref.read(cartNotifierProvider.notifier).clear();
-                            ref.invalidate(activeOrdersProvider);
-                            ref.invalidate(orderHistoryProvider);
-                            context.go('/orders/$orderId');
-                          },
-                        );
-                      },
-                child: _submitting
-                    ? const SizedBox(height: 22, width: 22, child: CircularProgressIndicator(strokeWidth: 2))
-                    : const Text('Place order'),
+              const SizedBox(width: 12),
+              OutlinedButton(
+                onPressed: _locating ? null : _detectLocation,
+                child: _locating
+                    ? const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Text('Qayta aniqlash'),
               ),
             ],
-          );
-        },
+          ),
+          if (isGuest) ...[
+            const SizedBox(height: 8),
+            Text(
+              'Ro‘yxatdan o‘tmasdan kuniga 2 martagacha buyurtma berish mumkin.',
+              style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
+            ),
+          ],
+          if (_error != null) ...[
+            const SizedBox(height: 12),
+            Text(_error!, style: TextStyle(color: Theme.of(context).colorScheme.error)),
+          ],
+          if (!canPlaceOrderNow) ...[
+            const SizedBox(height: 12),
+            Text(
+              "Restoran hozir yopiq. Buyurtma faqat ish vaqtida qabul qilinadi.",
+              style: TextStyle(color: Theme.of(context).colorScheme.error),
+            ),
+          ],
+          const SizedBox(height: 24),
+          FilledButton(
+            onPressed: _submitting ||
+                    !canPlaceOrderNow ||
+                    _lat == null ||
+                    _lng == null ||
+                    _phoneController.text.trim().isEmpty ||
+                    (isGuest && (_deviceId == null || _deviceId!.isEmpty))
+                ? null
+                : () async {
+                    final messenger = ScaffoldMessenger.of(context);
+                    setState(() {
+                      _submitting = true;
+                      _error = null;
+                    });
+                    final repo = ref.read(orderRepositoryProvider);
+                    final res = await repo.createOrder(
+                      restaurantId: cart.restaurantId!,
+                      paymentMethod: 'cash',
+                      lines: cart.lines,
+                      guestPhone: _phoneController.text.trim(),
+                      guestLat: _lat,
+                      guestLng: _lng,
+                      guestDeviceId: isGuest ? _deviceId : null,
+                    );
+                    if (!mounted) return;
+                    res.fold(
+                      (f) => setState(() {
+                        _submitting = false;
+                        _error = f.message;
+                      }),
+                      (orderId) {
+                        ref.read(cartNotifierProvider.notifier).clear();
+                        ref.invalidate(activeOrdersProvider);
+                        ref.invalidate(orderHistoryProvider);
+                        if (isGuest) {
+                          messenger.showSnackBar(
+                            const SnackBar(content: Text('Buyurtmangiz qabul qilindi. Operator tez orada bog‘lanadi.')),
+                          );
+                          context.go('/home');
+                        } else {
+                          context.go('/orders/$orderId');
+                        }
+                      },
+                    );
+                  },
+            child: _submitting
+                ? const SizedBox(height: 22, width: 22, child: CircularProgressIndicator(strokeWidth: 2))
+                : const Text('Buyurtma berish'),
+          ),
+        ],
       ),
     );
   }

@@ -13,15 +13,23 @@ class OrderRepositoryImpl implements OrderRepository {
   @override
   Future<Result<String>> createOrder({
     required String restaurantId,
-    required String addressId,
     required String paymentMethod,
     required List<CartLine> lines,
+    String? addressId,
+    String? guestPhone,
+    double? guestLat,
+    double? guestLng,
+    String? guestDeviceId,
   }) async {
     try {
       final body = {
         'restaurant_id': restaurantId,
         'address_id': addressId,
         'payment_method': paymentMethod,
+        'guest_phone': guestPhone,
+        'guest_lat': guestLat,
+        'guest_lng': guestLng,
+        'guest_device_id': guestDeviceId,
         'items': lines
             .map(
               (l) => {

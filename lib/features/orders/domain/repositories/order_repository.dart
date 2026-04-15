@@ -5,9 +5,13 @@ import 'package:customer_delivery/features/orders/domain/entities/order_summary.
 abstract class OrderRepository {
   Future<Result<String>> createOrder({
     required String restaurantId,
-    required String addressId,
     required String paymentMethod,
     required List<CartLine> lines,
+    String? addressId,
+    String? guestPhone,
+    double? guestLat,
+    double? guestLng,
+    String? guestDeviceId,
   });
 
   Future<Result<List<OrderSummary>>> fetchActiveOrders();

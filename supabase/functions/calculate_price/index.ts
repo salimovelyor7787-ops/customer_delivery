@@ -13,22 +13,6 @@ serve(async (req) => {
   }
 
   try {
-    const authHeader = req.headers.get("Authorization");
-    if (!authHeader) {
-      return json({ error: "Missing Authorization" }, 401);
-    }
-
-    const supabase = createClient(
-      Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_ANON_KEY") ?? "",
-      { global: { headers: { Authorization: authHeader } } },
-    );
-
-    const { data: userData, error: userErr } = await supabase.auth.getUser();
-    if (userErr || !userData.user) {
-      return json({ error: "Unauthorized" }, 401);
-    }
-
     const body = await req.json();
     const restaurantId = body.restaurant_id as string;
     const items = body.items as Array<{
