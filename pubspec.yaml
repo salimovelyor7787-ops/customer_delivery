@@ -46,6 +46,10 @@ dependencies:
   geolocator: ^13.0.2
   shared_preferences: ^2.3.2
 
+dependency_overrides:
+  # Transitive via supabase_flutter; older url_launcher_web breaks web compile on current Flutter (platformViewRegistry).
+  url_launcher: ^6.3.1
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
