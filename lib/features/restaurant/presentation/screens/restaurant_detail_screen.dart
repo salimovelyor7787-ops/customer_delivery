@@ -227,15 +227,32 @@ class _MenuItemListTile extends ConsumerWidget {
         overflow: TextOverflow.ellipsis,
       ),
       trailing: SizedBox(
-        width: 92,
+        width: 112,
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
-            Text(
-              money.format(item.priceCents / 100),
-              style: const TextStyle(fontWeight: FontWeight.w700),
-            ),
+            if (item.isDeal && item.dealPriceCents != null) ...[
+              Text(
+                money.format(item.effectivePriceCents / 100),
+                style: TextStyle(
+                  fontWeight: FontWeight.w800,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+              ),
+              Text(
+                money.format(item.priceCents / 100),
+                style: TextStyle(
+                  fontSize: 12,
+                  decoration: TextDecoration.lineThrough,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ] else
+              Text(
+                money.format(item.priceCents / 100),
+                style: const TextStyle(fontWeight: FontWeight.w700),
+              ),
             const SizedBox(height: 6),
             if (qty == 0)
               IconButton(

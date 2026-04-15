@@ -49,6 +49,7 @@ class MenuItem extends Equatable {
   final int? dealPriceCents;
   final bool isAvailable;
   final List<MenuOptionChoice> options;
+  int get effectivePriceCents => isDeal && dealPriceCents != null ? dealPriceCents! : priceCents;
 
   factory MenuItem.fromJson(Map<String, dynamic> json, {required String restaurantId}) {
     final optRaw = json['menu_item_options'];

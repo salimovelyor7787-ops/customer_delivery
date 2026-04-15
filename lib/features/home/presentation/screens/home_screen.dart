@@ -218,6 +218,10 @@ class _TopAddressBar extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     const demoLine = "Navoiy ko'chasi 51, 2-uy";
+    final hasPushDot = ref.watch(hasActivePushNotificationsProvider).maybeWhen(
+          data: (v) => v,
+          orElse: () => false,
+        );
 
     Widget line;
     if (session == null) {
@@ -268,10 +272,39 @@ class _TopAddressBar extends ConsumerWidget {
               ),
             ),
             IconButton(
-              onPressed: () => context.go('/profile'),
-              icon: const CircleAvatar(
-                radius: 20,
-                child: Icon(Icons.person_rounded, size: 22),
+              onPressed: () => context.push('/home/notifications'),
+              icon: Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: Colors.black.withOpacity(0.06)),
+                    ),
+                    child: Icon(
+                      Icons.notifications_none_rounded,
+                      size: 22,
+                      color: Theme.of(context).colorScheme.onSurface,
+                    ),
+                  ),
+                  if (hasPushDot)
+                    Positioned(
+                      right: -1,
+                      top: -1,
+                      child: Container(
+                        width: 9,
+                        height: 9,
+                        decoration: BoxDecoration(
+                          color: Colors.red,
+                          shape: BoxShape.circle,
+                          border: Border.all(color: Colors.white, width: 1.2),
+                        ),
+                      ),
+                    ),
+                ],
               ),
             ),
           ],

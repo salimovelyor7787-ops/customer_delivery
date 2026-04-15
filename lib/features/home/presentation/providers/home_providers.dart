@@ -75,3 +75,13 @@ final homeDealsProvider = FutureProvider<List<HomeDealItem>>((ref) async {
       .map((e) => HomeDealItem.fromJson(Map<String, dynamic>.from(e as Map)))
       .toList();
 });
+
+final hasActivePushNotificationsProvider = FutureProvider<bool>((ref) async {
+  final client = ref.watch(supabaseClientProvider);
+  final rows = await client
+      .from('push_notifications')
+      .select('id')
+      .eq('is_active', true)
+      .limit(1);
+  return (rows as List).isNotEmpty;
+});

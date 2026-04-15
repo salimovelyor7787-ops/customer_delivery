@@ -86,7 +86,8 @@ class CartNotifier extends Notifier<CartState> {
         lineId: _uuid.v4(),
         menuItemId: item.id,
         name: item.name,
-        basePriceCents: item.priceCents,
+        // Keep discounted price in cart when a deal is active.
+        basePriceCents: item.effectivePriceCents,
         optionsExtraCents: extra,
         quantity: 1,
         imageUrl: item.imageUrl,

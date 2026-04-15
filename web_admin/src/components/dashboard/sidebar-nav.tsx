@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, LogOut, Package, Percent, ShoppingBag, Truck, Users } from "lucide-react";
+import { Bell, LayoutDashboard, LogOut, Package, Percent, ShoppingBag, Truck, Users } from "lucide-react";
 import { createSupabaseBrowserClient, type UserRole } from "@/lib/supabase";
 
 type NavItem = { href: string; label: string; icon: React.ComponentType<{ className?: string }> };
@@ -17,6 +17,7 @@ const navByRole: Record<UserRole, NavItem[]> = {
     { href: "/admin/deals", label: "Aksiyalar", icon: Percent },
     { href: "/admin/banners", label: "Bannerlar", icon: Package },
     { href: "/admin/promocodes", label: "Promokodlar", icon: Percent },
+    { href: "/admin/push-notifications", label: "Push bildirishnomalar", icon: Bell },
     { href: "/admin/orders", label: "Buyurtmalar", icon: Truck },
   ],
   restaurant: [
