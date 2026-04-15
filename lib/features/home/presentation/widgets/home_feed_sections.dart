@@ -543,6 +543,124 @@ class HomeRestaurantCarousel extends StatelessWidget {
   }
 }
 
+class HomeRestaurantVerticalList extends StatelessWidget {
+  const HomeRestaurantVerticalList({super.key, required this.restaurants, required this.etaLabels});
+
+  final List<Restaurant> restaurants;
+  final List<String> etaLabels;
+
+  @override
+  Widget build(BuildContext context) {
+    if (restaurants.isEmpty) return const SizedBox.shrink();
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Column(
+        children: [
+          for (var i = 0; i < restaurants.length; i++) ...[
+            _RestaurantBannerCard(
+              restaurant: restaurants[i],
+              etaLabel: etaLabels[i % etaLabels.length],
+            ),
+            if (i != restaurants.length - 1) const SizedBox(height: 12),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _RestaurantBannerCard extends StatelessWidget {
+  const _RestaurantBannerCard({
+    required this.restaurant,
+    required this.etaLabel,
+  });
+
+  final Restaurant restaurant;
+  final String etaLabel;
+
+  double get _rating => 4.5 + (restaurant.id.hashCode % 6) * 0.1;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(16),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: () => context.push('/home/restaurant/${restaurant.id}'),
+        child: SizedBox(
+          height: 152,
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              AppNetworkImage(imageUrl: restaurant.imageUrl, fit: BoxFit.cover, placeholderIcon: Icons.restaurant),
+              DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      Colors.black.withOpacity(0.14),
+                      Colors.black.withOpacity(0.20),
+                      Colors.black.withOpacity(0.52),
+                    ],
+                  ),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Spacer(),
+                    Text(
+                      restaurant.name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 20,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      restaurant.categoryName ?? 'Restoran',
+                      style: TextStyle(color: Colors.white.withOpacity(0.92)),
+                    ),
+                    const SizedBox(height: 4),
+                    Row(
+                      children: [
+                        const Icon(Icons.star_rounded, size: 18, color: Color(0xFFFFB800)),
+                        Text(
+                          _rating.toStringAsFixed(1),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            etaLabel,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(color: Colors.white.withOpacity(0.92)),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 void showHomeCategoryFilterSheet(
   BuildContext context, {
   required List<Category> categories,

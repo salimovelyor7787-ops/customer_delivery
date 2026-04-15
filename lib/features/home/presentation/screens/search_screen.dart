@@ -1,7 +1,5 @@
 import 'package:customer_delivery/core/widgets/app_network_image.dart';
-import 'package:customer_delivery/features/home/domain/entities/category.dart';
 import 'package:customer_delivery/features/home/presentation/notifiers/restaurant_list_notifier.dart';
-import 'package:customer_delivery/features/home/presentation/providers/home_providers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -16,7 +14,6 @@ class SearchScreen extends ConsumerStatefulWidget {
 class _SearchScreenState extends ConsumerState<SearchScreen> {
   final _controller = TextEditingController();
   final _scroll = ScrollController();
-  final List<String> _recent = ['Lavash', 'Osh', 'Pizza', 'Coffee Lab'];
   static const _popular = ['Burger', 'Pizza', 'Sushi', 'Coffee', 'Salatlar'];
 
   @override
@@ -46,7 +43,6 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
   @override
   Widget build(BuildContext context) {
     final listState = ref.watch(restaurantListNotifierProvider);
-    final categoriesAsync = ref.watch(categoriesProvider);
     final t = Theme.of(context).textTheme;
 
     return Scaffold(
@@ -91,60 +87,9 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                 .toList(),
           ),
           const SizedBox(height: 18),
-          _SectionHeader(
-            title: 'Oxirgi qidiruvlar',
-            action: 'Tozalash',
-            onTap: () => setState(() => _recent.clear()),
-          ),
-          const SizedBox(height: 10),
-          if (_recent.isEmpty)
-            Text("Oxirgi qidiruvlar yo'q", style: t.bodyMedium)
-          else
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: _recent
-                  .map(
-                    (q) => _SearchChip(
-                      label: q,
-                      onTap: () => _applyQuery(q),
-                      icon: Icons.history_rounded,
-                    ),
-                  )
-                  .toList(),
-            ),
-          const SizedBox(height: 18),
-          _SectionHeader(
-            title: 'Kategoriyalar',
-            action: 'Barchasi',
-            onTap: () {},
-          ),
-          const SizedBox(height: 10),
-          categoriesAsync.when(
-            loading: () => const Center(
-              child: Padding(
-                padding: EdgeInsets.symmetric(vertical: 14),
-                child: CircularProgressIndicator(),
-              ),
-            ),
-            error: (e, _) => Text('$e'),
-            data: (cats) => _CategoryRow(categories: cats),
-          ),
-          const SizedBox(height: 18),
           Text('Restoranlar', style: t.titleLarge?.copyWith(fontWeight: FontWeight.w700)),
           const SizedBox(height: 10),
-          _Results(
-            listState: listState,
-            onOpen: () {
-              final q = _controller.text.trim();
-              if (q.isEmpty) return;
-              setState(() {
-                _recent.remove(q);
-                _recent.insert(0, q);
-                if (_recent.length > 6) _recent.removeLast();
-              });
-            },
-          ),
+          _Results(listState: listState),
         ],
       ),
     );
@@ -152,10 +97,9 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
 }
 
 class _Results extends ConsumerWidget {
-  const _Results({required this.listState, required this.onOpen});
+  const _Results({required this.listState});
 
   final RestaurantListState listState;
-  final VoidCallback onOpen;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -193,10 +137,7 @@ class _Results extends ConsumerWidget {
           borderRadius: BorderRadius.circular(16),
           clipBehavior: Clip.antiAlias,
           child: InkWell(
-            onTap: () {
-              onOpen();
-              context.push('/home/restaurant/${r.id}');
-            },
+            onTap: () => context.push('/home/restaurant/${r.id}'),
             child: SizedBox(
               height: 102,
               child: Row(
@@ -342,62 +283,6 @@ class _SearchChip extends StatelessWidget {
             ],
           ),
         ),
-      ),
-    );
-  }
-}
-
-class _CategoryRow extends StatelessWidget {
-  const _CategoryRow({required this.categories});
-
-  final List<Category> categories;
-
-  static const _icons = [
-    Icons.fastfood_rounded,
-    Icons.local_pizza_rounded,
-    Icons.set_meal_rounded,
-    Icons.ramen_dining_rounded,
-    Icons.local_cafe_rounded,
-    Icons.eco_rounded,
-  ];
-
-  @override
-  Widget build(BuildContext context) {
-    if (categories.isEmpty) {
-      return const Text("Kategoriyalar mavjud emas");
-    }
-    final display = categories.take(6).toList();
-    return SizedBox(
-      height: 114,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        itemCount: display.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 10),
-        itemBuilder: (context, i) {
-          final c = display[i];
-          return Container(
-            width: 102,
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
-            decoration: BoxDecoration(
-              color: const Color(0xFFF7F1ED),
-              borderRadius: BorderRadius.circular(14),
-            ),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(_icons[i % _icons.length], size: 28),
-                const SizedBox(height: 8),
-                Text(
-                  c.name,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(fontWeight: FontWeight.w600),
-                ),
-              ],
-            ),
-          );
-        },
       ),
     );
   }

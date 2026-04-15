@@ -1,4 +1,4 @@
-package com.delivery.customer.customer_delivery
+package com.delivery.customer.minutka
 
 import io.flutter.embedding.android.FlutterActivity
 

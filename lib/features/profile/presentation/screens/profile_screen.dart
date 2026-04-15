@@ -61,14 +61,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   subtitle: 'Saqlangan manzillar',
                   onTap: () => context.push(withNextQuery('/login', '/profile')),
                 ),
-                _MenuRow(
-                  icon: Icons.favorite_border_rounded,
-                  title: 'Sevimlilar',
-                  subtitle: 'Sevimli restoranlar va taomlar',
-                  onTap: () => ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text("Bu bo'lim tez orada qo'shiladi")),
-                  ),
-                ),
               ],
             ),
             const SizedBox(height: 20),
@@ -145,14 +137,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 ),
                 onTap: () => ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(content: Text("Manzil tahriri tez orada qo'shiladi")),
-                ),
-              ),
-              _MenuRow(
-                icon: Icons.favorite_border_rounded,
-                title: 'Sevimlilar',
-                subtitle: 'Sevimli restoranlar va taomlar',
-                onTap: () => ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text("Bu bo'lim tez orada qo'shiladi")),
                 ),
               ),
             ],

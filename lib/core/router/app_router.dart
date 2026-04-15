@@ -199,8 +199,8 @@ class ScaffoldWithNavBar extends ConsumerWidget {
                 onTap: () => onTabSelected(1),
               ),
               _FloatingNavItem(
-                icon: Icons.shopping_basket_outlined,
-                activeIcon: Icons.shopping_basket_rounded,
+                icon: Icons.shopping_cart_outlined,
+                activeIcon: Icons.shopping_cart_rounded,
                 selected: navigationShell.currentIndex == 2,
                 showDot: hasCartItems,
                 onTap: () => onTabSelected(2),

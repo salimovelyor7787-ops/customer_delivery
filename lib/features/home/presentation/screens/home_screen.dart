@@ -2,7 +2,6 @@ import 'package:customer_delivery/core/di/providers.dart';
 import 'package:customer_delivery/features/home/domain/entities/home_banner.dart';
 import 'package:customer_delivery/features/home/domain/entities/home_nearby_card.dart';
 import 'package:customer_delivery/features/home/domain/entities/home_service_card.dart';
-import 'package:customer_delivery/features/home/domain/entities/restaurant.dart';
 import 'package:customer_delivery/features/home/presentation/notifiers/restaurant_list_notifier.dart';
 import 'package:customer_delivery/features/home/presentation/providers/home_providers.dart';
 import 'package:customer_delivery/features/home/presentation/widgets/home_feed_sections.dart';
@@ -55,15 +54,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   static const _etaPopular = ['20 – 30 daqiqa', '15 – 45 daqiqa', '25 – 30 daqiqa', '40 – 45 daqiqa'];
-  static const _etaReorder = ['25 – 30 daqiqa', '40 – 45 daqiqa', '25 – 30 daqiqa'];
-
-  List<Restaurant> _reorderSlice(List<Restaurant> items) {
-    if (items.length <= 1) return items;
-    final skip = items.length > 3 ? 1 : 0;
-    final rotated = items.skip(skip).toList();
-    if (rotated.length >= 3) return rotated.take(3).toList();
-    return rotated;
-  }
 
   static const _fallbackServiceCards = [
     HomeServiceCard(
@@ -177,18 +167,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             const SliverToBoxAdapter(child: HomeSectionHeader(title: 'Chegirmalar va aksiyalar')),
             const SliverToBoxAdapter(child: HomeDealsRow()),
             if (listState.items.isNotEmpty) ...[
-              const SliverToBoxAdapter(child: HomeSectionHeader(title: 'Ommabop restoranlar')),
+              const SliverToBoxAdapter(child: HomeSectionHeader(title: 'Все рестораны')),
               SliverToBoxAdapter(
-                child: HomeRestaurantCarousel(
+                child: HomeRestaurantVerticalList(
                   restaurants: listState.items.take(8).toList(),
                   etaLabels: _etaPopular,
-                ),
-              ),
-              const SliverToBoxAdapter(child: HomeSectionHeader(title: "Siz buyurtma qilgansiz")),
-              SliverToBoxAdapter(
-                child: HomeRestaurantCarousel(
-                  restaurants: _reorderSlice(listState.items),
-                  etaLabels: _etaReorder,
                 ),
               ),
             ],
