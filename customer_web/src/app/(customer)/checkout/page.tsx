@@ -83,7 +83,7 @@ export default function CheckoutPage() {
   };
 
   return (
-    <main className="space-y-4 p-4">
+    <main className="space-y-4 p-4 sm:p-6 lg:p-8">
       <h1 className="text-2xl font-semibold">Checkout</h1>
       <form onSubmit={onSubmit} className="space-y-3 rounded-2xl border border-zinc-200 bg-white p-4">
         <input value={phone} onChange={(e) => setPhone(e.target.value.replace(/\D/g, "").slice(0, 9))} placeholder="Telefon (901234567)" className="w-full rounded-lg border border-zinc-300 px-3 py-2" />

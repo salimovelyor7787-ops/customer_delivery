@@ -18,7 +18,7 @@ export function BottomNav() {
 
   return (
     <nav className="fixed inset-x-0 bottom-0 z-50 border-t border-zinc-200 bg-white/95 backdrop-blur">
-      <div className="mx-auto flex max-w-3xl items-center justify-between px-4 py-2">
+      <div className="mx-auto flex w-full max-w-7xl items-center justify-between gap-1 px-4 py-2 sm:px-6 sm:gap-2 lg:px-8 2xl:max-w-[90rem] md:py-2.5">
         {items.map((item) => {
           const Icon = item.icon;
           const active = pathname === item.href || pathname.startsWith(`${item.href}/`);

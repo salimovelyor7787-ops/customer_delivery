@@ -1,6 +1,6 @@
 export default function SupportPage() {
   return (
-    <main className="space-y-4 p-4">
+    <main className="space-y-4 p-4 sm:p-6 lg:p-8">
       <h1 className="text-2xl font-semibold">Qo&apos;llab-quvvatlash</h1>
       <div className="rounded-2xl border border-zinc-200 bg-white p-4">
         <p className="text-sm text-zinc-600">Savollaringiz bo&apos;lsa operator bilan bog&apos;laning.</p>

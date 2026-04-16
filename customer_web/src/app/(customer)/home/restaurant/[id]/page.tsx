@@ -51,13 +51,14 @@ export default function RestaurantPage() {
   }, [items]);
 
   return (
-    <main className="space-y-4 p-4">
-      {restaurant?.image_url ? <img src={restaurant.image_url} alt={restaurant.name} className="h-44 w-full rounded-2xl object-cover" /> : null}
-      <h1 className="text-2xl font-semibold">{restaurant?.name ?? "Restoran"}</h1>
-      <div className="space-y-5">
+    <main className="space-y-4 p-4 sm:p-6 lg:space-y-6 lg:p-8">
+      {restaurant?.image_url ? <img src={restaurant.image_url} alt={restaurant.name} className="h-44 w-full rounded-2xl object-cover sm:h-52 lg:h-64 lg:max-h-[22rem]" /> : null}
+      <h1 className="text-2xl font-semibold sm:text-3xl">{restaurant?.name ?? "Restoran"}</h1>
+      <div className="space-y-5 lg:space-y-8">
         {grouped.map(([category, lines]) => (
           <section key={category} className="space-y-2">
-            <h2 className="px-1 text-lg font-semibold">{category}</h2>
+            <h2 className="px-1 text-lg font-semibold sm:text-xl">{category}</h2>
+            <div className="grid gap-2 sm:gap-3 lg:grid-cols-2">
             {lines.map((item) => (
               <article key={item.id} className="flex gap-3 rounded-2xl border border-zinc-200 bg-white p-3">
                 <div className="h-16 w-16 shrink-0 overflow-hidden rounded-xl bg-zinc-100">{item.image_url ? <img src={item.image_url} alt={item.name} className="h-full w-full object-cover" /> : null}</div>
@@ -82,6 +83,7 @@ export default function RestaurantPage() {
                 </div>
               </article>
             ))}
+            </div>
           </section>
         ))}
       </div>

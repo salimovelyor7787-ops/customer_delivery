@@ -38,7 +38,7 @@ export default function ProductDetailPage() {
   if (!item) return <main className="p-4">Yuklanmoqda...</main>;
 
   return (
-    <main className="space-y-4 p-4">
+    <main className="space-y-4 p-4 sm:p-6 lg:p-8">
       <h1 className="text-2xl font-semibold">{item.name}</h1>
       {item.image_url ? <img src={item.image_url} alt={item.name} className="h-52 w-full rounded-2xl object-cover" /> : null}
       {item.description ? <p className="text-sm text-zinc-600">{item.description}</p> : null}

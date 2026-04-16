@@ -48,7 +48,7 @@ export default function OrderDetailPage() {
 
   if (loggedIn === false) {
     return (
-      <main className="space-y-4 p-4">
+      <main className="space-y-4 p-4 sm:p-6 lg:p-8">
         <h1 className="text-2xl font-semibold">Buyurtma</h1>
         <p className="text-sm text-zinc-600">Buyurtmani ko&apos;rish uchun login qiling.</p>
         <Link href={`/login?next=/orders/${id}`} className="inline-flex rounded-lg bg-zinc-900 px-4 py-2 text-white">Kirish</Link>
@@ -60,7 +60,7 @@ export default function OrderDetailPage() {
     order?.restaurants == null ? "Restoran" : Array.isArray(order.restaurants) ? (order.restaurants[0]?.name ?? "Restoran") : order.restaurants.name;
 
   return (
-    <main className="space-y-4 p-4">
+    <main className="space-y-4 p-4 sm:p-6 lg:p-8">
       <h1 className="text-2xl font-semibold">Buyurtma</h1>
       <div className="rounded-2xl border border-zinc-200 bg-white p-4">
         <p className="font-medium">{restaurantName}</p>

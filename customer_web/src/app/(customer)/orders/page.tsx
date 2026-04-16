@@ -39,7 +39,7 @@ export default function OrdersPage() {
 
   if (loggedIn === false) {
     return (
-      <main className="space-y-4 p-4">
+      <main className="space-y-4 p-4 sm:p-6 lg:p-8">
         <h1 className="text-2xl font-semibold">Buyurtmalar</h1>
         <p className="text-sm text-zinc-600">Buyurtmalarni ko&apos;rish uchun login qiling.</p>
         <Link href="/login?next=/orders" className="inline-flex rounded-lg bg-zinc-900 px-4 py-2 text-white">Kirish</Link>
@@ -48,7 +48,7 @@ export default function OrdersPage() {
   }
 
   return (
-    <main className="space-y-5 p-4">
+    <main className="space-y-5 p-4 sm:p-6 lg:p-8">
       <h1 className="text-2xl font-semibold">Buyurtmalar</h1>
       <section className="space-y-2">
         <h2 className="text-lg font-semibold">Faol</h2>

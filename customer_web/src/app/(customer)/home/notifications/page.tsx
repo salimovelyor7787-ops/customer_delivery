@@ -14,7 +14,7 @@ export default function NotificationsPage() {
   }, [supabase]);
 
   return (
-    <main className="space-y-4 p-4">
+    <main className="space-y-4 p-4 sm:p-6 lg:p-8">
       <h1 className="text-2xl font-semibold">Bildirishnomalar</h1>
       {rows.length === 0 ? <p className="text-sm text-zinc-500">Hozircha bildirishnoma yo&apos;q.</p> : null}
       <div className="space-y-2">

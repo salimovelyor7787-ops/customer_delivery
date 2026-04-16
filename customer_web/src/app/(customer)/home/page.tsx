@@ -43,11 +43,11 @@ export default function CustomerHomePage() {
   }, [restaurants, selectedCategoryId]);
 
   return (
-    <main className="space-y-4 p-4">
-      <div className="flex items-center justify-between">
+    <main className="space-y-4 p-4 sm:p-6 lg:space-y-6 lg:p-8">
+      <div className="flex items-center justify-between gap-4">
         <div>
-          <p className="text-xs text-zinc-500">Yetkazib berish</p>
-          <h1 className="text-2xl font-semibold">Chust shahri bo&apos;ylab</h1>
+          <p className="text-xs text-zinc-500 sm:text-sm">Yetkazib berish</p>
+          <h1 className="text-2xl font-semibold sm:text-3xl lg:text-4xl">Chust shahri bo&apos;ylab</h1>
         </div>
         <Link href="/home/notifications" className="relative rounded-xl border border-zinc-200 bg-white p-2.5">
           <Bell className="h-5 w-5" />
@@ -56,9 +56,9 @@ export default function CustomerHomePage() {
       </div>
 
       <div className="space-y-2">
-        <div className="flex gap-2 overflow-x-auto pb-1">
+        <div className="flex gap-2 overflow-x-auto pb-1 md:grid md:grid-cols-2 md:overflow-x-visible lg:grid-cols-3">
           {banners.map((banner) => (
-            <div key={banner.id} className="relative h-36 min-w-[280px] overflow-hidden rounded-2xl bg-zinc-100">
+            <div key={banner.id} className="relative h-36 min-w-[280px] overflow-hidden rounded-2xl bg-zinc-100 md:min-w-0 md:h-40 lg:h-44">
               <img src={banner.image_url} alt={banner.title ?? "Banner"} className="h-full w-full object-cover" />
               {banner.title ? <p className="absolute bottom-2 left-2 rounded bg-black/55 px-2 py-1 text-xs text-white">{banner.title}</p> : null}
             </div>
@@ -78,9 +78,9 @@ export default function CustomerHomePage() {
       {deals.length > 0 ? (
         <section className="space-y-2">
           <h2 className="text-lg font-semibold">Chegirmalar va aksiyalar</h2>
-          <div className="flex gap-2 overflow-x-auto pb-1">
+          <div className="flex gap-2 overflow-x-auto pb-1 md:grid md:grid-cols-2 md:overflow-x-visible lg:grid-cols-3 xl:grid-cols-4">
             {deals.map((deal) => (
-              <Link href={`/home/restaurant/${deal.restaurant_id}`} key={deal.id} className="min-w-[220px] overflow-hidden rounded-2xl border border-zinc-200 bg-white">
+              <Link href={`/home/restaurant/${deal.restaurant_id}`} key={deal.id} className="min-w-[220px] overflow-hidden rounded-2xl border border-zinc-200 bg-white md:min-w-0">
                 <div className="h-24 bg-zinc-100">{deal.image_url ? <img src={deal.image_url} alt={deal.name} className="h-full w-full object-cover" /> : null}</div>
                 <div className="p-2">
                   <p className="truncate text-sm font-medium">{deal.name}</p>
@@ -92,10 +92,10 @@ export default function CustomerHomePage() {
         </section>
       ) : null}
 
-      <div className="grid gap-3">
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
         {filtered.map((restaurant) => (
           <Link href={`/home/restaurant/${restaurant.id}`} key={restaurant.id} className="overflow-hidden rounded-2xl border border-zinc-200 bg-white">
-            <div className="h-36 w-full bg-zinc-100">{restaurant.image_url ? <img src={restaurant.image_url} alt={restaurant.name} className="h-full w-full object-cover" /> : null}</div>
+            <div className="h-36 w-full bg-zinc-100 sm:h-40 lg:h-44">{restaurant.image_url ? <img src={restaurant.image_url} alt={restaurant.name} className="h-full w-full object-cover" /> : null}</div>
             <div className="p-3">
               <p className="font-semibold">{restaurant.name}</p>
               <p className={`text-xs ${restaurant.is_open ? "text-green-600" : "text-red-500"}`}>{restaurant.is_open ? "Ochiq" : "Yopiq"}</p>

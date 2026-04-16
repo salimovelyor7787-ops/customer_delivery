@@ -9,7 +9,7 @@ export default async function ProfilePage() {
   const { data: sessionData } = await supabase.auth.getSession();
   if (!sessionData.session) {
     return (
-      <main className="space-y-4 p-4">
+      <main className="space-y-4 p-4 sm:p-6 lg:p-8">
         <h1 className="text-2xl font-semibold">Profil</h1>
         <div className="rounded-2xl border border-zinc-200 bg-white p-4">
           <p className="font-medium">Mehmon foydalanuvchi</p>
@@ -27,7 +27,7 @@ export default async function ProfilePage() {
   const { data: profile } = await supabase.from("profiles").select("full_name,phone,role").eq("id", sessionData.session.user.id).single();
 
   return (
-    <main className="space-y-4 p-4">
+    <main className="space-y-4 p-4 sm:p-6 lg:p-8">
       <h1 className="text-2xl font-semibold">Profil</h1>
       <div className="rounded-2xl border border-zinc-200 bg-white p-4">
         <p className="text-sm text-zinc-500">Ism</p>
