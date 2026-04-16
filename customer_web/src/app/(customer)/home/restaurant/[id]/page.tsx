@@ -19,10 +19,72 @@ type MenuItem = {
 };
 type Restaurant = { id: string; name: string; image_url: string | null };
 
+function MenuItemRow({ item }: { item: MenuItem }) {
+  const { items, addItemWithRestaurantGuard, setQuantity } = useCart();
+  const qty = items.find((line) => line.id === item.id)?.quantity ?? 0;
+
+  const addOne = () => {
+    const { switched } = addItemWithRestaurantGuard({
+      id: item.id,
+      name: item.name,
+      priceCents: item.price_cents,
+      imageUrl: item.image_url,
+      restaurantId: item.restaurant_id,
+    });
+    if (switched) toast("Savat boshqa restoranga almashtirildi");
+  };
+
+  return (
+    <article className="flex gap-3 rounded-2xl border border-zinc-200 bg-white p-3">
+      <div className="h-16 w-16 shrink-0 overflow-hidden rounded-xl bg-zinc-100">
+        {item.image_url ? <img src={item.image_url} alt={item.name} className="h-full w-full object-cover" /> : null}
+      </div>
+      <div className="flex min-w-0 flex-1 flex-col">
+        <p className="font-medium">{item.name}</p>
+        {item.description ? <p className="line-clamp-2 text-sm text-zinc-500">{item.description}</p> : null}
+        <div className="mt-2 flex flex-col items-stretch gap-2 sm:items-end">
+          <p className="text-base font-semibold text-zinc-900 sm:text-right">so&apos;m {(item.price_cents / 100).toFixed(0)}</p>
+          {item.is_available ? (
+            qty === 0 ? (
+              <button type="button" onClick={addOne} className="rounded-lg bg-zinc-900 px-3 py-2 text-sm font-medium text-white sm:self-end">
+                Savatga
+              </button>
+            ) : (
+              <div className="inline-flex items-center gap-0 self-stretch rounded-lg border border-zinc-300 bg-zinc-50 sm:self-end">
+                <button
+                  type="button"
+                  aria-label="Kamaytirish"
+                  onClick={() => setQuantity(item.id, qty - 1)}
+                  className="px-3 py-2 text-lg font-medium leading-none text-zinc-700 hover:bg-zinc-100"
+                >
+                  −
+                </button>
+                <span className="min-w-[2rem] select-none text-center text-sm font-semibold tabular-nums">{qty}</span>
+                <button
+                  type="button"
+                  aria-label="Ko&apos;paytirish"
+                  onClick={() => setQuantity(item.id, qty + 1)}
+                  className="px-3 py-2 text-lg font-medium leading-none text-zinc-700 hover:bg-zinc-100"
+                >
+                  +
+                </button>
+              </div>
+            )
+          ) : (
+            <p className="text-right text-xs text-zinc-400">Mavjud emas</p>
+          )}
+        </div>
+        <Link href={`/home/restaurant/${item.restaurant_id}/item/${item.id}`} className="mt-2 inline-block text-xs text-orange-600 sm:self-end">
+          Batafsil
+        </Link>
+      </div>
+    </article>
+  );
+}
+
 export default function RestaurantPage() {
   const params = useParams<{ id: string }>();
   const supabase = createSupabaseBrowserClient();
-  const { addItemWithRestaurantGuard } = useCart();
   const [restaurant, setRestaurant] = useState<Restaurant | null>(null);
   const [items, setItems] = useState<MenuItem[]>([]);
 
@@ -59,30 +121,9 @@ export default function RestaurantPage() {
           <section key={category} className="space-y-2">
             <h2 className="px-1 text-lg font-semibold sm:text-xl">{category}</h2>
             <div className="grid gap-2 sm:gap-3 lg:grid-cols-2">
-            {lines.map((item) => (
-              <article key={item.id} className="flex gap-3 rounded-2xl border border-zinc-200 bg-white p-3">
-                <div className="h-16 w-16 shrink-0 overflow-hidden rounded-xl bg-zinc-100">{item.image_url ? <img src={item.image_url} alt={item.name} className="h-full w-full object-cover" /> : null}</div>
-                <div className="min-w-0 flex-1">
-                  <p className="font-medium">{item.name}</p>
-                  {item.description ? <p className="line-clamp-2 text-sm text-zinc-500">{item.description}</p> : null}
-                  <div className="mt-2 flex items-center justify-between">
-                    <p className="font-semibold">so&apos;m {(item.price_cents / 100).toFixed(0)}</p>
-                    <button
-                      type="button"
-                      disabled={!item.is_available}
-                      onClick={() => {
-                        const { switched } = addItemWithRestaurantGuard({ id: item.id, name: item.name, priceCents: item.price_cents, imageUrl: item.image_url, restaurantId: item.restaurant_id });
-                        if (switched) toast("Savat boshqa restoranga almashtirildi");
-                      }}
-                      className="rounded-lg bg-zinc-900 px-3 py-1.5 text-sm text-white disabled:opacity-50"
-                    >
-                      Savatga
-                    </button>
-                  </div>
-                  <Link href={`/home/restaurant/${item.restaurant_id}/item/${item.id}`} className="mt-2 inline-block text-xs text-orange-600">Batafsil</Link>
-                </div>
-              </article>
-            ))}
+              {lines.map((item) => (
+                <MenuItemRow key={item.id} item={item} />
+              ))}
             </div>
           </section>
         ))}
