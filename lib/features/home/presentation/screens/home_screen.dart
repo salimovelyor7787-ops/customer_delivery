@@ -1,5 +1,6 @@
 import 'package:customer_delivery/core/di/providers.dart';
 import 'package:customer_delivery/features/home/domain/entities/home_banner.dart';
+import 'package:customer_delivery/features/home/domain/entities/home_nearby_card.dart';
 import 'package:customer_delivery/features/home/presentation/notifiers/restaurant_list_notifier.dart';
 import 'package:customer_delivery/features/home/presentation/providers/home_providers.dart';
 import 'package:customer_delivery/features/home/presentation/widgets/home_feed_sections.dart';
@@ -45,9 +46,27 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final categoriesAsync = ref.watch(categoriesProvider);
     final listState = ref.watch(restaurantListNotifierProvider);
     final bannersAsync = ref.watch(homeBannersProvider);
+    final nearbyCardsAsync = ref.watch(homeNearbyCardsProvider);
     final banners = bannersAsync.maybeWhen(
       data: (items) => items,
       orElse: () => const <HomeBanner>[],
+    );
+    final nearbyCards = nearbyCardsAsync.maybeWhen(
+      data: (items) => items,
+      orElse: () {
+        final sample = listState.items.take(3).toList();
+        return sample
+            .map(
+              (r) => HomeNearbyCard(
+                id: 'fallback-${r.id}',
+                imageUrl: r.imageUrl ?? '',
+                restaurantId: r.id,
+                sortOrder: 0,
+                isActive: true,
+              ),
+            )
+            .toList();
+      },
     );
     final session = ref.watch(supabaseClientProvider).auth.currentSession;
     const bg = Color(0xFFF3F4F6);
@@ -84,6 +103,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             )),
             const SliverToBoxAdapter(child: SizedBox(height: 8)),
             SliverToBoxAdapter(child: HomePromoBannerCarousel(banners: banners)),
+            SliverToBoxAdapter(
+              child: HomeSectionHeader(
+                title: "Yaqin do'konlar",
+                onSeeAll: () => context.push('/home/stores'),
+              ),
+            ),
+            SliverToBoxAdapter(child: HomeNearbyStoresRow(cards: nearbyCards.take(3).toList())),
             const SliverToBoxAdapter(child: HomeSectionHeader(title: 'Chegirmalar va aksiyalar')),
             const SliverToBoxAdapter(child: HomeDealsRow()),
             if (listState.items.isNotEmpty) ...[
