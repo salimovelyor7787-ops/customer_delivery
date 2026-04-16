@@ -2,6 +2,8 @@ import Link from "next/link";
 import { SignOutButton } from "@/components/customer/sign-out-button";
 import { createSupabaseServerClient } from "@/lib/supabase-server";
 
+export const dynamic = "force-dynamic";
+
 export default async function ProfilePage() {
   const supabase = await createSupabaseServerClient();
   const { data: sessionData } = await supabase.auth.getSession();
