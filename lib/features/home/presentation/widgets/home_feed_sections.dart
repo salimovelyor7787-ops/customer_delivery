@@ -251,15 +251,19 @@ class HomeNearbyStoresRow extends StatelessWidget {
   Widget build(BuildContext context) {
     if (cards.isEmpty) return const SizedBox.shrink();
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Row(
-        children: [
-          for (var i = 0; i < cards.length; i++) ...[
-            if (i > 0) const SizedBox(width: 10),
-            Expanded(child: _StoreSquare(card: cards[i])),
-          ],
-        ],
+    return SizedBox(
+      height: 74,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        itemCount: cards.length,
+        separatorBuilder: (_, __) => const SizedBox(width: 8),
+        itemBuilder: (context, i) {
+          return SizedBox(
+            width: 108,
+            child: _StoreSquare(card: cards[i]),
+          );
+        },
       ),
     );
   }
@@ -271,16 +275,24 @@ class _StoreSquare extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AspectRatio(
-      aspectRatio: 1.4,
-      child: Material(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        clipBehavior: Clip.antiAlias,
-        child: InkWell(
-          onTap: card.restaurantId == null
-              ? null
-              : () => context.push('/home/restaurant/${card.restaurantId}'),
+    return Material(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(12),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: card.restaurantId == null ? null : () => context.push('/home/restaurant/${card.restaurantId}'),
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            border: Border.all(color: Colors.black.withOpacity(0.08)),
+            borderRadius: BorderRadius.circular(12),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.03),
+                blurRadius: 6,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
           child: AppNetworkImage(
             imageUrl: card.imageUrl,
             fit: BoxFit.cover,
