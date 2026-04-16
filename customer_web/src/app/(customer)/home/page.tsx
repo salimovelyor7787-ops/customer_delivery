@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { Bell, Search, Store } from "lucide-react";
+import { RestaurantHeroCard } from "@/components/customer/restaurant-hero-card";
 import { createSupabaseBrowserClient } from "@/lib/supabase";
 
 type Restaurant = { id: string; name: string; image_url: string | null; is_open: boolean; category_id: string | null };
@@ -16,19 +17,22 @@ export default function CustomerHomePage() {
   const [banners, setBanners] = useState<Banner[]>([]);
   const [deals, setDeals] = useState<DealItem[]>([]);
   const [nearbyCards, setNearbyCards] = useState<NearbyStoreCard[]>([]);
+  const [categoryNames, setCategoryNames] = useState<Record<string, string>>({});
   const [hasNotifications, setHasNotifications] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
     const load = async () => {
-      const [{ data: rests }, { data: bannerRows }, { data: dealRows }, { data: nearbyRows }, { data: pushRows }] = await Promise.all([
+      const [{ data: rests }, { data: catRows }, { data: bannerRows }, { data: dealRows }, { data: nearbyRows }, { data: pushRows }] = await Promise.all([
         supabase.from("restaurants").select("id,name,image_url,is_open,category_id").order("name", { ascending: true }),
+        supabase.from("categories").select("id,name").order("sort_order", { ascending: true }),
         supabase.from("banners").select("id,image_url,title").eq("active", true).order("sort_order", { ascending: true }).limit(5),
         supabase.from("menu_items").select("id,restaurant_id,name,image_url,price_cents,deal_price_cents").eq("is_available", true).eq("is_deal", true).not("deal_price_cents", "is", null).order("sort_order", { ascending: true }).limit(10),
         supabase.from("home_nearby_cards").select("id,title,image_url,restaurant_id").eq("is_active", true).order("sort_order", { ascending: true }).limit(20),
         supabase.from("push_notifications").select("id").eq("is_active", true).limit(1),
       ]);
       setRestaurants((rests ?? []) as Restaurant[]);
+      setCategoryNames(Object.fromEntries((catRows ?? []).map((c: { id: string; name: string }) => [c.id, c.name])));
       setBanners((bannerRows ?? []) as Banner[]);
       setDeals((dealRows ?? []) as DealItem[]);
       setNearbyCards((nearbyRows ?? []) as NearbyStoreCard[]);
@@ -159,17 +163,23 @@ export default function CustomerHomePage() {
         </section>
       ) : null}
 
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-        {filteredRestaurants.map((restaurant) => (
-          <Link href={`/home/restaurant/${restaurant.id}`} key={restaurant.id} className="overflow-hidden rounded-2xl border border-zinc-200 bg-white">
-            <div className="h-36 w-full bg-zinc-100 sm:h-40 lg:h-44">{restaurant.image_url ? <img src={restaurant.image_url} alt={restaurant.name} className="h-full w-full object-cover" /> : null}</div>
-            <div className="p-3">
-              <p className="font-semibold">{restaurant.name}</p>
-              <p className={`text-xs ${restaurant.is_open ? "text-green-600" : "text-red-500"}`}>{restaurant.is_open ? "Ochiq" : "Yopiq"}</p>
-            </div>
-          </Link>
-        ))}
-      </div>
+      <section className="space-y-4 sm:space-y-5">
+        {filteredRestaurants.length === 0 ? (
+          <p className="py-6 text-center text-sm text-zinc-500">Restoran topilmadi</p>
+        ) : (
+          filteredRestaurants.map((restaurant, index) => (
+            <RestaurantHeroCard
+              key={restaurant.id}
+              id={restaurant.id}
+              name={restaurant.name}
+              imageUrl={restaurant.image_url}
+              categoryLabel={restaurant.category_id ? (categoryNames[restaurant.category_id] ?? null) : null}
+              isOpen={restaurant.is_open}
+              listIndex={index}
+            />
+          ))
+        )}
+      </section>
     </main>
   );
 }

@@ -1,19 +1,28 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
+import { RestaurantHeroCard } from "@/components/customer/restaurant-hero-card";
 import { createSupabaseBrowserClient } from "@/lib/supabase";
 
-type Restaurant = { id: string; name: string; image_url: string | null };
+type Restaurant = { id: string; name: string; image_url: string | null; is_open: boolean; category_id: string | null };
 
 export default function SearchPage() {
   const supabase = createSupabaseBrowserClient();
   const [query, setQuery] = useState("");
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
+  const [categoryNames, setCategoryNames] = useState<Record<string, string>>({});
   const popular = ["Burger", "Pizza", "Sushi", "Coffee", "Lavash"];
 
   useEffect(() => {
-    supabase.from("restaurants").select("id,name,image_url").order("name", { ascending: true }).then(({ data }) => setRestaurants((data ?? []) as Restaurant[]));
+    const load = async () => {
+      const [{ data: rests }, { data: cats }] = await Promise.all([
+        supabase.from("restaurants").select("id,name,image_url,is_open,category_id").order("name", { ascending: true }),
+        supabase.from("categories").select("id,name").order("sort_order", { ascending: true }),
+      ]);
+      setRestaurants((rests ?? []) as Restaurant[]);
+      setCategoryNames(Object.fromEntries((cats ?? []).map((c: { id: string; name: string }) => [c.id, c.name])));
+    };
+    void load();
   }, [supabase]);
 
   const filtered = useMemo(() => {
@@ -33,14 +42,23 @@ export default function SearchPage() {
           </button>
         ))}
       </div>
-      <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-        {filtered.map((restaurant) => (
-          <Link key={restaurant.id} href={`/home/restaurant/${restaurant.id}`} className="flex items-center gap-3 rounded-xl border border-zinc-200 bg-white p-3 sm:flex-col sm:items-stretch sm:gap-2 sm:p-0 sm:pb-3">
-            <div className="h-12 w-12 shrink-0 overflow-hidden rounded-lg bg-zinc-100 sm:h-36 sm:w-full sm:rounded-none sm:rounded-t-xl">{restaurant.image_url ? <img src={restaurant.image_url} alt={restaurant.name} className="h-full w-full object-cover" /> : null}</div>
-            <p className="min-w-0 truncate font-medium sm:px-3">{restaurant.name}</p>
-          </Link>
-        ))}
-      </div>
+      <section className="space-y-4 sm:space-y-5">
+        {filtered.length === 0 ? (
+          <p className="py-6 text-center text-sm text-zinc-500">Restoran topilmadi</p>
+        ) : (
+          filtered.map((restaurant, index) => (
+            <RestaurantHeroCard
+              key={restaurant.id}
+              id={restaurant.id}
+              name={restaurant.name}
+              imageUrl={restaurant.image_url}
+              categoryLabel={restaurant.category_id ? (categoryNames[restaurant.category_id] ?? null) : null}
+              isOpen={restaurant.is_open}
+              listIndex={index}
+            />
+          ))
+        )}
+      </section>
     </main>
   );
 }
