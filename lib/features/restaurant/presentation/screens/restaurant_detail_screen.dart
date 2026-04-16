@@ -22,6 +22,7 @@ class RestaurantDetailScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final restaurantAsync = ref.watch(restaurantDetailProvider(restaurantId));
     final menuAsync = ref.watch(restaurantMenuProvider(restaurantId));
+    final categoriesAsync = ref.watch(categoriesProvider);
     final money = NumberFormat.currency(locale: 'uz_UZ', symbol: "so'm ", decimalDigits: 0);
 
     return Scaffold(
@@ -112,13 +113,26 @@ class RestaurantDetailScreen extends ConsumerWidget {
                 ),
                 error: (e, _) => SliverFillRemaining(child: _buildErrorView(context, e)),
                 data: (items) {
+                  final orderedCategories = categoriesAsync.valueOrNull ?? const [];
+                  final categoryOrder = <String, int>{
+                    for (var i = 0; i < orderedCategories.length; i++)
+                      orderedCategories[i].name.trim().toLowerCase(): i,
+                  };
                   final grouped = <String, List<MenuItem>>{};
                   for (final item in items) {
                     final rawCategory = item.category?.trim() ?? '';
                     final category = rawCategory.isEmpty ? 'Boshqa' : rawCategory;
                     grouped.putIfAbsent(category, () => <MenuItem>[]).add(item);
                   }
-                  final sections = grouped.entries.toList();
+                  final sections = grouped.entries.toList()
+                    ..sort((a, b) {
+                      final orderA = categoryOrder[a.key.trim().toLowerCase()];
+                      final orderB = categoryOrder[b.key.trim().toLowerCase()];
+                      if (orderA != null && orderB != null) return orderA.compareTo(orderB);
+                      if (orderA != null) return -1;
+                      if (orderB != null) return 1;
+                      return a.key.toLowerCase().compareTo(b.key.toLowerCase());
+                    });
                   return SliverList(
                     delegate: SliverChildBuilderDelegate(
                       (context, i) {
