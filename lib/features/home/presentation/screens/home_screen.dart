@@ -1,7 +1,5 @@
 import 'package:customer_delivery/core/di/providers.dart';
 import 'package:customer_delivery/features/home/domain/entities/home_banner.dart';
-import 'package:customer_delivery/features/home/domain/entities/home_nearby_card.dart';
-import 'package:customer_delivery/features/home/domain/entities/home_service_card.dart';
 import 'package:customer_delivery/features/home/presentation/notifiers/restaurant_list_notifier.dart';
 import 'package:customer_delivery/features/home/presentation/providers/home_providers.dart';
 import 'package:customer_delivery/features/home/presentation/widgets/home_feed_sections.dart';
@@ -20,7 +18,6 @@ class HomeScreen extends ConsumerStatefulWidget {
 class _HomeScreenState extends ConsumerState<HomeScreen> {
   final _searchController = TextEditingController();
   final _scroll = ScrollController();
-  int _serviceTypeIndex = 1;
 
   @override
   void initState() {
@@ -41,76 +38,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     super.dispose();
   }
 
-  void _onServiceSelect(int i, List<HomeServiceCard> items) {
-    final key = (i >= 0 && i < items.length) ? items[i].serviceKey : '';
-    if (key != 'restaurants') {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Bo'lim tez orada mavjud bo'ladi")),
-      );
-    }
-    setState(() => _serviceTypeIndex = i);
-  }
-
   static const _etaPopular = ['20 – 30 daqiqa', '15 – 45 daqiqa', '25 – 30 daqiqa', '40 – 45 daqiqa'];
-
-  static const _fallbackServiceCards = [
-    HomeServiceCard(
-      id: 'stores-fallback',
-      serviceKey: 'stores',
-      title: "Do'konlar",
-      imageUrl: 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=400&q=80',
-      sortOrder: 0,
-      isActive: true,
-    ),
-    HomeServiceCard(
-      id: 'restaurants-fallback',
-      serviceKey: 'restaurants',
-      title: 'Restoranlar',
-      imageUrl: 'https://images.unsplash.com/photo-1600891964092-4316c288032e?w=400&q=80',
-      sortOrder: 1,
-      isActive: true,
-    ),
-    HomeServiceCard(
-      id: 'courier-fallback',
-      serviceKey: 'courier',
-      title: 'Kuryer',
-      imageUrl: 'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=400&q=80',
-      sortOrder: 2,
-      isActive: true,
-    ),
-  ];
 
   @override
   Widget build(BuildContext context) {
     final categoriesAsync = ref.watch(categoriesProvider);
     final listState = ref.watch(restaurantListNotifierProvider);
-    final serviceCardsAsync = ref.watch(homeServiceCardsProvider);
     final bannersAsync = ref.watch(homeBannersProvider);
-    final nearbyCardsAsync = ref.watch(homeNearbyCardsProvider);
-    final serviceCards = serviceCardsAsync.maybeWhen(
-      data: (cards) => cards.isNotEmpty ? cards.take(3).toList() : _fallbackServiceCards,
-      orElse: () => _fallbackServiceCards,
-    );
     final banners = bannersAsync.maybeWhen(
       data: (items) => items,
       orElse: () => const <HomeBanner>[],
-    );
-    final nearbyCards = nearbyCardsAsync.maybeWhen(
-      data: (items) => items,
-      orElse: () {
-        final sample = listState.items.take(3).toList();
-        return sample
-            .map(
-              (r) => HomeNearbyCard(
-                id: 'fallback-${r.id}',
-                imageUrl: r.imageUrl ?? '',
-                restaurantId: r.id,
-                sortOrder: 0,
-                isActive: true,
-              ),
-            )
-            .toList();
-      },
     );
     final session = ref.watch(supabaseClientProvider).auth.currentSession;
     const bg = Color(0xFFF3F4F6);
@@ -146,22 +83,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               },
             )),
             const SliverToBoxAdapter(child: SizedBox(height: 8)),
-            SliverToBoxAdapter(
-              child: HomeServiceTypeRow(
-                selectedIndex: _serviceTypeIndex,
-                onSelect: (i) => _onServiceSelect(i, serviceCards),
-                items: serviceCards,
-              ),
-            ),
-            const SliverToBoxAdapter(child: SizedBox(height: 8)),
             SliverToBoxAdapter(child: HomePromoBannerCarousel(banners: banners)),
-            SliverToBoxAdapter(
-              child: HomeSectionHeader(
-                title: "Yaqin do'konlar",
-                onSeeAll: () => context.push('/home/stores'),
-              ),
-            ),
-            SliverToBoxAdapter(child: HomeNearbyStoresRow(cards: nearbyCards.take(3).toList())),
             const SliverToBoxAdapter(child: HomeSectionHeader(title: 'Chegirmalar va aksiyalar')),
             const SliverToBoxAdapter(child: HomeDealsRow()),
             if (listState.items.isNotEmpty) ...[
