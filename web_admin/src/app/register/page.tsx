@@ -2,13 +2,14 @@
 
 import { FormEvent, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import toast from "react-hot-toast";
 import { createSupabaseBrowserClient } from "@/lib/supabase";
 import { pathAfterAuth } from "@/lib/auth-redirect";
 
 export default function RegisterPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
@@ -60,14 +61,16 @@ export default function RegisterPage() {
     if (data.session) {
       const { data: profile } = await supabase.from("profiles").select("role").eq("id", data.user.id).single();
       const role = profile?.role ?? "customer";
+      const next = searchParams.get("next");
       toast.success("Hisob yaratildi");
-      router.push(pathAfterAuth(role));
+      router.push(next && next.startsWith("/") ? next : pathAfterAuth(role));
       router.refresh();
       return;
     }
 
     toast.success("Emailni tasdiqlang, so'ng kirish sahifasiga o'ting");
-    router.push("/login");
+    const next = searchParams.get("next");
+    router.push(next ? `/login?next=${encodeURIComponent(next)}` : "/login");
     setLoading(false);
   };
 
@@ -75,10 +78,7 @@ export default function RegisterPage() {
     <main className="flex min-h-screen items-center justify-center px-4 py-10">
       <div className="w-full max-w-md rounded-2xl border border-zinc-200 bg-white p-8 shadow-sm">
         <h1 className="text-2xl font-semibold text-zinc-900">Ro&apos;yxatdan o&apos;tish</h1>
-        <p className="mt-2 text-sm text-zinc-500">
-          Yangi foydalanuvchiga <strong>customer</strong> (mijoz) roli beriladi. Admin / restoran / kuryer rollarini
-          administrator Supabase orqali beradi.
-        </p>
+        <p className="mt-2 text-sm text-zinc-500">Mijoz hisobini yarating va buyurtma berishni boshlang.</p>
 
         <form className="mt-6 space-y-4" onSubmit={onSubmit}>
           <label className="block">
@@ -151,7 +151,7 @@ export default function RegisterPage() {
 
         <p className="mt-6 text-center text-sm text-zinc-600">
           Hisobingiz bormi?{" "}
-          <Link href="/login" className="font-medium text-zinc-900 underline">
+          <Link href={searchParams.get("next") ? `/login?next=${encodeURIComponent(searchParams.get("next") ?? "")}` : "/login"} className="font-medium text-zinc-900 underline">
             Kirish
           </Link>
         </p>

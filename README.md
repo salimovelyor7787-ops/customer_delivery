@@ -1,16 +1,60 @@
-# Minutka
+# Customer Delivery
 
-A new Flutter project.
+This repository contains:
 
-## Getting Started
+- Flutter customer app (`lib/...`) for Android/iOS/Web
+- Customer website (`customer_web/...`) built with Next.js (separate deploy from admin)
+- Web admin panel (`web_admin/...`) built with Next.js
+- Supabase SQL and Edge Functions (`supabase/...`)
 
-This project is a starting point for a Flutter application.
+## Customer Website (Next.js)
 
-A few resources to get you started if this is your first Flutter project:
+```bash
+npm run install:customer-web
+npm run dev:customer-web
+```
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+## Customer Web (Flutter)
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+This is the Flutter app running in the browser. It is useful when you want the closest possible match to the mobile implementation without maintaining a separate web UI.
+
+### Run locally in browser
+
+```bash
+npm run web:run
+```
+
+This starts Flutter on Chrome.
+
+### Build production static website
+
+```bash
+npm run web:build
+```
+
+Production files will be generated into:
+
+```text
+flutter_web_deploy/
+```
+
+### Serve built website locally
+
+```bash
+npm run web:serve
+```
+
+Website will be available on:
+
+```text
+http://localhost:4173
+```
+
+## Admin Panel
+
+```bash
+npm run install:web-admin
+npm run dev
+```
+
+Admin panel runs from `web_admin`.

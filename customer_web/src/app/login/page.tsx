@@ -18,29 +18,15 @@ export default function LoginPage() {
     event.preventDefault();
     const supabase = createSupabaseBrowserClient();
     setLoading(true);
-
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     if (error || !data.user) {
       toast.error(error?.message ?? "Kirish muvaffaqiyatsiz");
       setLoading(false);
       return;
     }
-
-    const { data: profile, error: profileError } = await supabase
-      .from("profiles")
-      .select("role")
-      .eq("id", data.user.id)
-      .single();
-
-    if (profileError || !profile?.role) {
-      toast.error("Profil topilmadi");
-      setLoading(false);
-      return;
-    }
-
     const next = searchParams.get("next");
     toast.success("Xush kelibsiz");
-    router.push(next && next.startsWith("/") ? next : pathAfterAuth(profile.role));
+    router.push(next && next.startsWith("/") ? next : pathAfterAuth());
     router.refresh();
   };
 
@@ -49,41 +35,19 @@ export default function LoginPage() {
       <div className="w-full max-w-md rounded-2xl border border-zinc-200 bg-white p-8 shadow-sm">
         <h1 className="text-2xl font-semibold text-zinc-900">Kirish</h1>
         <p className="mt-2 text-sm text-zinc-500">Buyurtmalar, profil va tarixni ko&apos;rish uchun tizimga kiring.</p>
-
         <form className="mt-6 space-y-4" onSubmit={onSubmit}>
           <label className="block">
             <span className="mb-1 block text-sm text-zinc-600">Email</span>
-            <input
-              type="email"
-              required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full rounded-lg border border-zinc-300 px-3 py-2 outline-none focus:border-zinc-900"
-              autoComplete="email"
-            />
+            <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} className="w-full rounded-lg border border-zinc-300 px-3 py-2 outline-none focus:border-zinc-900" autoComplete="email" />
           </label>
-
           <label className="block">
             <span className="mb-1 block text-sm text-zinc-600">Parol</span>
-            <input
-              type="password"
-              required
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full rounded-lg border border-zinc-300 px-3 py-2 outline-none focus:border-zinc-900"
-              autoComplete="current-password"
-            />
+            <input type="password" required value={password} onChange={(e) => setPassword(e.target.value)} className="w-full rounded-lg border border-zinc-300 px-3 py-2 outline-none focus:border-zinc-900" autoComplete="current-password" />
           </label>
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full rounded-lg bg-zinc-900 px-4 py-2 font-medium text-white disabled:opacity-60"
-          >
+          <button type="submit" disabled={loading} className="w-full rounded-lg bg-zinc-900 px-4 py-2 font-medium text-white disabled:opacity-60">
             {loading ? "Kirilmoqda…" : "Kirish"}
           </button>
         </form>
-
         <p className="mt-6 text-center text-sm text-zinc-600">
           Hisobingiz yo&apos;qmi?{" "}
           <Link href={searchParams.get("next") ? `/register?next=${encodeURIComponent(searchParams.get("next") ?? "")}` : "/register"} className="font-medium text-zinc-900 underline">
