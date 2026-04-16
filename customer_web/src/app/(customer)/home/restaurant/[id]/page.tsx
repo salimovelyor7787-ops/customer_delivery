@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
 import toast from "react-hot-toast";
+import { Plus } from "lucide-react";
 import { useCart } from "@/components/customer/cart-context";
 import { createSupabaseBrowserClient } from "@/lib/supabase";
 
@@ -35,48 +36,55 @@ function MenuItemRow({ item }: { item: MenuItem }) {
   };
 
   return (
-    <article className="flex gap-3 rounded-2xl border border-zinc-200 bg-white p-3">
+    <article className="flex min-h-[5.5rem] gap-3 rounded-2xl border border-zinc-200 bg-white p-3">
       <div className="h-16 w-16 shrink-0 overflow-hidden rounded-xl bg-zinc-100">
         {item.image_url ? <img src={item.image_url} alt={item.name} className="h-full w-full object-cover" /> : null}
       </div>
-      <div className="flex min-w-0 flex-1 flex-col">
+      <div className="flex min-w-0 flex-1 flex-col pr-1">
         <p className="font-medium">{item.name}</p>
         {item.description ? <p className="line-clamp-2 text-sm text-zinc-500">{item.description}</p> : null}
-        <div className="mt-2 flex flex-col items-stretch gap-2 sm:items-end">
-          <p className="text-base font-semibold text-zinc-900 sm:text-right">so&apos;m {(item.price_cents / 100).toFixed(0)}</p>
-          {item.is_available ? (
-            qty === 0 ? (
-              <button type="button" onClick={addOne} className="rounded-lg bg-zinc-900 px-3 py-2 text-sm font-medium text-white sm:self-end">
-                Savatga
-              </button>
-            ) : (
-              <div className="inline-flex items-center gap-0 self-stretch rounded-lg border border-zinc-300 bg-zinc-50 sm:self-end">
-                <button
-                  type="button"
-                  aria-label="Kamaytirish"
-                  onClick={() => setQuantity(item.id, qty - 1)}
-                  className="px-3 py-2 text-lg font-medium leading-none text-zinc-700 hover:bg-zinc-100"
-                >
-                  −
-                </button>
-                <span className="min-w-[2rem] select-none text-center text-sm font-semibold tabular-nums">{qty}</span>
-                <button
-                  type="button"
-                  aria-label="Ko&apos;paytirish"
-                  onClick={() => setQuantity(item.id, qty + 1)}
-                  className="px-3 py-2 text-lg font-medium leading-none text-zinc-700 hover:bg-zinc-100"
-                >
-                  +
-                </button>
-              </div>
-            )
-          ) : (
-            <p className="text-right text-xs text-zinc-400">Mavjud emas</p>
-          )}
-        </div>
-        <Link href={`/home/restaurant/${item.restaurant_id}/item/${item.id}`} className="mt-2 inline-block text-xs text-orange-600 sm:self-end">
+        <Link href={`/home/restaurant/${item.restaurant_id}/item/${item.id}`} className="mt-auto pt-2 text-xs text-orange-600">
           Batafsil
         </Link>
+      </div>
+      <div className="flex shrink-0 flex-col items-end justify-end gap-1.5 self-stretch pl-1">
+        <p className="text-right text-sm font-semibold tabular-nums text-zinc-900">
+          so&apos;m {(item.price_cents / 100).toFixed(0)}
+        </p>
+        {item.is_available ? (
+          qty === 0 ? (
+            <button
+              type="button"
+              onClick={addOne}
+              aria-label="Savatga qo&apos;shish"
+              className="flex h-9 w-9 items-center justify-center rounded-full bg-zinc-900 text-white shadow-sm transition hover:bg-zinc-800 active:scale-95"
+            >
+              <Plus className="h-5 w-5" strokeWidth={2.5} />
+            </button>
+          ) : (
+            <div className="inline-flex items-center overflow-hidden rounded-full border border-zinc-300 bg-zinc-50">
+              <button
+                type="button"
+                aria-label="Kamaytirish"
+                onClick={() => setQuantity(item.id, qty - 1)}
+                className="px-2.5 py-1.5 text-base font-medium leading-none text-zinc-700 hover:bg-zinc-100"
+              >
+                −
+              </button>
+              <span className="min-w-[1.75rem] select-none px-0.5 text-center text-xs font-semibold tabular-nums">{qty}</span>
+              <button
+                type="button"
+                aria-label="Ko&apos;paytirish"
+                onClick={() => setQuantity(item.id, qty + 1)}
+                className="px-2.5 py-1.5 text-base font-medium leading-none text-zinc-700 hover:bg-zinc-100"
+              >
+                +
+              </button>
+            </div>
+          )
+        ) : (
+          <p className="max-w-[4.5rem] text-right text-[10px] leading-tight text-zinc-400">Mavjud emas</p>
+        )}
       </div>
     </article>
   );
