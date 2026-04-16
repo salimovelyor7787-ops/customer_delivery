@@ -29,12 +29,18 @@ type MenuOption = {
   price_delta_cents: number;
   sort_order: number;
 };
+type MenuCategory = {
+  id: string;
+  name: string;
+  sort_order: number;
+};
 
 const supabase = createSupabaseBrowserClient();
 
 export default function AdminMenuItemsPage() {
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
+  const [categories, setCategories] = useState<MenuCategory[]>([]);
   const [selectedRestaurantId, setSelectedRestaurantId] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -46,6 +52,7 @@ export default function AdminMenuItemsPage() {
 
   const [name, setName] = useState("");
   const [category, setCategory] = useState("Boshqa");
+  const [newCategory, setNewCategory] = useState("");
   const [description, setDescription] = useState("");
   const [price, setPrice] = useState("0");
   const [imageUrl, setImageUrl] = useState("");
@@ -91,6 +98,25 @@ export default function AdminMenuItemsPage() {
     setMenuItems((data ?? []) as MenuItem[]);
   };
 
+  const loadCategories = async (restaurantId: string) => {
+    if (!restaurantId) {
+      setCategories([]);
+      return;
+    }
+    const { data, error } = await supabase
+      .from("menu_categories")
+      .select("id,name,sort_order")
+      .eq("restaurant_id", restaurantId)
+      .order("sort_order", { ascending: true })
+      .order("name", { ascending: true });
+    if (error) return toast.error(error.message);
+    const list = (data ?? []) as MenuCategory[];
+    setCategories(list);
+    setCategory((prev) =>
+      list.some((item) => item.name === prev) ? prev : list.find((item) => item.name === "Boshqa")?.name ?? list[0]?.name ?? "Boshqa",
+    );
+  };
+
   const loadOptions = async (menuItemId: string) => {
     if (!menuItemId) {
       setOptions([]);
@@ -112,6 +138,7 @@ export default function AdminMenuItemsPage() {
 
   useEffect(() => {
     void loadMenuItems(selectedRestaurantId);
+    void loadCategories(selectedRestaurantId);
     resetForm();
     setSelectedOptionItemId("");
     setOptions([]);
@@ -183,6 +210,26 @@ export default function AdminMenuItemsPage() {
     toast.success("Kartochka o'chirildi");
     setMenuItems((prev) => prev.filter((item) => item.id !== id));
     if (editingId === id) resetForm();
+  };
+
+  const onAddCategory = async () => {
+    if (!selectedRestaurantId) return toast.error("Avval restoran tanlang");
+    const value = newCategory.trim();
+    if (!value) return;
+    const isDuplicate = categories.some((item) => item.name.toLowerCase() === value.toLowerCase());
+    if (isDuplicate) return toast.error("Bu kategoriya allaqachon mavjud");
+
+    const { error } = await supabase.from("menu_categories").insert({
+      restaurant_id: selectedRestaurantId,
+      name: value,
+      sort_order: categories.length + 1,
+    });
+    if (error) return toast.error(error.message);
+
+    toast.success("Kategoriya qo'shildi");
+    setNewCategory("");
+    await loadCategories(selectedRestaurantId);
+    setCategory(value);
   };
 
   const onCreateOption = async (event: FormEvent) => {
@@ -292,6 +339,34 @@ export default function AdminMenuItemsPage() {
         </select>
       </div>
 
+      <div className="space-y-3 rounded-2xl border border-zinc-200 bg-white p-4">
+        <h2 className="text-sm font-semibold text-zinc-900">Kategoriyalar</h2>
+        <div className="flex flex-wrap items-center gap-2">
+          {categories.length === 0 ? <p className="text-sm text-zinc-500">Kategoriya hali yo&apos;q.</p> : null}
+          {categories.map((cat) => (
+            <span key={cat.id} className="inline-flex items-center rounded-full border border-zinc-300 px-3 py-1.5 text-xs">
+              {cat.name}
+            </span>
+          ))}
+        </div>
+        <div className="flex flex-col gap-2 sm:flex-row">
+          <input
+            value={newCategory}
+            onChange={(e) => setNewCategory(e.target.value)}
+            placeholder="Yangi kategoriya nomi"
+            className="rounded-lg border border-zinc-300 px-3 py-2 text-sm"
+          />
+          <button
+            type="button"
+            onClick={() => void onAddCategory()}
+            disabled={!selectedRestaurantId}
+            className="rounded-lg bg-zinc-900 px-4 py-2 text-sm text-white disabled:opacity-50"
+          >
+            Kategoriya qo&apos;shish
+          </button>
+        </div>
+      </div>
+
       <form onSubmit={onSubmit} className="grid gap-3 rounded-2xl border border-zinc-200 bg-white p-4 md:grid-cols-2">
         <input
           value={name}
@@ -300,12 +375,14 @@ export default function AdminMenuItemsPage() {
           placeholder="Nomi"
           className="rounded-lg border border-zinc-300 px-3 py-2"
         />
-        <input
-          value={category}
-          onChange={(e) => setCategory(e.target.value)}
-          placeholder="Kategoriya"
-          className="rounded-lg border border-zinc-300 px-3 py-2"
-        />
+        <select value={category} onChange={(e) => setCategory(e.target.value)} className="rounded-lg border border-zinc-300 px-3 py-2">
+          {categories.length === 0 ? <option value="Boshqa">Boshqa</option> : null}
+          {categories.map((option) => (
+            <option key={option.id} value={option.name}>
+              {option.name}
+            </option>
+          ))}
+        </select>
         <textarea
           value={description}
           onChange={(e) => setDescription(e.target.value)}
@@ -355,8 +432,8 @@ export default function AdminMenuItemsPage() {
         </div>
       </form>
 
-      <div className="overflow-hidden rounded-2xl border border-zinc-200 bg-white">
-        <table className="min-w-full text-sm">
+      <div className="overflow-x-auto rounded-2xl border border-zinc-200 bg-white">
+        <table className="min-w-[760px] text-sm md:min-w-full">
           <thead className="bg-zinc-50 text-left text-zinc-500">
             <tr>
               <th className="px-4 py-3">Nomi</th>
@@ -452,8 +529,8 @@ export default function AdminMenuItemsPage() {
 
         {selectedOptionItemId ? (
           options.length > 0 ? (
-            <div className="overflow-hidden rounded-xl border border-zinc-200">
-              <table className="min-w-full text-sm">
+            <div className="overflow-x-auto rounded-xl border border-zinc-200">
+              <table className="min-w-[680px] text-sm md:min-w-full">
                 <thead className="bg-zinc-50 text-left text-zinc-500">
                   <tr>
                     <th className="px-3 py-2">Nomi</th>

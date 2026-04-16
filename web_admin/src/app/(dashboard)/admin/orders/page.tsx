@@ -24,7 +24,7 @@ export default function AdminOrdersPage() {
 
   return (
     <section className="space-y-4">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <h1 className="text-2xl font-semibold">Barcha buyurtmalar</h1>
         <select value={status} onChange={(e) => setStatus(e.target.value)} className="rounded-lg border border-zinc-300 px-3 py-2 text-sm">
           <option value="all">Barcha holatlar</option>
@@ -36,8 +36,8 @@ export default function AdminOrdersPage() {
           <option value="delivered">delivered (yetkazildi)</option>
         </select>
       </div>
-      <div className="overflow-hidden rounded-2xl border border-zinc-200 bg-white">
-        <table className="min-w-full text-sm">
+      <div className="overflow-x-auto rounded-2xl border border-zinc-200 bg-white">
+        <table className="min-w-[760px] text-sm md:min-w-full">
           <thead className="bg-zinc-50 text-left text-zinc-500">
             <tr>
               <th className="px-4 py-3">Buyurtma</th>

@@ -7,8 +7,8 @@ export default async function AdminUsersPage() {
   return (
     <section className="space-y-4">
       <h1 className="text-2xl font-semibold">Foydalanuvchilar</h1>
-      <div className="overflow-hidden rounded-2xl border border-zinc-200 bg-white">
-        <table className="min-w-full text-sm">
+      <div className="overflow-x-auto rounded-2xl border border-zinc-200 bg-white">
+        <table className="min-w-[640px] text-sm md:min-w-full">
           <thead className="bg-zinc-50 text-left text-zinc-500">
             <tr>
               <th className="px-4 py-3">Ism</th>

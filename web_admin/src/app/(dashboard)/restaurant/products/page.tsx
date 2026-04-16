@@ -439,8 +439,8 @@ export default function RestaurantProductsPage() {
 
         {selectedOptionItemId ? (
           options.length > 0 ? (
-            <div className="overflow-hidden rounded-xl border border-zinc-200">
-              <table className="min-w-full text-sm">
+            <div className="overflow-x-auto rounded-xl border border-zinc-200">
+              <table className="min-w-[680px] text-sm md:min-w-full">
                 <thead className="bg-zinc-50 text-left text-zinc-500">
                   <tr>
                     <th className="px-3 py-2">Nomi</th>
