@@ -22,7 +22,6 @@ export default function RestaurantProductsPage() {
   const [restaurantId, setRestaurantId] = useState<string>("");
   const [name, setName] = useState("");
   const [category, setCategory] = useState("Boshqa");
-  const [newCategory, setNewCategory] = useState("");
   const [price, setPrice] = useState("0");
   const [imageUrl, setImageUrl] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -31,22 +30,6 @@ export default function RestaurantProductsPage() {
   const [optionName, setOptionName] = useState("");
   const [optionPrice, setOptionPrice] = useState("0");
   const [editingOptionId, setEditingOptionId] = useState<string | null>(null);
-
-  const ensureFallbackCategory = useCallback(async (rid: string) => {
-    const { data: existing } = await supabase
-      .from("menu_categories")
-      .select("id")
-      .eq("restaurant_id", rid)
-      .eq("name", "Boshqa")
-      .maybeSingle();
-    if (!existing) {
-      await supabase.from("menu_categories").insert({
-        restaurant_id: rid,
-        name: "Boshqa",
-        sort_order: 0,
-      });
-    }
-  }, []);
 
   const loadProducts = useCallback(async (rid: string) => {
     const { data: rows } = await supabase
@@ -75,9 +58,8 @@ export default function RestaurantProductsPage() {
 
   const loadCategories = useCallback(async (rid: string) => {
     const { data: rows } = await supabase
-      .from("menu_categories")
+      .from("categories")
       .select("id,name,sort_order")
-      .eq("restaurant_id", rid)
       .order("sort_order", { ascending: true })
       .order("name", { ascending: true });
     const list = (rows ?? []) as MenuCategory[];
@@ -96,11 +78,10 @@ export default function RestaurantProductsPage() {
       if (!restaurant) return;
       setRestaurantId(restaurant.id);
 
-      await ensureFallbackCategory(restaurant.id);
       await Promise.all([loadProducts(restaurant.id), loadCategories(restaurant.id)]);
     };
     void loadData();
-  }, [ensureFallbackCategory, loadCategories, loadProducts]);
+  }, [loadCategories, loadProducts]);
 
   useEffect(() => {
     if (!selectedOptionItemId) return;
@@ -257,71 +238,18 @@ export default function RestaurantProductsPage() {
     }
   };
 
-  const onAddCategory = async () => {
-    if (!restaurantId) return;
-    const value = newCategory.trim();
-    if (!value) return;
-    const { error } = await supabase.from("menu_categories").insert({
-      restaurant_id: restaurantId,
-      name: value,
-      sort_order: categories.length + 1,
-    });
-    if (error) return toast.error(error.message);
-    toast.success("Kategoriya qo'shildi");
-    setNewCategory("");
-    await loadCategories(restaurantId);
-  };
-
-  const onDeleteCategory = async (cat: MenuCategory) => {
-    if (!restaurantId) return;
-    if (cat.name === "Boshqa") {
-      toast.error("Boshqa kategoriyasini o'chirib bo'lmaydi");
-      return;
-    }
-    // Keep menu consistent: move items to fallback before deleting category.
-    const { error: moveError } = await supabase
-      .from("menu_items")
-      .update({ category: "Boshqa" })
-      .eq("restaurant_id", restaurantId)
-      .eq("category", cat.name);
-    if (moveError) return toast.error(moveError.message);
-
-    const { error } = await supabase.from("menu_categories").delete().eq("id", cat.id).eq("restaurant_id", restaurantId);
-    if (error) return toast.error(error.message);
-    toast.success("Kategoriya o'chirildi");
-    await Promise.all([loadProducts(restaurantId), loadCategories(restaurantId)]);
-  };
-
   return (
     <section className="space-y-6">
       <h1 className="text-2xl font-semibold">Mahsulotlar</h1>
       <div className="space-y-3 rounded-2xl border border-zinc-200 bg-white p-4">
         <h2 className="text-sm font-semibold text-zinc-900">Kategoriyalar</h2>
         <div className="flex flex-wrap items-center gap-2">
+          {categories.length === 0 ? <p className="text-sm text-zinc-500">Kategoriya hali yo&apos;q. Avval admin paneldagi Kategoriyalar bo&apos;limida qo&apos;shing.</p> : null}
           {categories.map((cat) => (
             <div key={cat.id} className="inline-flex items-center gap-2 rounded-full border border-zinc-300 px-3 py-1.5 text-xs">
               <span>{cat.name}</span>
-              <button
-                type="button"
-                onClick={() => void onDeleteCategory(cat)}
-                className="text-zinc-400 transition hover:text-red-600"
-                aria-label={`Delete category ${cat.name}`}
-              >
-                ×
-              </button>
             </div>
           ))}
-        </div>
-        <div className="flex flex-col gap-2 sm:flex-row">
-          <input
-            value={newCategory}
-            onChange={(e) => setNewCategory(e.target.value)}
-            placeholder="Yangi kategoriya nomi"
-            className="rounded-lg border border-zinc-300 px-3 py-2 text-sm"
-          />
-          <button type="button" onClick={() => void onAddCategory()} className="rounded-lg bg-zinc-900 px-4 py-2 text-sm text-white">
-            Kategoriya qo&apos;shish
-          </button>
         </div>
       </div>
       <form onSubmit={editingId ? onSave : onCreate} className="grid gap-3 rounded-2xl border border-zinc-200 bg-white p-4 md:grid-cols-5">
