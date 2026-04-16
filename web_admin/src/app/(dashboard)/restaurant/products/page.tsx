@@ -31,6 +31,9 @@ export default function RestaurantProductsPage() {
   const [optionPrice, setOptionPrice] = useState("0");
   const [editingOptionId, setEditingOptionId] = useState<string | null>(null);
 
+  const getDefaultCategory = () =>
+    categories.find((item) => item.name === "Boshqa")?.name ?? categories[0]?.name ?? "Boshqa";
+
   const loadProducts = useCallback(async (rid: string) => {
     const { data: rows } = await supabase
       .from("menu_items")
@@ -91,6 +94,10 @@ export default function RestaurantProductsPage() {
     return () => clearTimeout(timer);
   }, [selectedOptionItemId, loadOptions]);
 
+  useEffect(() => {
+    setCategory((prev) => (categories.some((item) => item.name === prev) ? prev : getDefaultCategory()));
+  }, [categories]);
+
   const onCreate = async (event: FormEvent) => {
     event.preventDefault();
     const { error } = await supabase.from("menu_items").insert({
@@ -103,7 +110,7 @@ export default function RestaurantProductsPage() {
     if (error) return toast.error(error.message);
     toast.success("Mahsulot yaratildi");
     setName("");
-    setCategory("Boshqa");
+    setCategory(getDefaultCategory());
     setPrice("0");
     setImageUrl("");
     await loadProducts(restaurantId);
@@ -134,7 +141,7 @@ export default function RestaurantProductsPage() {
     toast.success("Mahsulot yangilandi");
     setEditingId(null);
     setName("");
-    setCategory("Boshqa");
+    setCategory(getDefaultCategory());
     setPrice("0");
     setImageUrl("");
     await loadProducts(restaurantId);
@@ -288,7 +295,7 @@ export default function RestaurantProductsPage() {
             onClick={() => {
               setEditingId(null);
               setName("");
-              setCategory("Boshqa");
+              setCategory(getDefaultCategory());
               setPrice("0");
               setImageUrl("");
             }}

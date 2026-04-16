@@ -62,10 +62,13 @@ export default function AdminMenuItemsPage() {
     [restaurants, selectedRestaurantId],
   );
 
+  const getDefaultCategory = () =>
+    categories.find((item) => item.name === "Boshqa")?.name ?? categories[0]?.name ?? "Boshqa";
+
   const resetForm = () => {
     setEditingId(null);
     setName("");
-    setCategory("Boshqa");
+    setCategory(getDefaultCategory());
     setDescription("");
     setPrice("0");
     setImageUrl("");
@@ -140,6 +143,10 @@ export default function AdminMenuItemsPage() {
     setOptionName("");
     setOptionPrice("0");
   }, [selectedRestaurantId]);
+
+  useEffect(() => {
+    setCategory((prev) => (categories.some((item) => item.name === prev) ? prev : getDefaultCategory()));
+  }, [categories]);
 
   useEffect(() => {
     void loadOptions(selectedOptionItemId);
