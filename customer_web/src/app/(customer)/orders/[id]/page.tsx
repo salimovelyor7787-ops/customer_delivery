@@ -66,13 +66,13 @@ export default function OrderDetailPage() {
         <p className="font-medium">{restaurantName}</p>
         <p className="text-sm text-zinc-500">Status: {order?.status ?? "—"}</p>
         <p className="text-sm text-zinc-500">Sana: {order ? new Date(order.created_at).toLocaleString() : "—"}</p>
-        <p className="mt-2 font-semibold">Jami: so&apos;m {order ? (order.total_cents / 100).toFixed(0) : "0"}</p>
+        <p className="mt-2 font-semibold">Jami: {order ? (order.total_cents / 100).toFixed(0) : "0"} so&apos;m</p>
       </div>
       <div className="space-y-2">
         {lines.map((line) => (
           <article key={line.id} className="rounded-xl border border-zinc-200 bg-white p-3">
             <p className="font-medium">{Array.isArray(line.menu_items) ? (line.menu_items[0]?.name ?? "Mahsulot") : (line.menu_items?.name ?? "Mahsulot")}</p>
-            <p className="text-sm text-zinc-500">{line.quantity} x so&apos;m {(line.unit_price_cents / 100).toFixed(0)}</p>
+            <p className="text-sm text-zinc-500">{line.quantity} x {(line.unit_price_cents / 100).toFixed(0)} so&apos;m</p>
           </article>
         ))}
       </div>

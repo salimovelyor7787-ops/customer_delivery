@@ -48,7 +48,7 @@ export default function ProductDetailPage() {
           {item.menu_item_options.map((option) => (
             <label key={option.id} className="flex items-center justify-between gap-3">
               <span className="text-sm">{option.name}</span>
-              <span className="text-xs text-zinc-500">+ so&apos;m {(option.price_delta_cents / 100).toFixed(0)}</span>
+              <span className="text-xs text-zinc-500">+ {(option.price_delta_cents / 100).toFixed(0)} so&apos;m</span>
               <input type="checkbox" checked={selectedOptions.includes(option.id)} onChange={(e) => setSelectedOptions((prev) => (e.target.checked ? [...prev, option.id] : prev.filter((id) => id !== option.id)))} />
             </label>
           ))}
@@ -65,7 +65,7 @@ export default function ProductDetailPage() {
         }}
         className="rounded-lg bg-zinc-900 px-4 py-2 text-white disabled:opacity-50"
       >
-        Savatga qo&apos;shish - so&apos;m {(totalCents / 100).toFixed(0)}
+        Savatga qo&apos;shish - {(totalCents / 100).toFixed(0)} so&apos;m
       </button>
     </main>
   );

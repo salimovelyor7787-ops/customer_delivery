@@ -91,7 +91,7 @@ export default function CheckoutPage() {
         <button type="button" onClick={detectLocation} disabled={locating} className="rounded-lg border border-zinc-300 px-4 py-2 text-sm">
           {locating ? "Aniqlanmoqda..." : lat && lng ? "Joylashuv aniqlandi" : "Joylashuvni aniqlash"}
         </button>
-        <p className="text-sm text-zinc-500">Jami: so&apos;m {(totalCents / 100).toFixed(0)}</p>
+        <p className="text-sm text-zinc-500">Jami: {(totalCents / 100).toFixed(0)} so&apos;m</p>
         <button disabled={saving || items.length === 0} className="rounded-lg bg-zinc-900 px-4 py-2 text-white disabled:opacity-50">
           {saving ? "Yuborilmoqda..." : "Buyurtma berish"}
         </button>

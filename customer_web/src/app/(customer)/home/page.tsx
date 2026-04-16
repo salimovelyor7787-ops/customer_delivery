@@ -148,8 +148,8 @@ export default function CustomerHomePage() {
                   <div className="space-y-1 p-2">
                     <p className="line-clamp-2 text-[11px] font-medium leading-tight text-zinc-900">{deal.name}</p>
                     <div className="flex flex-wrap items-baseline gap-x-1.5 gap-y-0">
-                      <span className="text-[10px] text-zinc-400 line-through">so&apos;m {(oldCents / 100).toFixed(0)}</span>
-                      <span className="text-xs font-semibold text-orange-600">so&apos;m {(newCents / 100).toFixed(0)}</span>
+                      <span className="text-[10px] text-zinc-400 line-through">{(oldCents / 100).toFixed(0)} so&apos;m</span>
+                      <span className="text-xs font-semibold text-orange-600">{(newCents / 100).toFixed(0)} so&apos;m</span>
                     </div>
                   </div>
                 </Link>

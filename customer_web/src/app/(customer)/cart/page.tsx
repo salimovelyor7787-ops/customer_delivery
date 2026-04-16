@@ -18,7 +18,7 @@ export default function CartPage() {
                 <p className="min-w-0 font-medium">{item.name}</p>
                 <button type="button" onClick={() => removeItem(item.id)} className="shrink-0 text-sm text-red-600">O&apos;chirish</button>
               </div>
-              <p className="text-sm text-zinc-500">so&apos;m {(item.priceCents / 100).toFixed(0)}</p>
+              <p className="text-sm text-zinc-500">{(item.priceCents / 100).toFixed(0)} so&apos;m</p>
               <div className="mt-2 flex items-center gap-2">
                 <button type="button" onClick={() => setQuantity(item.id, item.quantity - 1)} className="rounded border border-zinc-300 px-2">-</button>
                 <span>{item.quantity}</span>
@@ -29,7 +29,7 @@ export default function CartPage() {
         </div>
         {items.length > 0 ? (
           <div className="mt-4 rounded-xl border border-zinc-200 bg-white p-4 lg:sticky lg:top-4 lg:mt-0">
-            <p className="mb-3 text-lg font-semibold">Jami: so&apos;m {(totalCents / 100).toFixed(0)}</p>
+            <p className="mb-3 text-lg font-semibold">Jami: {(totalCents / 100).toFixed(0)} so&apos;m</p>
             <Link href="/checkout" className="inline-flex w-full justify-center rounded-lg bg-zinc-900 px-4 py-2.5 text-center text-white sm:w-auto">Buyurtma berish</Link>
           </div>
         ) : null}

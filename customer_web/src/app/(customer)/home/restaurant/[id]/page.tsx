@@ -49,7 +49,7 @@ function MenuItemRow({ item }: { item: MenuItem }) {
       </div>
       <div className="flex shrink-0 flex-col items-end justify-end gap-1.5 self-stretch pl-1">
         <p className="text-right text-sm font-semibold tabular-nums text-zinc-900">
-          so&apos;m {(item.price_cents / 100).toFixed(0)}
+          {(item.price_cents / 100).toFixed(0)} so&apos;m
         </p>
         {item.is_available ? (
           qty === 0 ? (
