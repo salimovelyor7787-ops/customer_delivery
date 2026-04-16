@@ -52,7 +52,6 @@ export default function AdminMenuItemsPage() {
 
   const [name, setName] = useState("");
   const [category, setCategory] = useState("Boshqa");
-  const [newCategory, setNewCategory] = useState("");
   const [description, setDescription] = useState("");
   const [price, setPrice] = useState("0");
   const [imageUrl, setImageUrl] = useState("");
@@ -98,15 +97,10 @@ export default function AdminMenuItemsPage() {
     setMenuItems((data ?? []) as MenuItem[]);
   };
 
-  const loadCategories = async (restaurantId: string) => {
-    if (!restaurantId) {
-      setCategories([]);
-      return;
-    }
+  const loadCategories = async () => {
     const { data, error } = await supabase
-      .from("menu_categories")
+      .from("categories")
       .select("id,name,sort_order")
-      .eq("restaurant_id", restaurantId)
       .order("sort_order", { ascending: true })
       .order("name", { ascending: true });
     if (error) return toast.error(error.message);
@@ -134,11 +128,11 @@ export default function AdminMenuItemsPage() {
 
   useEffect(() => {
     void loadRestaurants();
+    void loadCategories();
   }, []);
 
   useEffect(() => {
     void loadMenuItems(selectedRestaurantId);
-    void loadCategories(selectedRestaurantId);
     resetForm();
     setSelectedOptionItemId("");
     setOptions([]);
@@ -210,26 +204,6 @@ export default function AdminMenuItemsPage() {
     toast.success("Kartochka o'chirildi");
     setMenuItems((prev) => prev.filter((item) => item.id !== id));
     if (editingId === id) resetForm();
-  };
-
-  const onAddCategory = async () => {
-    if (!selectedRestaurantId) return toast.error("Avval restoran tanlang");
-    const value = newCategory.trim();
-    if (!value) return;
-    const isDuplicate = categories.some((item) => item.name.toLowerCase() === value.toLowerCase());
-    if (isDuplicate) return toast.error("Bu kategoriya allaqachon mavjud");
-
-    const { error } = await supabase.from("menu_categories").insert({
-      restaurant_id: selectedRestaurantId,
-      name: value,
-      sort_order: categories.length + 1,
-    });
-    if (error) return toast.error(error.message);
-
-    toast.success("Kategoriya qo'shildi");
-    setNewCategory("");
-    await loadCategories(selectedRestaurantId);
-    setCategory(value);
   };
 
   const onCreateOption = async (event: FormEvent) => {
@@ -342,28 +316,12 @@ export default function AdminMenuItemsPage() {
       <div className="space-y-3 rounded-2xl border border-zinc-200 bg-white p-4">
         <h2 className="text-sm font-semibold text-zinc-900">Kategoriyalar</h2>
         <div className="flex flex-wrap items-center gap-2">
-          {categories.length === 0 ? <p className="text-sm text-zinc-500">Kategoriya hali yo&apos;q.</p> : null}
+          {categories.length === 0 ? <p className="text-sm text-zinc-500">Kategoriya hali yo&apos;q. Avval Kategoriyalar bo&apos;limida qo&apos;shing.</p> : null}
           {categories.map((cat) => (
             <span key={cat.id} className="inline-flex items-center rounded-full border border-zinc-300 px-3 py-1.5 text-xs">
               {cat.name}
             </span>
           ))}
-        </div>
-        <div className="flex flex-col gap-2 sm:flex-row">
-          <input
-            value={newCategory}
-            onChange={(e) => setNewCategory(e.target.value)}
-            placeholder="Yangi kategoriya nomi"
-            className="rounded-lg border border-zinc-300 px-3 py-2 text-sm"
-          />
-          <button
-            type="button"
-            onClick={() => void onAddCategory()}
-            disabled={!selectedRestaurantId}
-            className="rounded-lg bg-zinc-900 px-4 py-2 text-sm text-white disabled:opacity-50"
-          >
-            Kategoriya qo&apos;shish
-          </button>
         </div>
       </div>
 
