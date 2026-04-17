@@ -22,6 +22,7 @@ create table if not exists public.categories (
 create table if not exists public.restaurants (
   id uuid primary key default uuid_generate_v4(),
   category_id uuid references public.categories (id),
+  category_ids uuid[] not null default '{}',
   name text not null,
   description text,
   slug text unique,

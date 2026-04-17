@@ -19,6 +19,7 @@ type RestaurantRow = {
   min_order_cents: number;
   owner_id: string | null;
   category_id: string | null;
+  category_ids: string[] | null;
 };
 
 type Category = {
@@ -47,14 +48,14 @@ export default function AdminRestaurantsPage() {
   const [deliveryFee, setDeliveryFee] = useState("0");
   const [minOrder, setMinOrder] = useState("0");
   const [ownerId, setOwnerId] = useState("");
-  const [categoryId, setCategoryId] = useState("");
+  const [selectedCategoryIds, setSelectedCategoryIds] = useState<string[]>([]);
 
   const loadData = async () => {
     const [{ data: restaurants, error: restaurantsError }, { data: categoryRows, error: categoriesError }] =
       await Promise.all([
         supabase
           .from("restaurants")
-          .select("id,name,description,slug,image_url,is_open,open_time_from,open_time_to,delivery_fee_cents,min_order_cents,owner_id,category_id")
+          .select("id,name,description,slug,image_url,is_open,open_time_from,open_time_to,delivery_fee_cents,min_order_cents,owner_id,category_id,category_ids")
           .order("name"),
         supabase.from("categories").select("id,name").order("sort_order", { ascending: true }),
       ]);
@@ -89,7 +90,7 @@ export default function AdminRestaurantsPage() {
     setDeliveryFee("0");
     setMinOrder("0");
     setOwnerId("");
-    setCategoryId("");
+    setSelectedCategoryIds([]);
   };
 
   const startEdit = (row: RestaurantRow) => {
@@ -105,7 +106,11 @@ export default function AdminRestaurantsPage() {
     setDeliveryFee((row.delivery_fee_cents / 100).toFixed(2));
     setMinOrder((row.min_order_cents / 100).toFixed(2));
     setOwnerId(row.owner_id ?? "");
-    setCategoryId(row.category_id ?? "");
+    if (row.category_ids && row.category_ids.length > 0) {
+      setSelectedCategoryIds(row.category_ids);
+    } else {
+      setSelectedCategoryIds(row.category_id ? [row.category_id] : []);
+    }
   };
 
   const startCreate = () => {
@@ -121,7 +126,7 @@ export default function AdminRestaurantsPage() {
     setDeliveryFee("0");
     setMinOrder("0");
     setOwnerId("");
-    setCategoryId("");
+    setSelectedCategoryIds([]);
   };
 
   const onSubmit = async (event: FormEvent) => {
@@ -138,7 +143,9 @@ export default function AdminRestaurantsPage() {
       delivery_fee_cents: Math.max(0, Math.round(Number(deliveryFee || "0") * 100)),
       min_order_cents: Math.max(0, Math.round(Number(minOrder || "0") * 100)),
       owner_id: ownerId.trim() === "" ? null : ownerId.trim(),
-      category_id: categoryId === "" ? null : categoryId,
+      category_ids: selectedCategoryIds,
+      // Keep legacy single-category column for backward compatibility.
+      category_id: selectedCategoryIds[0] ?? null,
     };
 
     const response =
@@ -169,6 +176,10 @@ export default function AdminRestaurantsPage() {
     setConfirmDeleteRow(null);
     toast.success("Restoran o'chirildi");
     await loadData();
+  };
+
+  const toggleCategory = (id: string) => {
+    setSelectedCategoryIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
   };
 
   return (
@@ -262,18 +273,35 @@ export default function AdminRestaurantsPage() {
             placeholder="Egasi foydalanuvchi ID"
             className="rounded-lg border border-zinc-300 px-3 py-2"
           />
-          <select
-            value={categoryId}
-            onChange={(e) => setCategoryId(e.target.value)}
-            className="rounded-lg border border-zinc-300 px-3 py-2"
-          >
-            <option value="">Kategoriyasiz</option>
-            {categories.map((category) => (
-              <option key={category.id} value={category.id}>
-                {category.name}
-              </option>
-            ))}
-          </select>
+          <div className="space-y-2 rounded-lg border border-zinc-300 px-3 py-2 md:col-span-2">
+            <p className="text-sm font-medium text-zinc-700">Kategoriyalar (bir nechta tanlash mumkin)</p>
+            <div className="flex flex-wrap gap-2">
+              {categories.map((category) => {
+                const checked = selectedCategoryIds.includes(category.id);
+                return (
+                  <button
+                    key={category.id}
+                    type="button"
+                    onClick={() => toggleCategory(category.id)}
+                    className={`rounded-full border px-3 py-1.5 text-xs ${
+                      checked ? "border-orange-500 bg-orange-50 text-orange-700" : "border-zinc-300 text-zinc-600"
+                    }`}
+                  >
+                    {category.name}
+                  </button>
+                );
+              })}
+              {categories.length === 0 ? <p className="text-xs text-zinc-500">Kategoriyalar topilmadi</p> : null}
+            </div>
+            <p className="text-xs text-zinc-500">
+              Tanlangan:{" "}
+              {selectedCategoryIds.length > 0
+                ? selectedCategoryIds
+                    .map((id) => categories.find((category) => category.id === id)?.name ?? id)
+                    .join(", ")
+                : "Kategoriyasiz"}
+            </p>
+          </div>
           <input
             type="number"
             min="0"

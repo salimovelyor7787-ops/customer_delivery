@@ -6,7 +6,14 @@ import { Bell, Search, Store } from "lucide-react";
 import { RestaurantHeroCard } from "@/components/customer/restaurant-hero-card";
 import { createSupabaseBrowserClient } from "@/lib/supabase";
 
-type Restaurant = { id: string; name: string; image_url: string | null; is_open: boolean; category_id: string | null };
+type Restaurant = {
+  id: string;
+  name: string;
+  image_url: string | null;
+  is_open: boolean;
+  category_id: string | null;
+  category_ids: string[] | null;
+};
 type Banner = { id: string; image_url: string; title: string | null };
 type DealItem = { id: string; restaurant_id: string; name: string; image_url: string | null; price_cents: number; deal_price_cents: number | null };
 type NearbyStoreCard = { id: string; title: string | null; image_url: string; restaurant_id: string | null };
@@ -24,7 +31,7 @@ export default function CustomerHomePage() {
   useEffect(() => {
     const load = async () => {
       const [{ data: rests }, { data: catRows }, { data: bannerRows }, { data: dealRows }, { data: nearbyRows }, { data: pushRows }] = await Promise.all([
-        supabase.from("restaurants").select("id,name,image_url,is_open,category_id").order("name", { ascending: true }),
+        supabase.from("restaurants").select("id,name,image_url,is_open,category_id,category_ids").order("name", { ascending: true }),
         supabase.from("categories").select("id,name").order("sort_order", { ascending: true }),
         supabase.from("banners").select("id,image_url,title").eq("active", true).order("sort_order", { ascending: true }).limit(5),
         supabase.from("menu_items").select("id,restaurant_id,name,image_url,price_cents,deal_price_cents").eq("is_available", true).eq("is_deal", true).not("deal_price_cents", "is", null).order("sort_order", { ascending: true }).limit(10),
@@ -51,11 +58,24 @@ export default function CustomerHomePage() {
     }));
   }, [nearbyCards, restaurants]);
 
+  const getRestaurantCategoryNames = (restaurant: Restaurant): string[] => {
+    const ids = restaurant.category_ids && restaurant.category_ids.length > 0
+      ? restaurant.category_ids
+      : restaurant.category_id
+        ? [restaurant.category_id]
+        : [];
+    return ids.map((id) => categoryNames[id]).filter(Boolean);
+  };
+
   const filteredRestaurants = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
     if (!q) return restaurants;
-    return restaurants.filter((r) => r.name.toLowerCase().includes(q));
-  }, [restaurants, searchQuery]);
+    return restaurants.filter((r) => {
+      if (r.name.toLowerCase().includes(q)) return true;
+      const categoryText = getRestaurantCategoryNames(r).join(" ").toLowerCase();
+      return categoryText.includes(q);
+    });
+  }, [restaurants, searchQuery, categoryNames]);
 
   return (
     <main className="space-y-4 p-4 sm:p-6 lg:space-y-6 lg:p-8">
@@ -173,7 +193,12 @@ export default function CustomerHomePage() {
               id={restaurant.id}
               name={restaurant.name}
               imageUrl={restaurant.image_url}
-              categoryLabel={restaurant.category_id ? (categoryNames[restaurant.category_id] ?? null) : null}
+              categoryLabel={
+                (() => {
+                  const names = getRestaurantCategoryNames(restaurant);
+                  return names.length > 0 ? names.join(", ") : null;
+                })()
+              }
               isOpen={restaurant.is_open}
               listIndex={index}
               compact

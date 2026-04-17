@@ -4,7 +4,14 @@ import { useEffect, useMemo, useState } from "react";
 import { RestaurantHeroCard } from "@/components/customer/restaurant-hero-card";
 import { createSupabaseBrowserClient } from "@/lib/supabase";
 
-type Restaurant = { id: string; name: string; image_url: string | null; is_open: boolean; category_id: string | null };
+type Restaurant = {
+  id: string;
+  name: string;
+  image_url: string | null;
+  is_open: boolean;
+  category_id: string | null;
+  category_ids: string[] | null;
+};
 
 export default function SearchPage() {
   const supabase = createSupabaseBrowserClient();
@@ -16,7 +23,7 @@ export default function SearchPage() {
   useEffect(() => {
     const load = async () => {
       const [{ data: rests }, { data: cats }] = await Promise.all([
-        supabase.from("restaurants").select("id,name,image_url,is_open,category_id").order("name", { ascending: true }),
+        supabase.from("restaurants").select("id,name,image_url,is_open,category_id,category_ids").order("name", { ascending: true }),
         supabase.from("categories").select("id,name").order("sort_order", { ascending: true }),
       ]);
       setRestaurants((rests ?? []) as Restaurant[]);
@@ -25,11 +32,24 @@ export default function SearchPage() {
     void load();
   }, [supabase]);
 
+  const getRestaurantCategoryNames = (restaurant: Restaurant): string[] => {
+    const ids = restaurant.category_ids && restaurant.category_ids.length > 0
+      ? restaurant.category_ids
+      : restaurant.category_id
+        ? [restaurant.category_id]
+        : [];
+    return ids.map((id) => categoryNames[id]).filter(Boolean);
+  };
+
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     if (!q) return restaurants;
-    return restaurants.filter((r) => r.name.toLowerCase().includes(q));
-  }, [query, restaurants]);
+    return restaurants.filter((r) => {
+      if (r.name.toLowerCase().includes(q)) return true;
+      const categoryText = getRestaurantCategoryNames(r).join(" ").toLowerCase();
+      return categoryText.includes(q);
+    });
+  }, [query, restaurants, categoryNames]);
 
   return (
     <main className="space-y-4 p-4 sm:p-6 lg:space-y-6 lg:p-8">
@@ -52,7 +72,12 @@ export default function SearchPage() {
               id={restaurant.id}
               name={restaurant.name}
               imageUrl={restaurant.image_url}
-              categoryLabel={restaurant.category_id ? (categoryNames[restaurant.category_id] ?? null) : null}
+              categoryLabel={
+                (() => {
+                  const names = getRestaurantCategoryNames(restaurant);
+                  return names.length > 0 ? names.join(", ") : null;
+                })()
+              }
               isOpen={restaurant.is_open}
               listIndex={index}
             />
