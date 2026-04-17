@@ -31,6 +31,7 @@ export default function AdminRestaurantsPage() {
   const [rows, setRows] = useState<RestaurantRow[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [saving, setSaving] = useState(false);
 
@@ -150,6 +151,26 @@ export default function AdminRestaurantsPage() {
     await loadData();
   };
 
+  const onDelete = async (row: RestaurantRow) => {
+    const confirmed = window.confirm(
+      `Rostdan ham "${row.name}" restoranini o'chirmoqchimisiz? Bu amalni ortga qaytarib bo'lmaydi.`
+    );
+    if (!confirmed) return;
+
+    setDeletingId(row.id);
+    const { error } = await supabase.from("restaurants").delete().eq("id", row.id);
+    setDeletingId(null);
+
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+
+    if (editingId === row.id) resetForm();
+    toast.success("Restoran o'chirildi");
+    await loadData();
+  };
+
   return (
     <section className="space-y-6">
       <h1 className="text-2xl font-semibold">Restoranlar</h1>
@@ -179,12 +200,21 @@ export default function AdminRestaurantsPage() {
                 <td className="px-4 py-3">{restaurant.is_open ? "Ochiq" : "Yopiq"}</td>
                 <td className="px-4 py-3 text-xs">{restaurant.owner_id ?? "—"}</td>
                 <td className="px-4 py-3">
-                  <button
-                    onClick={() => startEdit(restaurant)}
-                    className="rounded border border-zinc-300 px-3 py-1 text-xs"
-                  >
-                    Tahrirlash
-                  </button>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <button
+                      onClick={() => startEdit(restaurant)}
+                      className="rounded border border-zinc-300 px-3 py-1 text-xs"
+                    >
+                      Tahrirlash
+                    </button>
+                    <button
+                      onClick={() => void onDelete(restaurant)}
+                      disabled={deletingId === restaurant.id}
+                      className="rounded border border-red-300 px-3 py-1 text-xs text-red-700 disabled:opacity-50"
+                    >
+                      {deletingId === restaurant.id ? "O'chirilmoqda..." : "O'chirish"}
+                    </button>
+                  </div>
                 </td>
               </tr>
             ))}
