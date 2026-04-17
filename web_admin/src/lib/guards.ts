@@ -22,5 +22,5 @@ export async function requireRole(allowed: UserRole[]) {
     redirect(pathAfterAuth(role));
   }
 
-  return { supabase, user: row, role: role as UserRole };
+  return { supabase, user: row, role: role as UserRole, sessionUserId: sessionData.session.user.id };
 }
