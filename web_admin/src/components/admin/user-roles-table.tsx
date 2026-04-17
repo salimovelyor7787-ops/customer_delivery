@@ -10,6 +10,7 @@ export type ProfileRow = {
   full_name: string | null;
   phone: string | null;
   role: string;
+  email: string | null;
 };
 
 export type RestaurantOwnerRow = {
@@ -95,10 +96,11 @@ export function UserRolesTable({
 
   return (
     <div className="overflow-x-auto rounded-2xl border border-zinc-200 bg-white">
-      <table className="min-w-[960px] text-sm md:min-w-full">
+      <table className="min-w-[1100px] text-sm md:min-w-full">
         <thead className="bg-zinc-50 text-left text-zinc-500">
           <tr>
             <th className="px-4 py-3">Ism</th>
+            <th className="px-4 py-3">Email</th>
             <th className="px-4 py-3">Telefon</th>
             <th className="px-4 py-3">Rol</th>
             <th className="px-4 py-3">Restoran (faqat restoran admini)</th>
@@ -112,6 +114,7 @@ export function UserRolesTable({
             return (
               <tr key={u.id} className="border-t border-zinc-100 align-top">
                 <td className="px-4 py-3">{u.full_name ?? "—"}</td>
+                <td className="px-4 py-3 break-all text-zinc-700">{u.email ?? "—"}</td>
                 <td className="px-4 py-3">{u.phone ?? "—"}</td>
                 <td className="px-4 py-3">
                   <select
