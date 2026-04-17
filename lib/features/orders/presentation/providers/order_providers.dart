@@ -5,7 +5,12 @@ import 'package:customer_delivery/features/orders/domain/repositories/order_repo
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 final orderRepositoryProvider = Provider<OrderRepository>((ref) {
-  return OrderRepositoryImpl(ref.watch(supabaseClientProvider));
+  final cfg = ref.watch(appConfigProvider);
+  return OrderRepositoryImpl(
+    ref.watch(supabaseClientProvider),
+    supabaseAnonKey: cfg.supabaseAnonKey,
+    createOrderApiUrl: cfg.createOrderApiUrl,
+  );
 });
 
 final activeOrdersProvider = FutureProvider<List<OrderSummary>>((ref) async {

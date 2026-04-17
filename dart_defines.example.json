@@ -1,4 +1,5 @@
 {
   "SUPABASE_URL": "https://YOUR_PROJECT.supabase.co",
-  "SUPABASE_ANON_KEY": "paste_anon_public_key_here"
+  "SUPABASE_ANON_KEY": "paste_anon_public_key_here",
+  "CREATE_ORDER_API_URL": "https://YOUR_VERCEL_APP.vercel.app/api/create-order"
 }
