@@ -1,16 +1,24 @@
 import type { Metadata, Viewport } from "next";
-import { Inter } from "next/font/google";
 import { Toaster } from "react-hot-toast";
 import "./globals.css";
 
-const inter = Inter({
-  variable: "--font-inter",
-  subsets: ["latin"],
-});
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://minutka.uz";
 
 export const metadata: Metadata = {
+  metadataBase: new URL(siteUrl),
   title: "Minutka",
   description: "Mijozlar uchun ovqat yetkazib berish veb-ilovasi",
+  alternates: {
+    canonical: "/",
+  },
+  openGraph: {
+    title: "Minutka",
+    description: "Mijozlar uchun ovqat yetkazib berish veb-ilovasi",
+    url: siteUrl,
+    siteName: "Minutka",
+    locale: "uz_UZ",
+    type: "website",
+  },
 };
 
 export const viewport: Viewport = {
@@ -21,7 +29,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="uz" className={`${inter.variable} h-full antialiased`}>
+    <html lang="uz" className="h-full antialiased">
       <body className="min-h-full bg-zinc-50 text-zinc-900">
         {children}
         <Toaster position="top-right" />

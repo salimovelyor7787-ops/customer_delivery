@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import Image from "next/image";
 import { useParams } from "next/navigation";
 import toast from "react-hot-toast";
 import { useCart } from "@/components/customer/cart-context";
@@ -20,7 +21,7 @@ type MenuItem = {
 
 export default function ProductDetailPage() {
   const params = useParams<{ id: string; itemId: string }>();
-  const supabase = createSupabaseBrowserClient();
+  const supabase = useMemo(() => createSupabaseBrowserClient(), []);
   const { addItemWithRestaurantGuard } = useCart();
   const [item, setItem] = useState<MenuItem | null>(null);
   const [selectedOptions, setSelectedOptions] = useState<string[]>([]);
@@ -40,7 +41,18 @@ export default function ProductDetailPage() {
   return (
     <main className="space-y-4 p-4 sm:p-6 lg:p-8">
       <h1 className="text-2xl font-semibold">{item.name}</h1>
-      {item.image_url ? <img src={item.image_url} alt={item.name} className="h-52 w-full rounded-2xl object-cover" /> : null}
+      {item.image_url ? (
+        <div className="relative h-52 w-full overflow-hidden rounded-2xl">
+          <Image
+            src={item.image_url}
+            alt={item.name}
+            fill
+            sizes="(max-width: 768px) 100vw, 80vw"
+            className="object-cover"
+            priority
+          />
+        </div>
+      ) : null}
       {item.description ? <p className="text-sm text-zinc-600">{item.description}</p> : null}
       {item.menu_item_options.length > 0 ? (
         <section className="space-y-2 rounded-2xl border border-zinc-200 bg-white p-4">

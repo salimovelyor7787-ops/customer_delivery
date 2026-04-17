@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
 import toast from "react-hot-toast";
@@ -38,7 +39,9 @@ function MenuItemRow({ item }: { item: MenuItem }) {
   return (
     <article className="flex min-h-[5.5rem] gap-3 rounded-2xl border border-zinc-200 bg-white p-3">
       <div className="h-16 w-16 shrink-0 overflow-hidden rounded-xl bg-zinc-100">
-        {item.image_url ? <img src={item.image_url} alt={item.name} className="h-full w-full object-cover" /> : null}
+        {item.image_url ? (
+          <Image src={item.image_url} alt={item.name} width={64} height={64} className="h-full w-full object-cover" sizes="64px" />
+        ) : null}
       </div>
       <div className="flex min-w-0 flex-1 flex-col pr-1">
         <p className="font-medium">{item.name}</p>
@@ -92,7 +95,7 @@ function MenuItemRow({ item }: { item: MenuItem }) {
 
 export default function RestaurantPage() {
   const params = useParams<{ id: string }>();
-  const supabase = createSupabaseBrowserClient();
+  const supabase = useMemo(() => createSupabaseBrowserClient(), []);
   const [restaurant, setRestaurant] = useState<Restaurant | null>(null);
   const [items, setItems] = useState<MenuItem[]>([]);
 
@@ -122,7 +125,18 @@ export default function RestaurantPage() {
 
   return (
     <main className="space-y-4 p-4 sm:p-6 lg:space-y-6 lg:p-8">
-      {restaurant?.image_url ? <img src={restaurant.image_url} alt={restaurant.name} className="h-44 w-full rounded-2xl object-cover sm:h-52 lg:h-64 lg:max-h-[22rem]" /> : null}
+      {restaurant?.image_url ? (
+        <div className="relative h-44 w-full overflow-hidden rounded-2xl sm:h-52 lg:h-64 lg:max-h-[22rem]">
+          <Image
+            src={restaurant.image_url}
+            alt={restaurant.name}
+            fill
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 90vw, 80vw"
+            className="object-cover"
+            priority
+          />
+        </div>
+      ) : null}
       <h1 className="text-2xl font-semibold sm:text-3xl">{restaurant?.name ?? "Restoran"}</h1>
       <div className="space-y-5 lg:space-y-8">
         {grouped.map(([category, lines]) => (

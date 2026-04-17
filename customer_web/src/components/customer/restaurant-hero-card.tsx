@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { Star } from "lucide-react";
 
 const ETA_LABELS = ["20 – 30 daqiqa", "15 – 45 daqiqa", "25 – 30 daqiqa", "40 – 45 daqiqa"];
@@ -34,7 +35,13 @@ export function RestaurantHeroCard({ id, name, imageUrl, categoryLabel, isOpen =
       className={`group relative block w-full overflow-hidden rounded-[22px] shadow-[0_4px_20px_rgba(0,0,0,0.12)] ring-1 ring-black/5 transition active:scale-[0.99] ${compact ? "h-[168px] sm:h-[184px] lg:h-[198px]" : "h-[188px] sm:h-[208px] lg:h-[228px]"}`}
     >
       {imageUrl ? (
-        <img src={imageUrl} alt={name} className="absolute inset-0 h-full w-full object-cover transition duration-300 group-hover:scale-105" />
+        <Image
+          src={imageUrl}
+          alt={name}
+          fill
+          sizes={compact ? "(max-width: 768px) 100vw, 50vw" : "(max-width: 768px) 100vw, 60vw"}
+          className="absolute inset-0 h-full w-full object-cover transition duration-300 group-hover:scale-105"
+        />
       ) : (
         <div className="absolute inset-0 bg-gradient-to-br from-zinc-400 to-zinc-600" aria-hidden />
       )}

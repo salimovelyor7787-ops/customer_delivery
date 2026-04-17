@@ -1,9 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import Image from "next/image";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Bell, Search, Store } from "lucide-react";
 import { RestaurantHeroCard } from "@/components/customer/restaurant-hero-card";
+import { getCachedValue, setCachedValue } from "@/lib/client-cache";
 import { createSupabaseBrowserClient } from "@/lib/supabase";
 
 type Restaurant = {
@@ -17,9 +19,20 @@ type Restaurant = {
 type Banner = { id: string; image_url: string; title: string | null };
 type DealItem = { id: string; restaurant_id: string; name: string; image_url: string | null; price_cents: number; deal_price_cents: number | null };
 type NearbyStoreCard = { id: string; title: string | null; image_url: string; restaurant_id: string | null };
+type HomeCachePayload = {
+  restaurants: Restaurant[];
+  categories: Record<string, string>;
+  banners: Banner[];
+  deals: DealItem[];
+  nearbyCards: NearbyStoreCard[];
+  hasNotifications: boolean;
+};
+
+const HOME_CACHE_KEY = "customer_home_cache_v1";
+const HOME_CACHE_TTL_MS = 2 * 60 * 1000;
 
 export default function CustomerHomePage() {
-  const supabase = createSupabaseBrowserClient();
+  const supabase = useMemo(() => createSupabaseBrowserClient(), []);
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
   const [banners, setBanners] = useState<Banner[]>([]);
   const [deals, setDeals] = useState<DealItem[]>([]);
@@ -29,7 +42,45 @@ export default function CustomerHomePage() {
   const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
+    const cached = getCachedValue<HomeCachePayload>(HOME_CACHE_KEY);
+    if (cached) {
+      Promise.resolve().then(() => {
+        setRestaurants(cached.restaurants);
+        setCategoryNames(cached.categories);
+        setBanners(cached.banners);
+        setDeals(cached.deals);
+        setNearbyCards(cached.nearbyCards);
+        setHasNotifications(cached.hasNotifications);
+      });
+    }
+
+    const loadFromApi = async (): Promise<HomeCachePayload | null> => {
+      try {
+        const res = await fetch("/api/home");
+        if (!res.ok) return null;
+        const json: unknown = await res.json();
+        if (!json || typeof json !== "object" || "error" in json) return null;
+        const data = json as HomeCachePayload;
+        if (!Array.isArray(data.restaurants)) return null;
+        return data;
+      } catch {
+        return null;
+      }
+    };
+
     const load = async () => {
+      const fromApi = await loadFromApi();
+      if (fromApi) {
+        setRestaurants(fromApi.restaurants);
+        setCategoryNames(fromApi.categories);
+        setBanners(fromApi.banners);
+        setDeals(fromApi.deals);
+        setNearbyCards(fromApi.nearbyCards);
+        setHasNotifications(fromApi.hasNotifications);
+        setCachedValue(HOME_CACHE_KEY, fromApi, HOME_CACHE_TTL_MS);
+        return;
+      }
+
       const [{ data: rests }, { data: catRows }, { data: bannerRows }, { data: dealRows }, { data: nearbyRows }, { data: pushRows }] = await Promise.all([
         supabase.from("restaurants").select("id,name,image_url,is_open,category_id,category_ids").order("name", { ascending: true }),
         supabase.from("categories").select("id,name").order("sort_order", { ascending: true }),
@@ -38,12 +89,22 @@ export default function CustomerHomePage() {
         supabase.from("home_nearby_cards").select("id,title,image_url,restaurant_id").eq("is_active", true).order("sort_order", { ascending: true }).limit(20),
         supabase.from("push_notifications").select("id").eq("is_active", true).limit(1),
       ]);
-      setRestaurants((rests ?? []) as Restaurant[]);
-      setCategoryNames(Object.fromEntries((catRows ?? []).map((c: { id: string; name: string }) => [c.id, c.name])));
-      setBanners((bannerRows ?? []) as Banner[]);
-      setDeals((dealRows ?? []) as DealItem[]);
-      setNearbyCards((nearbyRows ?? []) as NearbyStoreCard[]);
-      setHasNotifications((pushRows ?? []).length > 0);
+      const nextPayload: HomeCachePayload = {
+        restaurants: (rests ?? []) as Restaurant[],
+        categories: Object.fromEntries((catRows ?? []).map((c: { id: string; name: string }) => [c.id, c.name])),
+        banners: (bannerRows ?? []) as Banner[],
+        deals: (dealRows ?? []) as DealItem[],
+        nearbyCards: (nearbyRows ?? []) as NearbyStoreCard[],
+        hasNotifications: (pushRows ?? []).length > 0,
+      };
+
+      setRestaurants(nextPayload.restaurants);
+      setCategoryNames(nextPayload.categories);
+      setBanners(nextPayload.banners);
+      setDeals(nextPayload.deals);
+      setNearbyCards(nextPayload.nearbyCards);
+      setHasNotifications(nextPayload.hasNotifications);
+      setCachedValue(HOME_CACHE_KEY, nextPayload, HOME_CACHE_TTL_MS);
     };
     void load();
   }, [supabase]);
@@ -58,14 +119,17 @@ export default function CustomerHomePage() {
     }));
   }, [nearbyCards, restaurants]);
 
-  const getRestaurantCategoryNames = (restaurant: Restaurant): string[] => {
-    const ids = restaurant.category_ids && restaurant.category_ids.length > 0
-      ? restaurant.category_ids
-      : restaurant.category_id
-        ? [restaurant.category_id]
-        : [];
-    return ids.map((id) => categoryNames[id]).filter(Boolean);
-  };
+  const getRestaurantCategoryNames = useCallback(
+    (restaurant: Restaurant): string[] => {
+      const ids = restaurant.category_ids && restaurant.category_ids.length > 0
+        ? restaurant.category_ids
+        : restaurant.category_id
+          ? [restaurant.category_id]
+          : [];
+      return ids.map((id) => categoryNames[id]).filter(Boolean);
+    },
+    [categoryNames],
+  );
 
   const filteredRestaurants = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
@@ -75,7 +139,7 @@ export default function CustomerHomePage() {
       const categoryText = getRestaurantCategoryNames(r).join(" ").toLowerCase();
       return categoryText.includes(q);
     });
-  }, [restaurants, searchQuery, categoryNames]);
+  }, [restaurants, searchQuery, getRestaurantCategoryNames]);
 
   return (
     <main className="space-y-4 p-4 sm:p-6 lg:space-y-6 lg:p-8">
@@ -106,7 +170,13 @@ export default function CustomerHomePage() {
         <div className="flex gap-2 overflow-x-auto pb-1 md:grid md:grid-cols-2 md:overflow-x-visible lg:grid-cols-3">
           {banners.map((banner) => (
             <div key={banner.id} className="relative h-36 min-w-[280px] overflow-hidden rounded-2xl bg-zinc-100 md:min-w-0 md:h-40 lg:h-44">
-              <img src={banner.image_url} alt={banner.title ?? "Banner"} className="h-full w-full object-cover" />
+              <Image
+                src={banner.image_url}
+                alt={banner.title ?? "Banner"}
+                fill
+                sizes="(max-width: 768px) 280px, (max-width: 1024px) 50vw, 33vw"
+                className="h-full w-full object-cover"
+              />
               {banner.title ? <p className="absolute bottom-2 left-2 rounded bg-black/55 px-2 py-1 text-xs text-white">{banner.title}</p> : null}
             </div>
           ))}
@@ -126,7 +196,13 @@ export default function CustomerHomePage() {
               const inner = (
                 <div className="relative h-[74px] w-[108px] shrink-0 snap-start overflow-hidden rounded-xl border border-zinc-200/90 bg-white shadow-sm">
                   {card.image_url ? (
-                    <img src={card.image_url} alt={card.title ?? "Do'kon"} className="h-full w-full object-cover" />
+                    <Image
+                      src={card.image_url}
+                      alt={card.title ?? "Do'kon"}
+                      fill
+                      sizes="108px"
+                      className="h-full w-full object-cover"
+                    />
                   ) : (
                     <div className="flex h-full w-full items-center justify-center bg-zinc-100 text-zinc-400">
                       <Store className="h-8 w-8" aria-hidden />
@@ -167,7 +243,9 @@ export default function CustomerHomePage() {
                   className="w-[148px] shrink-0 snap-start overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-sm sm:w-[156px]"
                 >
                   <div className="relative h-[72px] bg-zinc-100">
-                    {deal.image_url ? <img src={deal.image_url} alt={deal.name} className="h-full w-full object-cover" /> : null}
+                    {deal.image_url ? (
+                      <Image src={deal.image_url} alt={deal.name} fill sizes="156px" className="h-full w-full object-cover" />
+                    ) : null}
                   </div>
                   <div className="space-y-1 p-2">
                     <p className="line-clamp-2 text-[11px] font-medium leading-tight text-zinc-900">{deal.name}</p>
