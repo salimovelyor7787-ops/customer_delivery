@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { isLikelyJwt } from "@/lib/edge-function-error";
+import { createOrderDirect, isEdgeFunctionNotFound, type CreateOrderBody } from "@/lib/server/create-order-impl";
 import { createSupabaseServerClient } from "@/lib/supabase-server";
 
 /**
@@ -66,6 +67,41 @@ export async function POST(req: Request) {
     parsed = text ? JSON.parse(text) : null;
   } catch {
     parsed = { error: text.slice(0, 200) || "Edge function returned non-JSON" };
+  }
+
+  if (
+    upstream.ok &&
+    parsed &&
+    typeof parsed === "object" &&
+    "order_id" in parsed &&
+    typeof (parsed as { order_id: unknown }).order_id === "string"
+  ) {
+    return NextResponse.json(parsed, { status: upstream.status });
+  }
+
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (serviceKey && isEdgeFunctionNotFound(upstream.status, text, parsed)) {
+    const direct = await createOrderDirect({
+      supabaseUrl: base,
+      anonKey,
+      serviceRoleKey: serviceKey,
+      authorizationHeader: `Bearer ${accessToken}`,
+      body: body as CreateOrderBody,
+    });
+    if (direct.ok) {
+      return NextResponse.json({ order_id: direct.order_id }, { status: 200 });
+    }
+    return NextResponse.json(direct.body, { status: direct.status });
+  }
+
+  if (!serviceKey && isEdgeFunctionNotFound(upstream.status, text, parsed)) {
+    return NextResponse.json(
+      {
+        error:
+          "Edge Function create_order topilmadi. Variantlar: (1) Supabase → Edge Functions → create_order ni deploy qiling; yoki (2) Vercel → Environment → SUPABASE_SERVICE_ROLE_KEY qo'shing (faqat server, NEXT_PUBLIC emas).",
+      },
+      { status: 503 },
+    );
   }
 
   return NextResponse.json(parsed, { status: upstream.status });
