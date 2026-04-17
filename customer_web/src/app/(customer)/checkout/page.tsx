@@ -77,28 +77,57 @@ export default function CheckoutPage() {
       }
     }
 
-    const { data, error } = await supabase.functions.invoke("create_order", {
-      body: {
-        restaurant_id: restaurantId,
-        address_id: null,
-        payment_method: "cash",
-        guest_phone: isGuest ? `+998${phoneDigits}` : null,
-        guest_lat: lat,
-        guest_lng: lng,
-        guest_device_id: isGuest ? guestDeviceId : null,
-        items: items.map((item) => ({
-          menu_item_id: item.id.includes(":") ? item.id.split(":")[0] : item.id,
-          quantity: item.quantity,
-          selected_option_ids: item.id.includes(":") ? item.id.split(":")[1]?.split(",").filter(Boolean) ?? [] : [],
-        })),
-      },
-    });
+    const payload = {
+      restaurant_id: restaurantId,
+      address_id: null,
+      payment_method: "cash",
+      guest_phone: isGuest ? `+998${phoneDigits}` : null,
+      guest_lat: lat,
+      guest_lng: lng,
+      guest_device_id: isGuest ? guestDeviceId : null,
+      items: items.map((item) => ({
+        menu_item_id: item.id.includes(":") ? item.id.split(":")[0] : item.id,
+        quantity: item.quantity,
+        selected_option_ids: item.id.includes(":") ? item.id.split(":")[1]?.split(",").filter(Boolean) ?? [] : [],
+      })),
+    };
+
+    let res: Response;
+    try {
+      res = await fetch("/api/create-order", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+    } catch {
+      setSaving(false);
+      return toast.error("Tarmoq xatosi — qayta urinib ko'ring");
+    }
+
+    let json: { order_id?: string; error?: string } | null = null;
+    try {
+      json = (await res.json()) as { order_id?: string; error?: string };
+    } catch {
+      json = null;
+    }
+
     setSaving(false);
-    if (error) return toast.error(error.message ?? "Buyurtma yuborilmadi");
-    clear();
-    toast.success("Buyurtma yuborildi");
-    if (isGuest) return router.push("/home");
-    router.push(`/orders/${data?.order_id ?? ""}`);
+
+    if (json?.order_id) {
+      clear();
+      toast.success("Buyurtma yuborildi");
+      if (isGuest) return router.push("/home");
+      router.push(`/orders/${json.order_id}`);
+      return;
+    }
+
+    const msg =
+      typeof json?.error === "string"
+        ? json.error
+        : res.status === 502
+          ? "Server bilan aloqa uzildi"
+          : "Buyurtma yuborilmadi";
+    toast.error(msg);
   };
 
   return (
