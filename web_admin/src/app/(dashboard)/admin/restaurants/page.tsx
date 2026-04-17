@@ -2,6 +2,7 @@
 
 import { FormEvent, useEffect, useState } from "react";
 import toast from "react-hot-toast";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { ImageUpload } from "@/components/ui/image-upload";
 import { createSupabaseBrowserClient } from "@/lib/supabase";
 
@@ -32,6 +33,7 @@ export default function AdminRestaurantsPage() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [confirmDeleteRow, setConfirmDeleteRow] = useState<RestaurantRow | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [saving, setSaving] = useState(false);
 
@@ -151,14 +153,11 @@ export default function AdminRestaurantsPage() {
     await loadData();
   };
 
-  const onDelete = async (row: RestaurantRow) => {
-    const confirmed = window.confirm(
-      `Rostdan ham "${row.name}" restoranini o'chirmoqchimisiz? Bu amalni ortga qaytarib bo'lmaydi.`
-    );
-    if (!confirmed) return;
+  const onDelete = async () => {
+    if (!confirmDeleteRow) return;
 
-    setDeletingId(row.id);
-    const { error } = await supabase.from("restaurants").delete().eq("id", row.id);
+    setDeletingId(confirmDeleteRow.id);
+    const { error } = await supabase.from("restaurants").delete().eq("id", confirmDeleteRow.id);
     setDeletingId(null);
 
     if (error) {
@@ -166,7 +165,8 @@ export default function AdminRestaurantsPage() {
       return;
     }
 
-    if (editingId === row.id) resetForm();
+    if (editingId === confirmDeleteRow.id) resetForm();
+    setConfirmDeleteRow(null);
     toast.success("Restoran o'chirildi");
     await loadData();
   };
@@ -208,7 +208,7 @@ export default function AdminRestaurantsPage() {
                       Tahrirlash
                     </button>
                     <button
-                      onClick={() => void onDelete(restaurant)}
+                      onClick={() => setConfirmDeleteRow(restaurant)}
                       disabled={deletingId === restaurant.id}
                       className="rounded border border-red-300 px-3 py-1 text-xs text-red-700 disabled:opacity-50"
                     >
@@ -322,6 +322,21 @@ export default function AdminRestaurantsPage() {
           </div>
         </form>
       ) : null}
+
+      <ConfirmDialog
+        open={confirmDeleteRow != null}
+        title="Restoranni o'chirish"
+        description={
+          confirmDeleteRow
+            ? `Rostdan ham "${confirmDeleteRow.name}" restoranini o'chirmoqchimisiz? Bu amalni ortga qaytarib bo'lmaydi.`
+            : ""
+        }
+        confirmText="O'chirish"
+        cancelText="Bekor qilish"
+        loading={confirmDeleteRow != null && deletingId === confirmDeleteRow.id}
+        onConfirm={() => void onDelete()}
+        onCancel={() => setConfirmDeleteRow(null)}
+      />
     </section>
   );
 }
