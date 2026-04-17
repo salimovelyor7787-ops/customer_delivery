@@ -135,8 +135,19 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
             ],
             onChanged: (_) => setState(() {}),
             decoration: const InputDecoration(
-              prefixText: '+998 ',
+              prefixIcon: Padding(
+                padding: EdgeInsets.only(left: 12, right: 8),
+                child: Center(
+                  widthFactor: 1,
+                  child: Text(
+                    '+998',
+                    style: TextStyle(fontWeight: FontWeight.w600),
+                  ),
+                ),
+              ),
+              prefixIconConstraints: BoxConstraints(minWidth: 0, minHeight: 0),
               hintText: '90 123 45 67',
+              helperText: '9 ta raqam kiriting',
               hintStyle: TextStyle(color: Color(0xFFB6B6B6)),
               border: OutlineInputBorder(),
             ),

@@ -16,17 +16,20 @@ export function RegisterClient() {
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [loading, setLoading] = useState(false);
+  const phoneDigits = phone.replace(/\D/g, "").slice(0, 9);
+  const normalizedPhone = phoneDigits.length === 9 ? `+998${phoneDigits}` : "";
 
   const onSubmit = async (event: FormEvent) => {
     event.preventDefault();
     if (password !== confirm) return toast.error("Parollar mos kelmaydi");
     if (password.length < 6) return toast.error("Parol kamida 6 belgidan iborat bo'lsin");
+    if (phoneDigits.length > 0 && phoneDigits.length !== 9) return toast.error("Telefon 9 xonali bo'lishi kerak");
     const supabase = createSupabaseBrowserClient();
     setLoading(true);
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
-      options: { data: { full_name: fullName.trim(), phone: phone.trim() || undefined } },
+      options: { data: { full_name: fullName.trim(), phone: normalizedPhone || undefined } },
     });
     if (error) {
       toast.error(error.message);
@@ -38,8 +41,8 @@ export function RegisterClient() {
       setLoading(false);
       return;
     }
-    if (phone.trim() && data.session) {
-      await supabase.from("profiles").update({ phone: phone.trim() }).eq("id", data.user.id);
+    if (normalizedPhone && data.session) {
+      await supabase.from("profiles").update({ phone: normalizedPhone }).eq("id", data.user.id);
     }
     if (data.session) {
       const next = searchParams.get("next");
@@ -63,7 +66,23 @@ export function RegisterClient() {
         <p className="mt-2 text-sm text-zinc-500">Mijoz hisobini yarating va buyurtma berishni boshlang.</p>
         <form className="mt-6 space-y-4" onSubmit={onSubmit}>
           <label className="block"><span className="mb-1 block text-sm text-zinc-600">Ism</span><input type="text" required value={fullName} onChange={(e) => setFullName(e.target.value)} className="w-full rounded-lg border border-zinc-300 px-3 py-2 outline-none focus:border-zinc-900" autoComplete="name" /></label>
-          <label className="block"><span className="mb-1 block text-sm text-zinc-600">Telefon (ixtiyoriy)</span><input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} className="w-full rounded-lg border border-zinc-300 px-3 py-2 outline-none focus:border-zinc-900" autoComplete="tel" /></label>
+          <label className="block">
+            <span className="mb-1 block text-sm text-zinc-600">Telefon (ixtiyoriy)</span>
+            <div className="flex items-center overflow-hidden rounded-lg border border-zinc-300 bg-white focus-within:border-zinc-900">
+              <span className="border-r border-zinc-200 bg-zinc-50 px-3 py-2 text-sm font-medium text-zinc-700">+998</span>
+              <input
+                type="tel"
+                inputMode="numeric"
+                pattern="[0-9]*"
+                value={phoneDigits}
+                onChange={(e) => setPhone(e.target.value.replace(/\D/g, "").slice(0, 9))}
+                placeholder="901234567"
+                className="w-full px-3 py-2 outline-none"
+                autoComplete="tel-national"
+              />
+            </div>
+            <p className="mt-1 text-xs text-zinc-500">9 ta raqam kiriting</p>
+          </label>
           <label className="block"><span className="mb-1 block text-sm text-zinc-600">Email</span><input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} className="w-full rounded-lg border border-zinc-300 px-3 py-2 outline-none focus:border-zinc-900" autoComplete="email" /></label>
           <label className="block"><span className="mb-1 block text-sm text-zinc-600">Parol</span><input type="password" required value={password} onChange={(e) => setPassword(e.target.value)} className="w-full rounded-lg border border-zinc-300 px-3 py-2 outline-none focus:border-zinc-900" autoComplete="new-password" /></label>
           <label className="block"><span className="mb-1 block text-sm text-zinc-600">Parolni takrorlang</span><input type="password" required value={confirm} onChange={(e) => setConfirm(e.target.value)} className="w-full rounded-lg border border-zinc-300 px-3 py-2 outline-none focus:border-zinc-900" autoComplete="new-password" /></label>

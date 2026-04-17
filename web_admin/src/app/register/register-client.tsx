@@ -16,6 +16,8 @@ export function RegisterClient() {
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [loading, setLoading] = useState(false);
+  const phoneDigits = phone.replace(/\D/g, "").slice(0, 9);
+  const normalizedPhone = phoneDigits.length === 9 ? `+998${phoneDigits}` : "";
 
   const onSubmit = async (event: FormEvent) => {
     event.preventDefault();
@@ -25,6 +27,10 @@ export function RegisterClient() {
     }
     if (password.length < 6) {
       toast.error("Parol kamida 6 belgidan iborat bo'lsin");
+      return;
+    }
+    if (phoneDigits.length > 0 && phoneDigits.length !== 9) {
+      toast.error("Telefon 9 xonali bo'lishi kerak");
       return;
     }
 
@@ -37,7 +43,7 @@ export function RegisterClient() {
       options: {
         data: {
           full_name: fullName.trim(),
-          phone: phone.trim() || undefined,
+          phone: normalizedPhone || undefined,
         },
       },
     });
@@ -54,8 +60,8 @@ export function RegisterClient() {
       return;
     }
 
-    if (phone.trim() && data.session) {
-      await supabase.from("profiles").update({ phone: phone.trim() }).eq("id", data.user.id);
+    if (normalizedPhone && data.session) {
+      await supabase.from("profiles").update({ phone: normalizedPhone }).eq("id", data.user.id);
     }
 
     if (data.session) {
@@ -97,13 +103,20 @@ export function RegisterClient() {
 
           <label className="block">
             <span className="mb-1 block text-sm text-zinc-600">Telefon (ixtiyoriy)</span>
-            <input
-              type="tel"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              className="w-full rounded-lg border border-zinc-300 px-3 py-2 outline-none focus:border-zinc-900"
-              autoComplete="tel"
-            />
+            <div className="flex items-center overflow-hidden rounded-lg border border-zinc-300 bg-white focus-within:border-zinc-900">
+              <span className="border-r border-zinc-200 bg-zinc-50 px-3 py-2 text-sm font-medium text-zinc-700">+998</span>
+              <input
+                type="tel"
+                inputMode="numeric"
+                pattern="[0-9]*"
+                value={phoneDigits}
+                onChange={(e) => setPhone(e.target.value.replace(/\D/g, "").slice(0, 9))}
+                placeholder="901234567"
+                className="w-full px-3 py-2 outline-none"
+                autoComplete="tel-national"
+              />
+            </div>
+            <p className="mt-1 text-xs text-zinc-500">9 ta raqam kiriting</p>
           </label>
 
           <label className="block">
