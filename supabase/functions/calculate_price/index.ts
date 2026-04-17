@@ -1,4 +1,5 @@
 // deno-lint-ignore-file no-explicit-any
+// Standalone pricing endpoint (Flutter / tools). `create_order` inlines the same logic so checkout works if only that function is deployed.
 import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 
