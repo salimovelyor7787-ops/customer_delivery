@@ -58,9 +58,21 @@ class OrderRepositoryImpl implements OrderRepository {
 
   /// Shown when Edge Function `create_order` is missing on the linked Supabase project.
   String _edgeFunctionMissingMessage() {
-    return 'Supabase loyihasida create_order Edge Function topilmadi. '
-        'Loyiha papkasida: supabase functions deploy create_order '
-        '(yoki Dashboard → Edge Functions). Kod: supabase/functions/create_order/';
+    return 'Supabase loyihasida create_order Edge Function yo‘q (shuning uchun buyurtma yuborilmaydi).\n\n'
+        'Qanday tuzatish: kompyuterdagi loyiha papkasida `supabase functions deploy create_order` '
+        'yoki Supabase → Edge Functions → create_order ni deploy qiling.\n\n'
+        'На стороне Supabase нужно задеплоить функцию create_order из папки '
+        'supabase/functions/create_order/ (команда: supabase functions deploy create_order).';
+  }
+
+  bool _isCreateOrderNotFoundBody(Object? data) {
+    if (data is! Map) return false;
+    final code = data['code']?.toString().toUpperCase();
+    final msg = '${data['message'] ?? ''}'.toLowerCase();
+    if (code == 'NOT_FOUND') return true;
+    if (msg.contains('requested function was not found')) return true;
+    if (msg.contains('function not found')) return true;
+    return false;
   }
 
   String _friendlyInvokeError(int status, dynamic data) {
@@ -109,15 +121,22 @@ class OrderRepositoryImpl implements OrderRepository {
         body: body,
         method: HttpMethod.post,
       );
+      final data = res.data;
+      // Ba'zi SDK buildlarda status null bo‘lib, xato JSON qaytishi mumkin.
+      if (_isCreateOrderNotFoundBody(data)) {
+        return FailureResult(ValidationFailure(_edgeFunctionMissingMessage()));
+      }
       if (res.status != null && res.status! >= 400) {
         return FailureResult(ValidationFailure(_friendlyInvokeError(res.status!, res.data)));
       }
-      final data = res.data;
       if (data is Map<String, dynamic> && data['order_id'] != null) {
         return Success(data['order_id'].toString());
       }
       if (data is Map && data['order_id'] != null) {
         return Success(data['order_id'].toString());
+      }
+      if (data is Map && (data['error'] != null || data['code'] != null)) {
+        return FailureResult(ValidationFailure(_messageFromDecoded(data, data.toString())));
       }
       return const FailureResult(ServerFailure('Invalid create_order response'));
     } catch (e) {
