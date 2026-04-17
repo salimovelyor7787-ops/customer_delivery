@@ -19,6 +19,15 @@ export default function CheckoutPage() {
   const [saving, setSaving] = useState(false);
   const phoneDigits = phone.replace(/\D/g, "").slice(0, 9);
 
+  const geoButtonLabel =
+    geoState === "locating"
+      ? "Определяем местоположение…"
+      : geoState === "success"
+        ? "Локация определена — можете заказать"
+        : geoState === "error"
+          ? "Локацию не удалось определить — попробуйте ещё раз"
+          : "Уточнить местоположение";
+
   const detectLocation = () => {
     if (!navigator.geolocation) {
       setGeoState("error");
@@ -115,7 +124,7 @@ export default function CheckoutPage() {
           onClick={detectLocation}
           disabled={geoState === "locating"}
           className={
-            "mx-auto flex w-fit max-w-full items-center justify-center gap-1.5 rounded-lg px-4 py-2 text-sm font-medium text-white transition disabled:cursor-not-allowed disabled:opacity-70 " +
+            "mx-auto flex w-fit max-w-full items-center justify-center gap-1.5 whitespace-normal rounded-lg px-4 py-2 text-center text-sm font-medium leading-snug text-white transition disabled:cursor-not-allowed disabled:opacity-70 " +
             (geoState === "success"
               ? "bg-green-600 hover:bg-green-700"
               : geoState === "error"
@@ -123,19 +132,13 @@ export default function CheckoutPage() {
                 : "bg-zinc-900 hover:bg-zinc-800")
           }
         >
-          <MapPin className="h-4 w-4 shrink-0" aria-hidden />
-          {geoState === "locating"
-            ? "Joylashuv aniqlanmoqda…"
-            : geoState === "success"
-              ? "Joylashuvni qayta aniqlash"
-              : "Joylashuvni aniqlash"}
+          <MapPin className="h-4 w-4 shrink-0 self-center" aria-hidden />
+          {geoButtonLabel}
         </button>
         {geoState === "success" && lat != null && lng != null ? (
-          <p className="text-center text-sm font-medium text-green-700">Joylashuv aniqlandi</p>
-        ) : geoState === "error" ? (
-          <p className="text-center text-sm font-medium text-red-600">Joylashuv aniqlanmadi, qayta urinib ko&apos;ring</p>
-        ) : (
-          <p className="text-center text-sm text-zinc-500">Buyurtma uchun joylashuvingizni aniqlang</p>
+          <p className="text-center text-sm text-zinc-500">Оформите заказ кнопкой ниже</p>
+        ) : geoState === "error" ? null : (
+          <p className="text-center text-sm text-zinc-500">Для заказа сначала уточните местоположение</p>
         )}
         <p className="text-sm text-zinc-500">Jami: {(totalCents / 100).toFixed(0)} so&apos;m</p>
         <button disabled={saving || items.length === 0} className="rounded-lg bg-zinc-900 px-4 py-2 text-white disabled:opacity-50">
