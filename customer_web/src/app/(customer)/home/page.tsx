@@ -176,6 +176,7 @@ export default function CustomerHomePage() {
               categoryLabel={restaurant.category_id ? (categoryNames[restaurant.category_id] ?? null) : null}
               isOpen={restaurant.is_open}
               listIndex={index}
+              compact
             />
           ))
         )}
@@ -183,3 +184,4 @@ export default function CustomerHomePage() {
     </main>
   );
 }
+
