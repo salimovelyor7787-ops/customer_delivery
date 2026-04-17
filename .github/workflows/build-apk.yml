@@ -1,7 +1,6 @@
 # APK с вшитыми ключами: задайте Secrets → Actions:
 #   SUPABASE_URL, SUPABASE_ANON_KEY (Project Settings → API в Supabase)
-# Опционально: CREATE_ORDER_API_URL = полный URL Next.js /api/create-order на Vercel
-# (как у сайта), если Edge Function create_order в Supabase не задеплоена.
+# Оформление заказа в приложении: deploy Edge Function create_order (supabase/functions/create_order).
 
 name: Build Android APK
 
@@ -43,17 +42,14 @@ jobs:
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
-          CREATE_ORDER_API_URL: ${{ secrets.CREATE_ORDER_API_URL }}
         run: |
           if [ -z "$SUPABASE_URL" ] || [ -z "$SUPABASE_ANON_KEY" ]; then
             echo "::error::Добавьте в репозиторий секреты SUPABASE_URL и SUPABASE_ANON_KEY (Settings → Secrets and variables → Actions)."
             exit 1
           fi
-          defines=(--dart-define=SUPABASE_URL="$SUPABASE_URL" --dart-define=SUPABASE_ANON_KEY="$SUPABASE_ANON_KEY")
-          if [ -n "$CREATE_ORDER_API_URL" ]; then
-            defines+=(--dart-define=CREATE_ORDER_API_URL="$CREATE_ORDER_API_URL")
-          fi
-          flutter build apk --release "${defines[@]}"
+          flutter build apk --release \
+            --dart-define=SUPABASE_URL="$SUPABASE_URL" \
+            --dart-define=SUPABASE_ANON_KEY="$SUPABASE_ANON_KEY"
 
       - name: Upload APK
         uses: actions/upload-artifact@v4

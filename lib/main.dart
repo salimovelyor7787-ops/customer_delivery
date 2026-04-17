@@ -55,16 +55,15 @@ class _MissingSupabaseConfigApp extends StatelessWidget {
                 SizedBox(height: 8),
                 Text(
                   '• GitHub Actions: в репозитории Settings → Secrets → Actions задайте '
-                  'SUPABASE_URL и SUPABASE_ANON_KEY, затем снова запустите workflow «Build Android APK». '
-                  'Если checkout на сайте работает через Vercel без Edge Function, добавьте секрет '
-                  'CREATE_ORDER_API_URL = https://<ваш-проект>.vercel.app/api/create-order\n\n'
+                  'SUPABASE_URL и SUPABASE_ANON_KEY, затем снова запустите workflow «Build Android APK».\n\n'
+                  '• Buyurtma: Supabase-da create_order Edge Function deploy qiling '
+                  '(supabase functions deploy create_order).\n\n'
                   '• Локально: скопируйте dart_defines.example.json → dart_defines.json, '
                   'вставьте свои значения и выполните:\n'
                   'flutter build apk --release --dart-define-from-file=dart_defines.json\n\n'
                   '• Запуск с ПК:\n'
                   'flutter run --dart-define=SUPABASE_URL=https://....supabase.co '
-                  '--dart-define=SUPABASE_ANON_KEY=eyJ... '
-                  '--dart-define=CREATE_ORDER_API_URL=https://....vercel.app/api/create-order',
+                  '--dart-define=SUPABASE_ANON_KEY=eyJ...',
                 ),
               ],
             ),

@@ -5,20 +5,12 @@ import 'package:customer_delivery/core/utils/result.dart';
 import 'package:customer_delivery/features/cart/domain/entities/cart_line.dart';
 import 'package:customer_delivery/features/orders/domain/entities/order_summary.dart';
 import 'package:customer_delivery/features/orders/domain/repositories/order_repository.dart';
-import 'package:http/http.dart' as http;
 import 'package:supabase_flutter/supabase_flutter.dart' hide Provider;
 
 class OrderRepositoryImpl implements OrderRepository {
-  OrderRepositoryImpl(
-    this._client, {
-    required String supabaseAnonKey,
-    String? createOrderApiUrl,
-  })  : _anonKey = supabaseAnonKey,
-        _createOrderApiUrl = createOrderApiUrl;
+  OrderRepositoryImpl(this._client);
 
   final SupabaseClient _client;
-  final String _anonKey;
-  final String? _createOrderApiUrl;
 
   Map<String, dynamic> _createOrderBody({
     required String restaurantId,
@@ -64,11 +56,11 @@ class OrderRepositoryImpl implements OrderRepository {
     return preview.isEmpty ? 'Buyurtma rad etildi' : preview;
   }
 
-  String _friendlyFunctionNotFound() {
-    return 'Buyurtma xizmati topilmadi (Supabase-da create_order Edge Function yo‘q). '
-        'Sayt orqali ishlayotgan bo‘lsa: ilovani qayta yarating va '
-        'CREATE_ORDER_API_URL=https://<vercel-domeningiz>/api/create-order '
-        'dart-define qo‘shing (yoki Supabase CLI bilan create_order ni deploy qiling).';
+  /// Shown when Edge Function `create_order` is missing on the linked Supabase project.
+  String _edgeFunctionMissingMessage() {
+    return 'Supabase loyihasida create_order Edge Function topilmadi. '
+        'Loyiha papkasida: supabase functions deploy create_order '
+        '(yoki Dashboard → Edge Functions). Kod: supabase/functions/create_order/';
   }
 
   String _friendlyInvokeError(int status, dynamic data) {
@@ -78,7 +70,7 @@ class OrderRepositoryImpl implements OrderRepository {
         lower.contains('not_found') ||
         lower.contains('requested function was not found') ||
         lower.contains('function not found')) {
-      return _friendlyFunctionNotFound();
+      return _edgeFunctionMissingMessage();
     }
     Object? decoded = data is Map ? data : null;
     if (decoded == null && raw.isNotEmpty) {
@@ -87,43 +79,6 @@ class OrderRepositoryImpl implements OrderRepository {
       } catch (_) {}
     }
     return _messageFromDecoded(decoded, raw);
-  }
-
-  Future<Result<String>> _createOrderViaHttp(String apiUrl, Map<String, dynamic> body) async {
-    try {
-      final token = _client.auth.currentSession?.accessToken ?? _anonKey;
-      final uri = Uri.parse(apiUrl);
-      final resp = await http
-          .post(
-            uri,
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': 'Bearer $token',
-            },
-            body: jsonEncode(body),
-          )
-          .timeout(const Duration(seconds: 60));
-      final status = resp.statusCode;
-      Object? decoded;
-      try {
-        decoded = resp.body.isEmpty ? null : jsonDecode(resp.body);
-      } catch (_) {
-        decoded = null;
-      }
-      if (status >= 200 && status < 300 && decoded is Map) {
-        final id = decoded['order_id'];
-        if (id != null) return Success(id.toString());
-      }
-      if (status == 404 || status == 503) {
-        final lower = resp.body.toLowerCase();
-        if (lower.contains('function') && lower.contains('not found')) {
-          return FailureResult(ValidationFailure(_friendlyFunctionNotFound()));
-        }
-      }
-      return FailureResult(ValidationFailure(_messageFromDecoded(decoded, resp.body)));
-    } catch (e) {
-      return FailureResult(NetworkFailure(e.toString()));
-    }
   }
 
   @override
@@ -148,11 +103,6 @@ class OrderRepositoryImpl implements OrderRepository {
       guestDeviceId: guestDeviceId,
     );
 
-    final orderApi = _createOrderApiUrl;
-    if (orderApi != null && orderApi.isNotEmpty) {
-      return _createOrderViaHttp(orderApi, body);
-    }
-
     try {
       final res = await _client.functions.invoke(
         'create_order',
@@ -173,7 +123,7 @@ class OrderRepositoryImpl implements OrderRepository {
     } catch (e) {
       final s = e.toString().toLowerCase();
       if (s.contains('not_found') || s.contains('requested function was not found') || s.contains('function not found')) {
-        return FailureResult(ValidationFailure(_friendlyFunctionNotFound()));
+        return FailureResult(ValidationFailure(_edgeFunctionMissingMessage()));
       }
       return FailureResult(NetworkFailure(e.toString()));
     }
