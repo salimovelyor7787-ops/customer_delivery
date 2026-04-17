@@ -49,6 +49,13 @@ export function LoginClient() {
   return (
     <main className="flex min-h-screen items-center justify-center px-4 py-10">
       <div className="w-full max-w-md rounded-2xl border border-zinc-200 bg-white p-8 shadow-sm">
+        <div className="mb-6 flex flex-col items-center text-center">
+          <img src="/minutka-logo.png" alt="Minutka logo" className="h-14 w-14 rounded-xl object-cover ring-1 ring-orange-200" />
+          <h2 className="mt-3 text-xl font-semibold text-zinc-900">Minutka-biznes</h2>
+          <p className="mt-1 text-sm text-zinc-500">
+            Bizni tanlaganingiz uchun rahmat. Birgalikda biznesingizni yanada kuchliroq rivojlantiramiz.
+          </p>
+        </div>
         <h1 className="text-2xl font-semibold text-zinc-900">Kirish</h1>
         <p className="mt-2 text-sm text-zinc-500">Buyurtmalar, profil va tarixni ko&apos;rish uchun tizimga kiring.</p>
 
