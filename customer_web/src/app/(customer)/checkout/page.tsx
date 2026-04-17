@@ -145,7 +145,9 @@ export default function CheckoutPage() {
           ? "Telefon va joylashuv majburiy."
           : raw === "Location is required"
             ? "Joylashuv majburiy."
-            : raw;
+            : raw.includes("Requested function was not found") || raw.includes("not found")
+              ? "Supabase-da create_order funksiyasi topilmadi yoki yangilanmagan. Supabase Dashboard → Edge Functions dan deploy qiling."
+              : raw;
     toast.error(mapped);
   };
 
