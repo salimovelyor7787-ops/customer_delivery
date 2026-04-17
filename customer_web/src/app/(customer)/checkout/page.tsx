@@ -21,12 +21,12 @@ export default function CheckoutPage() {
 
   const geoButtonLabel =
     geoState === "locating"
-      ? "Определяем местоположение…"
+      ? "Joylashuv aniqlanmoqda…"
       : geoState === "success"
-        ? "Локация определена — можете заказать"
+        ? "Joylashuv aniqlandi — buyurtma berishingiz mumkin"
         : geoState === "error"
-          ? "Локацию не удалось определить — попробуйте ещё раз"
-          : "Уточнить местоположение";
+          ? "Joylashuv aniqlanmadi — qayta urinib ko'ring"
+          : "Joylashuvni aniqlash";
 
   const detectLocation = () => {
     if (!navigator.geolocation) {
@@ -136,9 +136,9 @@ export default function CheckoutPage() {
           {geoButtonLabel}
         </button>
         {geoState === "success" && lat != null && lng != null ? (
-          <p className="text-center text-sm text-zinc-500">Оформите заказ кнопкой ниже</p>
+          <p className="text-center text-sm text-zinc-500">Pastdagi tugma orqali buyurtma bering</p>
         ) : geoState === "error" ? null : (
-          <p className="text-center text-sm text-zinc-500">Для заказа сначала уточните местоположение</p>
+          <p className="text-center text-sm text-zinc-500">Buyurtma uchun avval joylashuvni aniqlang</p>
         )}
         <p className="text-sm text-zinc-500">Jami: {(totalCents / 100).toFixed(0)} so&apos;m</p>
         <button disabled={saving || items.length === 0} className="rounded-lg bg-zinc-900 px-4 py-2 text-white disabled:opacity-50">
