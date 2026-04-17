@@ -4,14 +4,24 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import toast from "react-hot-toast";
 import { createSupabaseBrowserClient } from "@/lib/supabase";
 
-type MenuItemRef = { name: string | null } | null;
+/** PostgREST may return a single row or a one-element array for nested FK selects. */
+type MenuItemsNested = { name: string | null } | { name: string | null }[] | null;
+
 type OrderLine = {
   id: string;
   quantity: number;
   unit_price_cents: number;
   selected_option_ids: string[] | null;
-  menu_items: MenuItemRef;
+  menu_items: MenuItemsNested;
 };
+
+function menuItemDisplayName(menuItems: MenuItemsNested): string {
+  if (menuItems == null) return "Mahsulot";
+  if (Array.isArray(menuItems)) {
+    return menuItems[0]?.name?.trim() || "Mahsulot";
+  }
+  return menuItems.name?.trim() || "Mahsulot";
+}
 
 type RestaurantOrder = {
   id: string;
@@ -162,7 +172,7 @@ export default function RestaurantOrdersPage() {
                   ) : (
                     <ul className="space-y-2">
                       {lines.map((line) => {
-                        const name = line.menu_items?.name?.trim() || "Mahsulot";
+                        const name = menuItemDisplayName(line.menu_items);
                         const extras =
                           line.selected_option_ids && line.selected_option_ids.length > 0
                             ? ` (+${line.selected_option_ids.length} qo&apos;shimcha)`
