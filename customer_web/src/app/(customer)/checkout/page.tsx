@@ -14,21 +14,30 @@ export default function CheckoutPage() {
   const [phone, setPhone] = useState("");
   const [lat, setLat] = useState<number | null>(null);
   const [lng, setLng] = useState<number | null>(null);
-  const [locating, setLocating] = useState(false);
+  /** idle = default (black), locating, success (green), error (red) */
+  const [geoState, setGeoState] = useState<"idle" | "locating" | "success" | "error">("idle");
   const [saving, setSaving] = useState(false);
   const phoneDigits = phone.replace(/\D/g, "").slice(0, 9);
 
   const detectLocation = () => {
-    if (!navigator.geolocation) return toast.error("Brauzer geolokatsiyani qo'llamaydi");
-    setLocating(true);
+    if (!navigator.geolocation) {
+      setGeoState("error");
+      setLat(null);
+      setLng(null);
+      toast.error("Brauzer geolokatsiyani qo'llamaydi");
+      return;
+    }
+    setGeoState("locating");
     navigator.geolocation.getCurrentPosition(
       (pos) => {
-        setLocating(false);
+        setGeoState("success");
         setLat(pos.coords.latitude);
         setLng(pos.coords.longitude);
       },
       () => {
-        setLocating(false);
+        setGeoState("error");
+        setLat(null);
+        setLng(null);
         toast.error("Geolokatsiya aniqlanmadi");
       },
       { enableHighAccuracy: true, timeout: 15000 },
@@ -104,14 +113,27 @@ export default function CheckoutPage() {
         <button
           type="button"
           onClick={detectLocation}
-          disabled={locating}
-          className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-b from-orange-500 to-orange-600 px-5 py-4 text-base font-semibold text-white shadow-md shadow-orange-500/35 transition hover:from-orange-600 hover:to-orange-700 disabled:cursor-not-allowed disabled:opacity-70"
+          disabled={geoState === "locating"}
+          className={
+            "mx-auto flex w-fit max-w-full items-center justify-center gap-1.5 rounded-lg px-4 py-2 text-sm font-medium text-white transition disabled:cursor-not-allowed disabled:opacity-70 " +
+            (geoState === "success"
+              ? "bg-green-600 hover:bg-green-700"
+              : geoState === "error"
+                ? "bg-red-600 hover:bg-red-700"
+                : "bg-zinc-900 hover:bg-zinc-800")
+          }
         >
-          <MapPin className="h-6 w-6 shrink-0" aria-hidden />
-          {locating ? "Joylashuv aniqlanmoqda…" : lat && lng ? "Joylashuvni qayta aniqlash" : "Joylashuvni aniqlash"}
+          <MapPin className="h-4 w-4 shrink-0" aria-hidden />
+          {geoState === "locating"
+            ? "Joylashuv aniqlanmoqda…"
+            : geoState === "success"
+              ? "Joylashuvni qayta aniqlash"
+              : "Joylashuvni aniqlash"}
         </button>
-        {lat != null && lng != null ? (
+        {geoState === "success" && lat != null && lng != null ? (
           <p className="text-center text-sm font-medium text-green-700">Joylashuv aniqlandi</p>
+        ) : geoState === "error" ? (
+          <p className="text-center text-sm font-medium text-red-600">Joylashuv aniqlanmadi, qayta urinib ko&apos;ring</p>
         ) : (
           <p className="text-center text-sm text-zinc-500">Buyurtma uchun joylashuvingizni aniqlang</p>
         )}
