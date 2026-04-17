@@ -5,6 +5,7 @@ import { MapPin } from "lucide-react";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import { useCart } from "@/components/customer/cart-context";
+import { extractEdgeErrorMessage } from "@/lib/edge-function-error";
 import { createSupabaseBrowserClient } from "@/lib/supabase";
 
 export default function CheckoutPage() {
@@ -92,11 +93,20 @@ export default function CheckoutPage() {
       })),
     };
 
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+    const reqHeaders: Record<string, string> = { "Content-Type": "application/json" };
+    if (session?.access_token) {
+      reqHeaders.Authorization = `Bearer ${session.access_token}`;
+    }
+
     let res: Response;
     try {
       res = await fetch("/api/create-order", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: reqHeaders,
+        credentials: "same-origin",
         body: JSON.stringify(payload),
       });
     } catch {
@@ -104,30 +114,39 @@ export default function CheckoutPage() {
       return toast.error("Tarmoq xatosi — qayta urinib ko'ring");
     }
 
-    let json: { order_id?: string; error?: string } | null = null;
+    const text = await res.text();
+    let json: unknown = null;
     try {
-      json = (await res.json()) as { order_id?: string; error?: string };
+      json = text ? JSON.parse(text) : null;
     } catch {
-      json = null;
+      setSaving(false);
+      return toast.error(text.trim().slice(0, 220) || "Buyurtma yuborilmadi");
     }
 
     setSaving(false);
 
-    if (json?.order_id) {
+    const row = json as { order_id?: string; error?: string } | null;
+    if (row?.order_id) {
       clear();
       toast.success("Buyurtma yuborildi");
       if (isGuest) return router.push("/home");
-      router.push(`/orders/${json.order_id}`);
+      router.push(`/orders/${row.order_id}`);
       return;
     }
 
-    const msg =
-      typeof json?.error === "string"
-        ? json.error
-        : res.status === 502
-          ? "Server bilan aloqa uzildi"
-          : "Buyurtma yuborilmadi";
-    toast.error(msg);
+    const raw =
+      typeof row?.error === "string"
+        ? row.error
+        : extractEdgeErrorMessage(json, res.status, text);
+    const mapped =
+      raw === "Forbidden"
+        ? "Bu akkaunt bilan buyurtma berib bo'lmaydi (faqat mijoz roli)."
+        : raw === "Guest checkout requires phone and location"
+          ? "Telefon va joylashuv majburiy."
+          : raw === "Location is required"
+            ? "Joylashuv majburiy."
+            : raw;
+    toast.error(mapped);
   };
 
   return (

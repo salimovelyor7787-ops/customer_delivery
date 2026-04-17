@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { isLikelyJwt } from "@/lib/edge-function-error";
 import { createSupabaseServerClient } from "@/lib/supabase-server";
 
 /**
@@ -23,7 +24,15 @@ export async function POST(req: Request) {
   const {
     data: { session },
   } = await supabase.auth.getSession();
-  const accessToken = session?.access_token ?? anonKey;
+
+  const clientAuth = req.headers.get("authorization") ?? req.headers.get("Authorization");
+  let bearerFromClient: string | null = null;
+  if (clientAuth?.startsWith("Bearer ")) {
+    const raw = clientAuth.slice(7).trim();
+    if (isLikelyJwt(raw)) bearerFromClient = raw;
+  }
+
+  const accessToken = bearerFromClient ?? session?.access_token ?? anonKey;
 
   const base = supabaseUrl.replace(/\/$/, "");
   const upstreamUrl = `${base}/functions/v1/create_order`;
