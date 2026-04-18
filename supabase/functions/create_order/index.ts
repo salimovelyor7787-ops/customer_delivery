@@ -1,6 +1,6 @@
 // deno-lint-ignore-file no-explicit-any
-import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
-import { createClient, type SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
+import { serve } from "@std/http/server";
+import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
 const cors = {
   "Access-Control-Allow-Origin": "*",
