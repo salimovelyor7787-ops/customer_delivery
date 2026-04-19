@@ -22,9 +22,20 @@ export type RestaurantHeroCardProps = {
   listIndex?: number;
   /** Slightly smaller card variant for dense lists */
   compact?: boolean;
+  /** First visible card on home: faster LCP */
+  priority?: boolean;
 };
 
-export function RestaurantHeroCard({ id, name, imageUrl, categoryLabel, isOpen = true, listIndex = 0, compact = false }: RestaurantHeroCardProps) {
+export function RestaurantHeroCard({
+  id,
+  name,
+  imageUrl,
+  categoryLabel,
+  isOpen = true,
+  listIndex = 0,
+  compact = false,
+  priority = false,
+}: RestaurantHeroCardProps) {
   const eta = ETA_LABELS[listIndex % ETA_LABELS.length];
   const rating = ratingFromId(id);
   const category = categoryLabel?.trim() || "Restoran";
@@ -39,6 +50,7 @@ export function RestaurantHeroCard({ id, name, imageUrl, categoryLabel, isOpen =
           src={imageUrl}
           alt={name}
           fill
+          priority={priority}
           sizes={compact ? "(max-width: 768px) 100vw, 50vw" : "(max-width: 768px) 100vw, 60vw"}
           className="absolute inset-0 h-full w-full object-cover transition duration-300 group-hover:scale-105"
         />

@@ -118,6 +118,7 @@ export default function SearchPage() {
               id={restaurant.id}
               name={restaurant.name}
               imageUrl={restaurant.image_url}
+              priority={index === 0}
               categoryLabel={
                 (() => {
                   const names = getRestaurantCategoryNames(restaurant);

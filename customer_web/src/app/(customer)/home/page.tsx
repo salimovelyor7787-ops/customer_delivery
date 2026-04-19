@@ -271,6 +271,7 @@ export default function CustomerHomePage() {
               id={restaurant.id}
               name={restaurant.name}
               imageUrl={restaurant.image_url}
+              priority={index === 0}
               categoryLabel={
                 (() => {
                   const names = getRestaurantCategoryNames(restaurant);
