@@ -219,37 +219,43 @@ export function HomePageClient({ initial }: Props) {
 
       <div className="space-y-2">
         <div className="flex gap-2 overflow-x-auto pb-1 md:grid md:grid-cols-2 md:overflow-x-visible lg:grid-cols-3">
-          {banners.map((banner, index) => (
-            <div key={banner.id} className="relative h-36 min-w-[280px] overflow-hidden rounded-2xl bg-zinc-100 md:min-w-0 md:h-40 lg:h-44">
-              <Image
-                src={banner.image_url}
-                alt={banner.title ?? "Banner"}
-                fill
-                sizes="(max-width: 768px) 280px, (max-width: 1024px) 50vw, 33vw"
-                className="h-full w-full object-cover"
-                priority={index === 0}
-                fetchPriority={index === 0 ? "high" : "low"}
-                decoding={index === 0 ? "sync" : "async"}
-              />
-              <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/80 via-black/30 to-black/10" aria-hidden />
-              <div className="absolute inset-x-0 top-0 z-10 flex flex-col items-stretch gap-1.5 p-3 text-left md:gap-2 md:p-4">
-                {banner.title?.trim() ? (
-                  <h3 className="text-balance text-base font-bold leading-tight text-white drop-shadow md:text-lg">{banner.title.trim()}</h3>
-                ) : null}
-                {banner.subtitle?.trim() ? (
-                  <p className="text-pretty text-xs leading-snug text-white/90 md:text-sm">{banner.subtitle.trim()}</p>
-                ) : null}
-                {bannerHasActionUrl(banner.action_path) ? (
-                  <span className="pointer-events-auto mt-0.5 self-start">
-                    <BannerCta
-                      href={String(banner.action_path).trim()}
-                      label={(banner.button_text && banner.button_text.trim()) || "Ko'rish"}
-                    />
-                  </span>
-                ) : null}
+          {banners.map((banner, index) => {
+            const hasLink = bannerHasActionUrl(banner.action_path);
+            const sub = banner.subtitle?.trim() ?? "";
+            const btn = banner.button_text?.trim() ?? "";
+            /** Promo line often lives in `button_text` even when there is no URL — show as text, not only hide the button. */
+            const showButtonTextAsPlain =
+              !hasLink && btn.length > 0 && (sub.length === 0 || btn !== sub);
+            return (
+              <div key={banner.id} className="relative h-36 min-w-[280px] overflow-hidden rounded-2xl bg-zinc-100 md:min-w-0 md:h-40 lg:h-44">
+                <Image
+                  src={banner.image_url}
+                  alt={banner.title ?? "Banner"}
+                  fill
+                  sizes="(max-width: 768px) 280px, (max-width: 1024px) 50vw, 33vw"
+                  className="h-full w-full object-cover"
+                  priority={index === 0}
+                  fetchPriority={index === 0 ? "high" : "low"}
+                  decoding={index === 0 ? "sync" : "async"}
+                />
+                <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/80 via-black/30 to-black/10" aria-hidden />
+                <div className="absolute inset-x-0 top-0 z-10 flex flex-col items-stretch gap-1.5 p-3 text-left md:gap-2 md:p-4">
+                  {banner.title?.trim() ? (
+                    <h3 className="text-balance text-base font-bold leading-tight text-white drop-shadow md:text-lg">{banner.title.trim()}</h3>
+                  ) : null}
+                  {sub ? <p className="text-pretty text-xs leading-snug text-white/90 md:text-sm">{sub}</p> : null}
+                  {showButtonTextAsPlain ? (
+                    <p className="text-pretty text-xs font-medium leading-snug text-white/95 md:text-sm">{btn}</p>
+                  ) : null}
+                  {hasLink ? (
+                    <span className="pointer-events-auto mt-0.5 self-start">
+                      <BannerCta href={String(banner.action_path).trim()} label={btn || "Ko'rish"} />
+                    </span>
+                  ) : null}
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
 

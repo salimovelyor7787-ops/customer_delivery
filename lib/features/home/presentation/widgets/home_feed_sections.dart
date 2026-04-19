@@ -120,6 +120,20 @@ class _ServiceTypeCard extends StatelessWidget {
   }
 }
 
+VoidCallback? _bannerCtaCallback(BuildContext context, HomeBanner banner) {
+  final path = banner.actionPath?.trim();
+  if (path == null || path.isEmpty) return null;
+  return () {
+    if (path.startsWith('/')) {
+      context.push(path);
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Faqat ichki yo‘nalishlar qo‘llab-quvvatlanadi')),
+      );
+    }
+  };
+}
+
 class HomePromoBannerCarousel extends StatelessWidget {
   const HomePromoBannerCarousel({
     super.key,
@@ -127,6 +141,21 @@ class HomePromoBannerCarousel extends StatelessWidget {
   });
 
   final List<HomeBanner> banners;
+
+  Widget _promoCard(BuildContext context, HomeBanner b) {
+    final onCta = _bannerCtaCallback(context, b);
+    final sub = b.subtitle?.trim() ?? '';
+    final btn = b.buttonText?.trim() ?? '';
+    final showCaptionNoLink = onCta == null && btn.isNotEmpty && (sub.isEmpty || btn != sub);
+    return _PromoCard(
+      title: b.title,
+      subtitle: b.subtitle ?? '',
+      buttonLabel: btn.isNotEmpty ? btn : "Ko'rish",
+      captionWithoutLink: showCaptionNoLink ? btn : null,
+      imageUrl: b.imageUrl,
+      onCta: onCta,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -139,23 +168,7 @@ class HomePromoBannerCarousel extends StatelessWidget {
         children: [
           for (var i = 0; i < banners.length; i++) ...[
             if (i > 0) const SizedBox(width: 12),
-            _PromoCard(
-              title: banners[i].title,
-              subtitle: banners[i].subtitle ?? '',
-              buttonLabel: banners[i].buttonText?.isNotEmpty == true ? banners[i].buttonText! : "Ko'rish",
-              imageUrl: banners[i].imageUrl,
-              onPressed: () {
-                final path = banners[i].actionPath?.trim();
-                if (path == null || path.isEmpty) return;
-                if (path.startsWith('/')) {
-                  context.push(path);
-                } else {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Faqat ichki yo‘nalishlar qo‘llab-quvvatlanadi')),
-                  );
-                }
-              },
-            ),
+            _promoCard(context, banners[i]),
           ],
         ],
       ),
@@ -168,75 +181,91 @@ class _PromoCard extends StatelessWidget {
     required this.title,
     required this.subtitle,
     required this.buttonLabel,
+    this.captionWithoutLink,
     required this.imageUrl,
-    required this.onPressed,
+    this.onCta,
   });
 
   final String title;
   final String subtitle;
   final String buttonLabel;
+  /// When there is no [onCta], show this promo line as plain text (same copy as the button would use).
+  final String? captionWithoutLink;
   final String imageUrl;
-  final VoidCallback onPressed;
+  /// Null = no URL: hide CTA and do not make the whole card tappable.
+  final VoidCallback? onCta;
 
   @override
   Widget build(BuildContext context) {
+    final plainCaption = captionWithoutLink;
+    final card = SizedBox(
+      width: MediaQuery.sizeOf(context).width * 0.86,
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          AppNetworkImage(
+            imageUrl: imageUrl,
+            fit: BoxFit.cover,
+            placeholderIcon: Icons.restaurant,
+          ),
+          DecoratedBox(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  Colors.black.withOpacity(0.18),
+                  Colors.black.withOpacity(0.30),
+                  Colors.black.withOpacity(0.45),
+                ],
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(14),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: [
+                Text(title, style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w800)),
+                if (subtitle.trim().isNotEmpty) ...[
+                  const SizedBox(height: 6),
+                  Text(subtitle, style: TextStyle(color: Colors.white.withOpacity(0.92), fontSize: 13)),
+                ],
+                const Spacer(),
+                if (onCta != null)
+                  FilledButton(
+                    style: FilledButton.styleFrom(
+                      backgroundColor: Colors.white,
+                      foregroundColor: const Color(0xFF2563EB),
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                      minimumSize: Size.zero,
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    ),
+                    onPressed: onCta,
+                    child: Text(buttonLabel, style: const TextStyle(fontSize: 12)),
+                  )
+                else if (plainCaption != null && plainCaption.isNotEmpty)
+                  Text(
+                    plainCaption,
+                    style: TextStyle(
+                      color: Colors.white.withOpacity(0.95),
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+
     return Material(
       color: Colors.transparent,
       borderRadius: BorderRadius.circular(16),
       clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: onPressed,
-        child: SizedBox(
-          width: MediaQuery.sizeOf(context).width * 0.86,
-          child: Stack(
-            fit: StackFit.expand,
-            children: [
-              AppNetworkImage(
-                imageUrl: imageUrl,
-                fit: BoxFit.cover,
-                placeholderIcon: Icons.restaurant,
-              ),
-              DecoratedBox(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [
-                      Colors.black.withOpacity(0.18),
-                      Colors.black.withOpacity(0.30),
-                      Colors.black.withOpacity(0.45),
-                    ],
-                  ),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.all(14),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(title, style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w800)),
-                    const SizedBox(height: 6),
-                    Text(subtitle, style: TextStyle(color: Colors.white.withOpacity(0.92), fontSize: 13)),
-                    const Spacer(),
-                    FilledButton(
-                      style: FilledButton.styleFrom(
-                        backgroundColor: Colors.white,
-                        foregroundColor: const Color(0xFF2563EB),
-                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                        minimumSize: Size.zero,
-                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                      ),
-                      onPressed: onPressed,
-                      child: Text(buttonLabel, style: const TextStyle(fontSize: 12)),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
+      child: onCta != null ? InkWell(onTap: onCta, child: card) : card,
     );
   }
 }
