@@ -25,6 +25,7 @@ const navByRole: Record<UserRole, NavItem[]> = {
   restaurant: [
     { href: "/restaurant", label: "Umumiy", icon: LayoutDashboard },
     { href: "/restaurant/products", label: "Mahsulotlar", icon: Package },
+    { href: "/restaurant/promocodes", label: "Promokodlar", icon: Percent },
     { href: "/restaurant/orders", label: "Buyurtmalar", icon: Truck },
   ],
   courier: [

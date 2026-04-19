@@ -2,6 +2,7 @@
 // Standalone pricing endpoint (Flutter / tools). `create_order` inlines the same logic so checkout works if only that function is deployed.
 import { serve } from "@std/http/server";
 import { createClient } from "@supabase/supabase-js";
+import { resolveOrderPromo } from "../_shared/order_promo.ts";
 
 const cors = {
   "Access-Control-Allow-Origin": "*",
@@ -14,8 +15,21 @@ serve(async (req) => {
   }
 
   try {
+    const authHeader = req.headers.get("Authorization");
+    let uid: string | null = null;
+    if (authHeader) {
+      const userClient = createClient(
+        Deno.env.get("SUPABASE_URL") ?? "",
+        Deno.env.get("SUPABASE_ANON_KEY") ?? "",
+        { global: { headers: { Authorization: authHeader } } },
+      );
+      const { data: userData } = await userClient.auth.getUser();
+      uid = userData.user?.id ?? null;
+    }
+
     const body = await req.json();
     const restaurantId = body.restaurant_id as string;
+    const promoCode = body.promo_code as string | undefined;
     const items = body.items as Array<{
       menu_item_id: string;
       quantity: number;
@@ -95,13 +109,25 @@ serve(async (req) => {
     }
 
     const tax = Math.round(subtotal * 0); // plug regional tax rules
-    const total = subtotal + delivery + tax;
+
+    const promoRes = await resolveOrderPromo(admin, {
+      promoCodeRaw: promoCode,
+      restaurantId,
+      userId: uid,
+      subtotalCents: subtotal,
+      deliveryFeeCents: delivery,
+      taxCents: tax,
+    });
+    if (!promoRes.ok) {
+      return json(promoRes.body, promoRes.status);
+    }
 
     return json({
       subtotal_cents: subtotal,
       delivery_fee_cents: delivery,
       tax_cents: tax,
-      total_cents: total,
+      promo_discount_cents: promoRes.promoDiscountCents,
+      total_cents: promoRes.totalCents,
       currency: "USD",
     });
   } catch (e) {

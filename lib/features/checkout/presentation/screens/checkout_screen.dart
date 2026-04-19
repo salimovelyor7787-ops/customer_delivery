@@ -21,6 +21,7 @@ class CheckoutScreen extends ConsumerStatefulWidget {
 class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
   static const _deviceIdKey = 'guest_checkout_device_id';
   final _phoneController = TextEditingController();
+  final _promoController = TextEditingController();
 
   String? _deviceId;
   double? _lat;
@@ -35,6 +36,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
   @override
   void initState() {
     super.initState();
+    _promoController.text = ref.read(cartNotifierProvider).promoCode;
     _prepareGuestDeviceId();
     _detectLocation();
   }
@@ -42,6 +44,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
   @override
   void dispose() {
     _phoneController.dispose();
+    _promoController.dispose();
     super.dispose();
   }
 
@@ -124,6 +127,16 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
+          TextField(
+            controller: _promoController,
+            textCapitalization: TextCapitalization.characters,
+            decoration: const InputDecoration(
+              labelText: 'Promokod (ixtiyoriy)',
+              hintText: 'MASALAN SUMMER25',
+              border: OutlineInputBorder(),
+            ),
+          ),
+          const SizedBox(height: 16),
           Text('Telefon raqami', style: Theme.of(context).textTheme.titleMedium),
           const SizedBox(height: 8),
           TextField(
@@ -212,6 +225,10 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                       _error = null;
                     });
                     final repo = ref.read(orderRepositoryProvider);
+                    final promoRaw = _promoController.text.trim();
+                    final promoMerged = promoRaw.isNotEmpty
+                        ? promoRaw.toUpperCase()
+                        : (cart.promoCode.isEmpty ? null : cart.promoCode);
                     final res = await repo.createOrder(
                       restaurantId: cart.restaurantId!,
                       paymentMethod: 'cash',
@@ -220,6 +237,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                       guestLat: _lat,
                       guestLng: _lng,
                       guestDeviceId: isGuest ? _deviceId : null,
+                      promoCode: promoMerged,
                     );
                     if (!mounted) return;
                     res.fold(

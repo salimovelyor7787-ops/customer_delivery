@@ -1,6 +1,7 @@
 // deno-lint-ignore-file no-explicit-any
 import { serve } from "@std/http/server";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import { resolveOrderPromo } from "../_shared/order_promo.ts";
 
 const cors = {
   "Access-Control-Allow-Origin": "*",
@@ -127,6 +128,7 @@ serve(async (req) => {
     const guestLat = body.guest_lat as number | undefined;
     const guestLng = body.guest_lng as number | undefined;
     const guestDeviceId = body.guest_device_id as string | undefined;
+    const promoCode = body.promo_code as string | undefined;
     const items = body.items as LineItem[];
 
     if (!restaurantId || !paymentMethod || !Array.isArray(items) || items.length === 0) {
@@ -179,6 +181,18 @@ serve(async (req) => {
       return json({ error: "Restaurant is closed" }, 400);
     }
 
+    const promoRes = await resolveOrderPromo(admin, {
+      promoCodeRaw: promoCode,
+      restaurantId,
+      userId: uid,
+      subtotalCents: priced.subtotal_cents,
+      deliveryFeeCents: priced.delivery_fee_cents,
+      taxCents: priced.tax_cents,
+    });
+    if (!promoRes.ok) {
+      return json(promoRes.body, promoRes.status);
+    }
+
     const { data: orderRow, error: orderErr } = await admin
       .from("orders")
       .insert({
@@ -194,7 +208,10 @@ serve(async (req) => {
         subtotal_cents: priced.subtotal_cents,
         delivery_fee_cents: priced.delivery_fee_cents,
         tax_cents: priced.tax_cents,
-        total_cents: priced.total_cents,
+        total_cents: promoRes.totalCents,
+        promo_code: promoRes.promoCodeStored,
+        promocode_id: promoRes.promocodeId,
+        promo_discount_cents: promoRes.promoDiscountCents,
       })
       .select("id")
       .single();

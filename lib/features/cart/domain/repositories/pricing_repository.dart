@@ -6,5 +6,6 @@ abstract class PricingRepository {
   Future<Result<PriceQuote>> calculatePrice({
     required String restaurantId,
     required List<CartLine> lines,
+    String? promoCode,
   });
 }

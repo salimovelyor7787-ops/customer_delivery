@@ -11,7 +11,7 @@ import { createSupabaseBrowserClient } from "@/lib/supabase";
 export default function CheckoutPage() {
   const supabase = createSupabaseBrowserClient();
   const router = useRouter();
-  const { items, totalCents, clear } = useCart();
+  const { items, totalCents, clear, promoCode, setPromoCode } = useCart();
   const [phone, setPhone] = useState("");
   const [lat, setLat] = useState<number | null>(null);
   const [lng, setLng] = useState<number | null>(null);
@@ -78,7 +78,7 @@ export default function CheckoutPage() {
       }
     }
 
-    const payload = {
+    const payload: Record<string, unknown> = {
       restaurant_id: restaurantId,
       address_id: null,
       payment_method: "cash",
@@ -92,6 +92,9 @@ export default function CheckoutPage() {
         selected_option_ids: item.id.includes(":") ? item.id.split(":")[1]?.split(",").filter(Boolean) ?? [] : [],
       })),
     };
+    if (promoCode.trim()) {
+      payload.promo_code = promoCode.trim();
+    }
 
     const {
       data: { session },
@@ -155,6 +158,16 @@ export default function CheckoutPage() {
     <main className="space-y-4 p-4 sm:p-6 lg:p-8">
       <h1 className="text-2xl font-semibold">Checkout</h1>
       <form onSubmit={onSubmit} className="space-y-3 rounded-2xl border border-zinc-200 bg-white p-4">
+        <label className="block">
+          <span className="mb-1 block text-sm text-zinc-600">Promokod (ixtiyoriy)</span>
+          <input
+            value={promoCode}
+            onChange={(e) => setPromoCode(e.target.value)}
+            placeholder="MASALAN VIP2026"
+            className="w-full rounded-lg border border-zinc-300 px-3 py-2 uppercase outline-none focus:border-zinc-900"
+            autoComplete="off"
+          />
+        </label>
         <label className="block">
           <span className="mb-1 block text-sm text-zinc-600">Telefon</span>
           <div className="flex items-center overflow-hidden rounded-lg border border-zinc-300 bg-white focus-within:border-zinc-900">

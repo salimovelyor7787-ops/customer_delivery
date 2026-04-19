@@ -1,4 +1,5 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import { resolveOrderPromo } from "@/lib/server/promo-discount";
 
 export type CreateOrderBody = {
   restaurant_id: string;
@@ -8,6 +9,7 @@ export type CreateOrderBody = {
   guest_lat: number | null | undefined;
   guest_lng: number | null | undefined;
   guest_device_id: string | null | undefined;
+  promo_code?: string | null;
   items: Array<{
     menu_item_id: string;
     quantity: number;
@@ -136,6 +138,7 @@ export async function createOrderDirect(params: {
   const guestLat = body.guest_lat;
   const guestLng = body.guest_lng;
   const guestDeviceId = body.guest_device_id;
+  const promoCode = body.promo_code;
   const items = body.items;
 
   if (!restaurantId || !paymentMethod || !Array.isArray(items) || items.length === 0) {
@@ -187,6 +190,18 @@ export async function createOrderDirect(params: {
     return { ok: false, status: 400, body: { error: "Restaurant is closed" } };
   }
 
+  const promoRes = await resolveOrderPromo(admin, {
+    promoCodeRaw: promoCode ?? undefined,
+    restaurantId,
+    userId: uid,
+    subtotalCents: priced.subtotal_cents,
+    deliveryFeeCents: priced.delivery_fee_cents,
+    taxCents: priced.tax_cents,
+  });
+  if (!promoRes.ok) {
+    return { ok: false, status: promoRes.status, body: promoRes.body };
+  }
+
   const { data: orderRow, error: orderErr } = await admin
     .from("orders")
     .insert({
@@ -202,7 +217,10 @@ export async function createOrderDirect(params: {
       subtotal_cents: priced.subtotal_cents,
       delivery_fee_cents: priced.delivery_fee_cents,
       tax_cents: priced.tax_cents,
-      total_cents: priced.total_cents,
+      total_cents: promoRes.totalCents,
+      promo_code: promoRes.promoCodeStored,
+      promocode_id: promoRes.promocodeId,
+      promo_discount_cents: promoRes.promoDiscountCents,
     })
     .select("id")
     .single();

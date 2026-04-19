@@ -21,8 +21,9 @@ class OrderRepositoryImpl implements OrderRepository {
     double? guestLat,
     double? guestLng,
     String? guestDeviceId,
+    String? promoCode,
   }) {
-    return {
+    final body = <String, dynamic>{
       'restaurant_id': restaurantId,
       'address_id': addressId,
       'payment_method': paymentMethod,
@@ -40,6 +41,11 @@ class OrderRepositoryImpl implements OrderRepository {
           )
           .toList(),
     };
+    final p = promoCode?.trim();
+    if (p != null && p.isNotEmpty) {
+      body['promo_code'] = p.toUpperCase();
+    }
+    return body;
   }
 
   String _messageFromDecoded(Object? decoded, String rawBody) {
@@ -103,6 +109,7 @@ class OrderRepositoryImpl implements OrderRepository {
     double? guestLat,
     double? guestLng,
     String? guestDeviceId,
+    String? promoCode,
   }) async {
     final body = _createOrderBody(
       restaurantId: restaurantId,
@@ -113,6 +120,7 @@ class OrderRepositoryImpl implements OrderRepository {
       guestLat: guestLat,
       guestLng: guestLng,
       guestDeviceId: guestDeviceId,
+      promoCode: promoCode,
     );
 
     try {

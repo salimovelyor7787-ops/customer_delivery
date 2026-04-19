@@ -12,6 +12,7 @@ abstract class OrderRepository {
     double? guestLat,
     double? guestLng,
     String? guestDeviceId,
+    String? promoCode,
   });
 
   Future<Result<List<OrderSummary>>> fetchActiveOrders();

@@ -20,10 +20,13 @@ type CartContextValue = {
   clear: () => void;
   totalCents: number;
   totalCount: number;
+  promoCode: string;
+  setPromoCode: (value: string) => void;
 };
 
 const CartContext = createContext<CartContextValue | null>(null);
 const STORAGE_KEY = "customer_cart_v1";
+const PROMO_KEY = "customer_cart_promo_v1";
 
 export function CartProvider({ children }: { children: React.ReactNode }) {
   const [items, setItems] = useState<CartItem[]>(() => {
@@ -38,9 +41,22 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     }
   });
 
+  const [promoCode, setPromoCodeState] = useState(() => {
+    if (typeof window === "undefined") return "";
+    return window.localStorage.getItem(PROMO_KEY) ?? "";
+  });
+
   useEffect(() => {
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
   }, [items]);
+
+  useEffect(() => {
+    window.localStorage.setItem(PROMO_KEY, promoCode);
+  }, [promoCode]);
+
+  const setPromoCode = (value: string) => {
+    setPromoCodeState(value.trim().toUpperCase());
+  };
 
   const addItem: CartContextValue["addItem"] = (item) => {
     setItems((prev) => {
@@ -66,6 +82,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       next[index] = { ...next[index], quantity: next[index].quantity + 1 };
       return next;
     });
+    if (switched) setPromoCodeState("");
     return { switched };
   };
 
@@ -79,11 +96,31 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     setItems((prev) => prev.map((item) => (item.id === id ? { ...item, quantity } : item)));
   };
 
-  const clear = () => setItems([]);
+  const clear = () => {
+    setItems([]);
+    setPromoCodeState("");
+  };
   const totalCents = useMemo(() => items.reduce((sum, item) => sum + item.priceCents * item.quantity, 0), [items]);
   const totalCount = useMemo(() => items.reduce((sum, item) => sum + item.quantity, 0), [items]);
 
-  return <CartContext.Provider value={{ items, addItem, addItemWithRestaurantGuard, removeItem, setQuantity, clear, totalCents, totalCount }}>{children}</CartContext.Provider>;
+  return (
+    <CartContext.Provider
+      value={{
+        items,
+        addItem,
+        addItemWithRestaurantGuard,
+        removeItem,
+        setQuantity,
+        clear,
+        totalCents,
+        totalCount,
+        promoCode,
+        setPromoCode,
+      }}
+    >
+      {children}
+    </CartContext.Provider>
+  );
 }
 
 export function useCart() {

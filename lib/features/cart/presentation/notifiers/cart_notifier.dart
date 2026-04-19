@@ -15,6 +15,7 @@ class CartState {
     this.quote,
     this.quoteLoading = false,
     this.quoteError,
+    this.promoCode = '',
   });
 
   final String? restaurantId;
@@ -22,6 +23,8 @@ class CartState {
   final PriceQuote? quote;
   final bool quoteLoading;
   final String? quoteError;
+  /// Trimmed uppercase promo for checkout / calculate_price (server validates).
+  final String promoCode;
 
   int get clientSubtotalCents => lines.fold(0, (a, l) => a + l.lineTotalCents);
 
@@ -31,9 +34,11 @@ class CartState {
     PriceQuote? quote,
     bool? quoteLoading,
     String? quoteError,
+    String? promoCode,
     bool clearRestaurant = false,
     bool clearQuote = false,
     bool clearQuoteError = false,
+    bool clearPromoCode = false,
   }) {
     return CartState(
       restaurantId: clearRestaurant ? null : (restaurantId ?? this.restaurantId),
@@ -41,6 +46,7 @@ class CartState {
       quote: clearQuote ? null : (quote ?? this.quote),
       quoteLoading: quoteLoading ?? this.quoteLoading,
       quoteError: clearQuoteError ? null : (quoteError ?? this.quoteError),
+      promoCode: (clearRestaurant || clearPromoCode) ? '' : (promoCode ?? this.promoCode),
     );
   }
 }
@@ -128,6 +134,12 @@ class CartNotifier extends Notifier<CartState> {
     state = const CartState();
   }
 
+  void setPromoCode(String value) {
+    final next = value.trim().toUpperCase();
+    state = state.copyWith(promoCode: next, clearQuote: true);
+    _scheduleQuote();
+  }
+
   void _scheduleQuote() {
     _debounce.run(refreshQuote);
   }
@@ -152,7 +164,11 @@ class CartNotifier extends Notifier<CartState> {
     }
     state = state.copyWith(quoteLoading: true, clearQuoteError: true);
     final repo = ref.read(pricingRepositoryProvider);
-    final res = await repo.calculatePrice(restaurantId: state.restaurantId!, lines: state.lines);
+    final res = await repo.calculatePrice(
+      restaurantId: state.restaurantId!,
+      lines: state.lines,
+      promoCode: state.promoCode.isEmpty ? null : state.promoCode,
+    );
     res.fold(
       (f) => state = state.copyWith(quoteLoading: false, quoteError: f.message, clearQuote: true),
       (q) => state = state.copyWith(quoteLoading: false, quote: q, clearQuoteError: true),

@@ -17,12 +17,20 @@ class CartScreen extends ConsumerStatefulWidget {
 }
 
 class _CartScreenState extends ConsumerState<CartScreen> {
+  final _promoField = TextEditingController();
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(cartNotifierProvider.notifier).refreshQuote();
     });
+  }
+
+  @override
+  void dispose() {
+    _promoField.dispose();
+    super.dispose();
   }
 
   @override
@@ -143,6 +151,38 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                       style: TextStyle(color: Theme.of(context).colorScheme.error),
                     ),
                   ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          controller: _promoField,
+                          textCapitalization: TextCapitalization.characters,
+                          decoration: const InputDecoration(
+                            labelText: 'Promokod',
+                            hintText: 'IXTIYORIY',
+                            isDense: true,
+                            border: OutlineInputBorder(),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Padding(
+                        padding: const EdgeInsets.only(top: 4),
+                        child: OutlinedButton(
+                          onPressed: cart.quoteLoading
+                              ? null
+                              : () {
+                                  ref.read(cartNotifierProvider.notifier).setPromoCode(_promoField.text);
+                                },
+                          child: const Text("Qo'shish"),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
                 if (!canCheckoutBySchedule)
                   Padding(
                     padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
@@ -172,6 +212,16 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                       ],
                       if (cart.quote != null) ...[
                         const SizedBox(height: 8),
+                        if (cart.quote!.promoDiscountCents > 0) ...[
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              const Text('Promokod chegirmasi'),
+                              Text('-${money.format(cart.quote!.promoDiscountCents / 100)}'),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                        ],
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [

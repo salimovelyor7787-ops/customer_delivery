@@ -14,6 +14,7 @@ class PricingRepositoryImpl implements PricingRepository {
   Future<Result<PriceQuote>> calculatePrice({
     required String restaurantId,
     required List<CartLine> lines,
+    String? promoCode,
   }) async {
     if (lines.isEmpty) {
       return const Success(PriceQuote(
@@ -21,10 +22,11 @@ class PricingRepositoryImpl implements PricingRepository {
         deliveryFeeCents: 0,
         taxCents: 0,
         totalCents: 0,
+        promoDiscountCents: 0,
       ));
     }
     try {
-      final body = {
+      final body = <String, dynamic>{
         'restaurant_id': restaurantId,
         'items': lines
             .map(
@@ -36,6 +38,10 @@ class PricingRepositoryImpl implements PricingRepository {
             )
             .toList(),
       };
+      final p = promoCode?.trim();
+      if (p != null && p.isNotEmpty) {
+        body['promo_code'] = p;
+      }
       final res = await _client.functions.invoke(
         'calculate_price',
         body: body,

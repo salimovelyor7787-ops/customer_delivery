@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useCart } from "@/components/customer/cart-context";
 
 export default function CartPage() {
-  const { items, setQuantity, totalCents, removeItem } = useCart();
+  const { items, setQuantity, totalCents, removeItem, promoCode, setPromoCode } = useCart();
 
   return (
     <main className="space-y-4 p-4 sm:p-6 lg:p-8">
@@ -29,6 +29,16 @@ export default function CartPage() {
         </div>
         {items.length > 0 ? (
           <div className="mt-4 rounded-xl border border-zinc-200 bg-white p-4 lg:sticky lg:top-4 lg:mt-0">
+            <label className="mb-3 block text-sm">
+              <span className="mb-1 block text-zinc-600">Promokod (ixtiyoriy)</span>
+              <input
+                value={promoCode}
+                onChange={(e) => setPromoCode(e.target.value)}
+                placeholder="MASALAN VIP2026"
+                className="w-full rounded-lg border border-zinc-300 px-3 py-2 uppercase outline-none focus:border-zinc-900"
+                autoComplete="off"
+              />
+            </label>
             <p className="mb-3 text-lg font-semibold">Jami: {(totalCents / 100).toFixed(0)} so&apos;m</p>
             <Link href="/checkout" className="inline-flex w-full justify-center rounded-lg bg-zinc-900 px-4 py-2.5 text-center text-white sm:w-auto">Buyurtma berish</Link>
           </div>

@@ -11,17 +11,27 @@ class PromoCodeItem {
     required this.id,
     required this.code,
     required this.discount,
+    this.discountFixedCents,
   });
 
   final String id;
   final String code;
   final int discount;
+  final int? discountFixedCents;
+
+  String get discountLabel {
+    if (discountFixedCents != null && discountFixedCents! > 0) {
+      return '-${(discountFixedCents! / 100).toStringAsFixed(0)} so\'m';
+    }
+    return '-$discount%';
+  }
 
   factory PromoCodeItem.fromJson(Map<String, dynamic> json) {
     return PromoCodeItem(
       id: json['id'].toString(),
       code: (json['code'] as String? ?? '').toUpperCase(),
       discount: (json['discount'] as num?)?.toInt() ?? 0,
+      discountFixedCents: (json['discount_fixed_cents'] as num?)?.toInt(),
     );
   }
 }
@@ -56,8 +66,9 @@ final activePromocodesProvider = FutureProvider<List<PromoCodeItem>>((ref) async
   final client = ref.watch(supabaseClientProvider);
   final rows = await client
       .from('promocodes')
-      .select('id, code, discount')
+      .select('id, code, discount, discount_fixed_cents')
       .eq('active', true)
+      .eq('listed_for_customers', true)
       .order('created_at', ascending: false)
       .limit(20);
   return (rows as List)
@@ -182,7 +193,7 @@ class NotificationsScreen extends ConsumerWidget {
                   children: items
                       .map(
                         (promo) => Chip(
-                          label: Text('${promo.code}  •  -${promo.discount}%'),
+                          label: Text('${promo.code}  •  ${promo.discountLabel}'),
                           avatar: const Icon(Icons.local_offer_outlined, size: 16),
                         ),
                       )

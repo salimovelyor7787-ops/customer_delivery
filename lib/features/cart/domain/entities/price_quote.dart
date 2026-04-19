@@ -7,6 +7,7 @@ class PriceQuote extends Equatable {
     required this.deliveryFeeCents,
     required this.taxCents,
     required this.totalCents,
+    this.promoDiscountCents = 0,
     this.currency = 'USD',
   });
 
@@ -14,6 +15,8 @@ class PriceQuote extends Equatable {
   final int deliveryFeeCents;
   final int taxCents;
   final int totalCents;
+  /// Server-side promo discount off subtotal (create_order uses same rules).
+  final int promoDiscountCents;
   final String currency;
 
   factory PriceQuote.fromJson(Map<String, dynamic> json) {
@@ -22,10 +25,11 @@ class PriceQuote extends Equatable {
       deliveryFeeCents: (json['delivery_fee_cents'] as num?)?.toInt() ?? 0,
       taxCents: (json['tax_cents'] as num?)?.toInt() ?? 0,
       totalCents: (json['total_cents'] as num?)?.toInt() ?? 0,
+      promoDiscountCents: (json['promo_discount_cents'] as num?)?.toInt() ?? 0,
       currency: json['currency'] as String? ?? 'USD',
     );
   }
 
   @override
-  List<Object?> get props => [subtotalCents, deliveryFeeCents, taxCents, totalCents, currency];
+  List<Object?> get props => [subtotalCents, deliveryFeeCents, taxCents, totalCents, promoDiscountCents, currency];
 }

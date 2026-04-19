@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useCallback, useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { createSupabaseBrowserClient } from "@/lib/supabase";
 
@@ -9,7 +9,6 @@ type Promo = {
   code: string;
   discount: number | null;
   discount_fixed_cents: number | null;
-  restaurant_id: string | null;
   audience: string;
   min_subtotal_cents: number;
   expires_at: string | null;
@@ -17,12 +16,10 @@ type Promo = {
   active: boolean;
 };
 
-type Restaurant = { id: string; name: string };
-
-export default function AdminPromocodesPage() {
+export default function RestaurantPromocodesPage() {
   const supabase = createSupabaseBrowserClient();
+  const [restaurantId, setRestaurantId] = useState("");
   const [items, setItems] = useState<Promo[]>([]);
-  const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
 
   const [code, setCode] = useState("");
   const [discountKind, setDiscountKind] = useState<"percent" | "fixed">("percent");
@@ -32,24 +29,34 @@ export default function AdminPromocodesPage() {
   const [audience, setAudience] = useState<"all" | "first_order">("all");
   const [minSubtotalSom, setMinSubtotalSom] = useState("0");
   const [listed, setListed] = useState(true);
-  const [restaurantId, setRestaurantId] = useState("");
 
-  const load = async () => {
-    const [{ data: rows }, { data: rests }] = await Promise.all([
-      supabase.from("promocodes").select("*").order("created_at", { ascending: false }),
-      supabase.from("restaurants").select("id,name").order("name"),
-    ]);
-    setItems((rows ?? []) as Promo[]);
-    setRestaurants((rests ?? []) as Restaurant[]);
-  };
+  const loadList = useCallback(
+    async (rid: string) => {
+      const { data, error } = await supabase.from("promocodes").select("*").eq("restaurant_id", rid).order("created_at", { ascending: false });
+      if (error) return toast.error(error.message);
+      setItems((data ?? []) as Promo[]);
+    },
+    [supabase],
+  );
 
   useEffect(() => {
-    void load();
-  }, []);
+    const run = async () => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) return;
+      const { data: restaurant } = await supabase.from("restaurants").select("id").eq("owner_id", user.id).single();
+      if (!restaurant) return;
+      const rid = restaurant.id as string;
+      setRestaurantId(rid);
+      await loadList(rid);
+    };
+    void run();
+  }, [loadList, supabase]);
 
   const onCreate = async (event: FormEvent) => {
     event.preventDefault();
-    const rid = restaurantId.trim() || null;
+    if (!restaurantId) return toast.error("Restoran topilmadi");
     const minCents = Math.max(0, Math.round(Number(minSubtotalSom || "0") * 100));
     const expiresIso =
       expiresLocal.trim() === "" ? null : (() => {
@@ -60,7 +67,7 @@ export default function AdminPromocodesPage() {
     const base = {
       code: code.trim().toUpperCase(),
       active: true,
-      restaurant_id: rid,
+      restaurant_id: restaurantId,
       audience,
       min_subtotal_cents: minCents,
       expires_at: expiresIso,
@@ -88,8 +95,7 @@ export default function AdminPromocodesPage() {
     setFixedSom("5000");
     setExpiresLocal("");
     setMinSubtotalSom("0");
-    setRestaurantId("");
-    await load();
+    await loadList(restaurantId);
   };
 
   const onToggle = async (promo: Promo) => {
@@ -114,9 +120,9 @@ export default function AdminPromocodesPage() {
 
   return (
     <section className="space-y-6">
-      <h1 className="text-2xl font-semibold">Promokodlar (platforma)</h1>
+      <h1 className="text-2xl font-semibold">Promokodlar</h1>
       <p className="text-sm text-zinc-600">
-        Kod butun tizimda noyob bo'lishi kerak. Restoran uchun maxsus kodlarni restoran panelidagi bo'limdan yarating.
+        Kod butun tizimda noyob bo'lishi kerak. Tugash vaqti, minimal summa va auditoriyani sozlang.
       </p>
 
       <form onSubmit={onCreate} className="grid gap-3 rounded-2xl border border-zinc-200 bg-white p-4 md:grid-cols-2 lg:grid-cols-3">
@@ -125,7 +131,7 @@ export default function AdminPromocodesPage() {
           <input
             value={code}
             onChange={(e) => setCode(e.target.value)}
-            placeholder="MASALAN SUMMER25"
+            placeholder="MASALAN VIP2026"
             required
             className="rounded-lg border border-zinc-300 px-3 py-2 uppercase"
           />
@@ -199,35 +205,23 @@ export default function AdminPromocodesPage() {
             className="rounded-lg border border-zinc-300 px-3 py-2"
           />
         </label>
-        <label className="grid gap-1 text-sm">
-          <span className="text-zinc-600">Restoran (bo'sh = butun tizim)</span>
-          <select value={restaurantId} onChange={(e) => setRestaurantId(e.target.value)} className="rounded-lg border border-zinc-300 px-3 py-2">
-            <option value="">Butun tizim</option>
-            {restaurants.map((r) => (
-              <option key={r.id} value={r.id}>
-                {r.name}
-              </option>
-            ))}
-          </select>
-        </label>
         <label className="flex items-center gap-2 text-sm">
           <input type="checkbox" checked={listed} onChange={(e) => setListed(e.target.checked)} />
           <span>Mijozlar ilovasida ro'yxatda ko'rsatish</span>
         </label>
         <div className="flex items-end">
           <button type="submit" className="rounded-lg bg-zinc-900 px-4 py-2 text-white">
-            Promokod qo'shish
+            Qo'shish
           </button>
         </div>
       </form>
 
       <div className="overflow-x-auto rounded-2xl border border-zinc-200 bg-white">
-        <table className="min-w-[900px] text-sm md:min-w-full">
+        <table className="min-w-[760px] text-sm md:min-w-full">
           <thead className="bg-zinc-50 text-left text-zinc-500">
             <tr>
               <th className="px-4 py-3">Kod</th>
               <th className="px-4 py-3">Chegirma</th>
-              <th className="px-4 py-3">Restoran</th>
               <th className="px-4 py-3">Min. summa</th>
               <th className="px-4 py-3">Tugash</th>
               <th className="px-4 py-3">Auditoriya</th>
@@ -240,9 +234,6 @@ export default function AdminPromocodesPage() {
               <tr key={promo.id} className="border-t border-zinc-100">
                 <td className="px-4 py-3 font-medium">{promo.code}</td>
                 <td className="px-4 py-3">{labelDiscount(promo)}</td>
-                <td className="px-4 py-3 text-zinc-600">
-                  {promo.restaurant_id ? restaurants.find((r) => r.id === promo.restaurant_id)?.name ?? "—" : "Butun tizim"}
-                </td>
                 <td className="px-4 py-3">{(promo.min_subtotal_cents / 100).toFixed(0)} so'm</td>
                 <td className="px-4 py-3 text-xs text-zinc-500">
                   {promo.expires_at ? new Date(promo.expires_at).toLocaleString() : "—"}
