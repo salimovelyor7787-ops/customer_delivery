@@ -9,15 +9,27 @@ const inter = Inter({
   subsets: ["latin"],
 });
 
+const adminSiteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://minutka.uz";
+
 export const metadata: Metadata = {
+  metadataBase: new URL(adminSiteUrl),
   title: "Yetkazib berish — boshqaruv",
   description: "Supabase va Next.js asosidagi rolli boshqaruv paneli",
+  icons: {
+    icon: [
+      { url: "/favicon.svg", type: "image/svg+xml" },
+      { url: "/favicon-96x96.png", sizes: "96x96", type: "image/png" },
+    ],
+    apple: [{ url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" }],
+  },
+  manifest: "/site.webmanifest",
 };
 
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   maximumScale: 5,
+  themeColor: "#18181b",
 };
 
 export default function RootLayout({
