@@ -17,6 +17,10 @@ export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: "Minutka",
   description: "Mijozlar uchun ovqat yetkazib berish veb-ilovasi",
+  icons: {
+    icon: [{ url: "/favicon.svg", type: "image/svg+xml" }],
+  },
+  manifest: "/site.webmanifest",
   alternates: {
     canonical: "/",
   },
@@ -34,6 +38,7 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   maximumScale: 5,
+  themeColor: "#ea580c",
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {

@@ -1,0 +1,17 @@
+{
+  "name": "Minutka",
+  "short_name": "Minutka",
+  "description": "Ovqat yetkazib berish",
+  "start_url": "/home",
+  "display": "standalone",
+  "background_color": "#f4f4f5",
+  "theme_color": "#ea580c",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
