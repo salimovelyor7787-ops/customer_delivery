@@ -311,7 +311,22 @@ export default function RestaurantProductsPage() {
             <p className="font-medium">{product.name}</p>
             <p className="text-xs text-zinc-500">{product.category ?? "Boshqa"}</p>
             <p className="text-sm text-zinc-600">so'm {(Number(product.price_cents) / 100).toFixed(0)}</p>
-            {product.image_url ? <p className="truncate text-xs text-zinc-500">{product.image_url}</p> : null}
+            {product.image_url ? (
+              <div className="relative mt-2 h-28 w-full overflow-hidden rounded-lg border border-zinc-200 bg-zinc-100">
+                {/* Admin preview: arbitrary storage URLs; next/image would need per-project remotePatterns */}
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={product.image_url}
+                  alt={product.name}
+                  className="h-full w-full object-cover"
+                  loading="lazy"
+                />
+              </div>
+            ) : (
+              <div className="mt-2 flex h-28 items-center justify-center rounded-lg border border-dashed border-zinc-200 bg-zinc-50 text-xs text-zinc-400">
+                Rasm yo'q
+              </div>
+            )}
             <div className="mt-3 flex gap-2">
               <button className="rounded border border-zinc-300 px-2 py-1 text-xs" onClick={() => onEdit(product)}>
                 Tahrirlash
