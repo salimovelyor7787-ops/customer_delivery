@@ -16,7 +16,38 @@ export type Restaurant = {
   category_id: string | null;
   category_ids: string[] | null;
 };
-export type Banner = { id: string; image_url: string; title: string | null };
+export type Banner = {
+  id: string;
+  image_url: string;
+  title: string | null;
+  subtitle: string | null;
+  button_text: string | null;
+  action_path: string | null;
+};
+
+function bannerHasActionUrl(actionPath: string | null | undefined): boolean {
+  return Boolean(actionPath && String(actionPath).trim().length > 0);
+}
+
+function BannerCta({ href, label }: { href: string; label: string }) {
+  const h = href.trim();
+  const external = /^https?:\/\//i.test(h);
+  const className =
+    "inline-flex items-center justify-center rounded-full bg-white px-3 py-1.5 text-xs font-semibold text-zinc-900 shadow-sm ring-1 ring-black/5 transition hover:bg-zinc-100 active:scale-[0.98] md:px-4 md:text-sm";
+  if (external) {
+    return (
+      <a href={h} target="_blank" rel="noopener noreferrer" className={className}>
+        {label}
+      </a>
+    );
+  }
+  const path = h.startsWith("/") ? h : `/${h}`;
+  return (
+    <Link href={path} className={className}>
+      {label}
+    </Link>
+  );
+}
 export type DealItem = {
   id: string;
   restaurant_id: string;
@@ -87,7 +118,12 @@ export function HomePageClient({ initial }: Props) {
       const [{ data: rests }, { data: catRows }, { data: bannerRows }, { data: dealRows }, { data: nearbyRows }, { data: pushRows }] = await Promise.all([
         supabase.from("restaurants").select("id,name,image_url,is_open,category_id,category_ids").order("name", { ascending: true }),
         supabase.from("categories").select("id,name").order("sort_order", { ascending: true }),
-        supabase.from("banners").select("id,image_url,title").eq("active", true).order("sort_order", { ascending: true }).limit(5),
+        supabase
+          .from("banners")
+          .select("id,image_url,title,subtitle,button_text,action_path,sort_order")
+          .eq("active", true)
+          .order("sort_order", { ascending: true })
+          .limit(5),
         supabase
           .from("menu_items")
           .select("id,restaurant_id,name,image_url,price_cents,deal_price_cents")
@@ -195,7 +231,23 @@ export function HomePageClient({ initial }: Props) {
                 fetchPriority={index === 0 ? "high" : "low"}
                 decoding={index === 0 ? "sync" : "async"}
               />
-              {banner.title ? <p className="absolute bottom-2 left-2 rounded bg-black/55 px-2 py-1 text-xs text-white">{banner.title}</p> : null}
+              <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/80 via-black/30 to-black/10" aria-hidden />
+              <div className="absolute inset-x-0 top-0 z-10 flex flex-col items-stretch gap-1.5 p-3 text-left md:gap-2 md:p-4">
+                {banner.title?.trim() ? (
+                  <h3 className="text-balance text-base font-bold leading-tight text-white drop-shadow md:text-lg">{banner.title.trim()}</h3>
+                ) : null}
+                {banner.subtitle?.trim() ? (
+                  <p className="text-pretty text-xs leading-snug text-white/90 md:text-sm">{banner.subtitle.trim()}</p>
+                ) : null}
+                {bannerHasActionUrl(banner.action_path) ? (
+                  <span className="pointer-events-auto mt-0.5 self-start">
+                    <BannerCta
+                      href={String(banner.action_path).trim()}
+                      label={(banner.button_text && banner.button_text.trim()) || "Ko'rish"}
+                    />
+                  </span>
+                ) : null}
+              </div>
             </div>
           ))}
         </div>
