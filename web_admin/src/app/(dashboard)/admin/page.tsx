@@ -18,7 +18,7 @@ export default async function AdminDashboardPage() {
     <section className="space-y-6">
       <header>
         <h1 className="text-2xl font-semibold">Admin boshqaruvi</h1>
-        <p className="text-sm text-zinc-500">Asosiy ko&apos;rsatkichlar va buyurtmalar.</p>
+        <p className="text-sm text-zinc-500">Asosiy ko'rsatkichlar va buyurtmalar.</p>
       </header>
 
       <div className="grid gap-4 md:grid-cols-3">

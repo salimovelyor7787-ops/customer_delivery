@@ -323,7 +323,7 @@ export default function AdminMenuItemsPage() {
       <div className="space-y-3 rounded-2xl border border-zinc-200 bg-white p-4">
         <h2 className="text-sm font-semibold text-zinc-900">Kategoriyalar</h2>
         <div className="flex flex-wrap items-center gap-2">
-          {categories.length === 0 ? <p className="text-sm text-zinc-500">Kategoriya hali yo&apos;q. Avval Kategoriyalar bo&apos;limida qo&apos;shing.</p> : null}
+          {categories.length === 0 ? <p className="text-sm text-zinc-500">Kategoriya hali yo'q. Avval Kategoriyalar bo'limida qo'shing.</p> : null}
           {categories.map((cat) => (
             <span key={cat.id} className="inline-flex items-center rounded-full border border-zinc-300 px-3 py-1.5 text-xs">
               {cat.name}
@@ -425,7 +425,7 @@ export default function AdminMenuItemsPage() {
                     {item.description ? <p className="max-w-[380px] truncate text-xs text-zinc-500">{item.description}</p> : null}
                   </td>
                   <td className="px-4 py-3">{item.category ?? "Boshqa"}</td>
-                  <td className="px-4 py-3">so&apos;m {(item.price_cents / 100).toFixed(0)}</td>
+                  <td className="px-4 py-3">so'm {(item.price_cents / 100).toFixed(0)}</td>
                   <td className="px-4 py-3">{item.is_available ? "Mavjud" : "Yashirin"}</td>
                   <td className="px-4 py-3">
                     <div className="flex gap-2">
@@ -437,7 +437,7 @@ export default function AdminMenuItemsPage() {
                         onClick={() => void onDelete(item.id)}
                         className="rounded border border-red-300 px-3 py-1 text-xs text-red-600"
                       >
-                        O&apos;chirish
+                        O'chirish
                       </button>
                     </div>
                   </td>
@@ -449,7 +449,7 @@ export default function AdminMenuItemsPage() {
       </div>
 
       <div className="space-y-4 rounded-2xl border border-zinc-200 bg-white p-4">
-        <h2 className="text-sm font-semibold text-zinc-900">Qo&apos;shimchalar (соус, сыр, ...)</h2>
+        <h2 className="text-sm font-semibold text-zinc-900">Qo'shimchalar (соус, сыр, ...)</h2>
         <div className="grid gap-3 md:grid-cols-[minmax(240px,360px)_1fr]">
           <select
             value={selectedOptionItemId}
@@ -482,7 +482,7 @@ export default function AdminMenuItemsPage() {
               required
             />
             <button className="rounded-lg bg-zinc-900 px-4 py-2 text-white" disabled={!selectedOptionItemId}>
-              {editingOptionId ? "Saqlash" : "Qo&apos;shish"}
+              {editingOptionId ? "Saqlash" : "Qo'shish"}
             </button>
             {editingOptionId ? (
               <button type="button" onClick={onCancelOptionEdit} className="rounded-lg border border-zinc-300 px-4 py-2 text-zinc-700">
@@ -508,7 +508,7 @@ export default function AdminMenuItemsPage() {
                   {options.map((option, idx) => (
                     <tr key={option.id} className="border-t border-zinc-100">
                       <td className="px-3 py-2">{option.name}</td>
-                      <td className="px-3 py-2">so&apos;m {(option.price_delta_cents / 100).toFixed(0)}</td>
+                      <td className="px-3 py-2">so'm {(option.price_delta_cents / 100).toFixed(0)}</td>
                       <td className="px-3 py-2">{idx + 1}</td>
                       <td className="px-3 py-2">
                         <div className="flex flex-wrap gap-2">
@@ -536,7 +536,7 @@ export default function AdminMenuItemsPage() {
                             className="rounded border border-red-300 px-2 py-1 text-xs text-red-600"
                             onClick={() => void onDeleteOption(option.id)}
                           >
-                            O&apos;chirish
+                            O'chirish
                           </button>
                         </div>
                       </td>
@@ -546,10 +546,10 @@ export default function AdminMenuItemsPage() {
               </table>
             </div>
           ) : (
-            <p className="text-sm text-zinc-500">Bu kartochka uchun qo&apos;shimcha hali qo&apos;shilmagan.</p>
+            <p className="text-sm text-zinc-500">Bu kartochka uchun qo'shimcha hali qo'shilmagan.</p>
           )
         ) : (
-          <p className="text-sm text-zinc-500">Qo&apos;shimchalarni boshqarish uchun avval menu kartochkasini tanlang.</p>
+          <p className="text-sm text-zinc-500">Qo'shimchalarni boshqarish uchun avval menu kartochkasini tanlang.</p>
         )}
       </div>
     </section>

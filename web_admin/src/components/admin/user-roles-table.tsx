@@ -129,7 +129,7 @@ export function UserRolesTable({
                       </option>
                     ))}
                   </select>
-                  {isSelf ? <p className="mt-1 text-xs text-zinc-400">O&apos;z rolingizni bu yerda o&apos;zgartirmang</p> : null}
+                  {isSelf ? <p className="mt-1 text-xs text-zinc-400">O'z rolingizni bu yerda o'zgartirmang</p> : null}
                 </td>
                 <td className="px-4 py-3">
                   {draft?.role === "restaurant" ? (

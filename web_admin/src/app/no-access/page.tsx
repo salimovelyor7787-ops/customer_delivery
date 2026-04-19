@@ -27,16 +27,16 @@ export default async function NoAccessPage() {
   return (
     <main className="mx-auto flex min-h-screen max-w-lg flex-col justify-center px-4 py-12">
       <div className="rounded-2xl border border-zinc-200 bg-white p-8 shadow-sm">
-        <h1 className="text-xl font-semibold text-zinc-900">Panelga kirish yo&apos;q</h1>
+        <h1 className="text-xl font-semibold text-zinc-900">Panelga kirish yo'q</h1>
         <p className="mt-3 text-sm text-zinc-600">
           Sizning rolingiz <strong>customer</strong> (mijoz). Bu ilova xodimlar uchun:{" "}
           <strong>admin</strong>, <strong>restaurant</strong>, <strong>courier</strong>.
         </p>
         <p className="mt-3 text-sm text-zinc-600">
-          Kerakli bo&apos;limni ochish uchun administrator Supabase-da{" "}
+          Kerakli bo'limni ochish uchun administrator Supabase-da{" "}
           <code className="rounded bg-zinc-100 px-1">profiles.role</code> maydonini yangilashi kerak.
         </p>
-        <p className="mt-4 text-xs text-zinc-500">Ma&apos;lumotlar bazasida ruxsat etilgan qiymatlar: {BACKEND_PROFILE_ROLES.join(", ")}.</p>
+        <p className="mt-4 text-xs text-zinc-500">Ma'lumotlar bazasida ruxsat etilgan qiymatlar: {BACKEND_PROFILE_ROLES.join(", ")}.</p>
         <div className="mt-6 flex flex-wrap gap-3">
           <SignOutButton />
           <Link

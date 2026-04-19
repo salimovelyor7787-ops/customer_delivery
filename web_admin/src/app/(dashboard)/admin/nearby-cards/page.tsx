@@ -124,7 +124,7 @@ export default function AdminNearbyCardsPage() {
     <section className="space-y-6">
       <h1 className="text-2xl font-semibold">Yaqin kartochkalar</h1>
       <p className="text-sm text-zinc-500">
-        Bosh sahifadagi &quot;Yaqin do&apos;konlar&quot; bloki uchun rasm kartochkalarini boshqaring.
+        {`Bosh sahifadagi "Yaqin do'konlar" bloki uchun rasm kartochkalarini boshqaring.`}
       </p>
 
       <form
@@ -155,7 +155,7 @@ export default function AdminNearbyCardsPage() {
           onChange={(e) => setRestaurantId(e.target.value)}
           className="rounded-lg border border-zinc-300 px-3 py-2"
         >
-          <option value="">Restoranga bog&apos;lamaslik</option>
+          <option value="">Restoranga bog'lamaslik</option>
           {restaurants.map((restaurant) => (
             <option key={restaurant.id} value={restaurant.id}>
               {restaurant.name}

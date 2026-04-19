@@ -67,7 +67,7 @@ export default function AdminPromocodesPage() {
           required
           className="rounded-lg border border-zinc-300 px-3 py-2"
         />
-        <button className="rounded-lg bg-zinc-900 px-4 py-2 text-white">Promokod qo&apos;shish</button>
+        <button className="rounded-lg bg-zinc-900 px-4 py-2 text-white">Promokod qo'shish</button>
       </form>
 
       <div className="overflow-x-auto rounded-2xl border border-zinc-200 bg-white">
@@ -92,7 +92,7 @@ export default function AdminPromocodesPage() {
                       Almashirish
                     </button>
                     <button className="rounded border border-red-300 px-2 py-1 text-xs text-red-600" onClick={() => onDelete(promo.id)}>
-                      O&apos;chirish
+                      O'chirish
                     </button>
                   </div>
                 </td>

@@ -126,7 +126,7 @@ export default function RestaurantOrdersPage() {
       </div>
 
       <p className="text-sm text-zinc-600">
-        Yetkazilgan buyurtmalar avtomatik ravishda <span className="font-medium">Arxiv</span> bo&apos;limiga tushadi (holat:{" "}
+        Yetkazilgan buyurtmalar avtomatik ravishda <span className="font-medium">Arxiv</span> bo'limiga tushadi (holat:{" "}
         <span className="font-medium">delivered</span> yoki <span className="font-medium">cancelled</span>).
       </p>
 
@@ -152,7 +152,7 @@ export default function RestaurantOrdersPage() {
                         </span>
                       ) : null}
                     </p>
-                    <p className="mt-1 text-sm font-semibold text-zinc-900">Jami: {(order.total_cents / 100).toFixed(0)} so&apos;m</p>
+                    <p className="mt-1 text-sm font-semibold text-zinc-900">Jami: {(order.total_cents / 100).toFixed(0)} so'm</p>
                   </div>
                   {tab === "active" && next ? (
                     <button
@@ -168,14 +168,14 @@ export default function RestaurantOrdersPage() {
                 <div className="mt-3 border-t border-zinc-100 pt-3">
                   <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-zinc-500">Taomlar</p>
                   {lines.length === 0 ? (
-                    <p className="text-sm text-zinc-400">Pozitsiyalar yuklanmadi yoki ro&apos;yxat bo&apos;sh.</p>
+                    <p className="text-sm text-zinc-400">Pozitsiyalar yuklanmadi yoki ro'yxat bo'sh.</p>
                   ) : (
                     <ul className="space-y-2">
                       {lines.map((line) => {
                         const name = menuItemDisplayName(line.menu_items);
                         const extras =
                           line.selected_option_ids && line.selected_option_ids.length > 0
-                            ? ` (+${line.selected_option_ids.length} qo&apos;shimcha)`
+                            ? ` (+${line.selected_option_ids.length} qo'shimcha)`
                             : "";
                         return (
                           <li key={line.id} className="flex flex-wrap justify-between gap-2 text-sm">
@@ -185,7 +185,7 @@ export default function RestaurantOrdersPage() {
                               <span className="text-zinc-500"> × {line.quantity}</span>
                             </span>
                             <span className="tabular-nums text-zinc-600">
-                              {((line.unit_price_cents * line.quantity) / 100).toFixed(0)} so&apos;m
+                              {((line.unit_price_cents * line.quantity) / 100).toFixed(0)} so'm
                             </span>
                           </li>
                         );

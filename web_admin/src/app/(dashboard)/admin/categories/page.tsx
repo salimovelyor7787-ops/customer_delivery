@@ -77,7 +77,7 @@ export default function AdminCategoriesPage() {
     <section className="space-y-6">
       <h1 className="text-2xl font-semibold">Kategoriyalar</h1>
       <p className="text-sm text-zinc-500">
-        Bosh sahifadagi qidiruv yonidagi filtrda ko&apos;rinadigan kategoriyalarni boshqaring.
+        Bosh sahifadagi qidiruv yonidagi filtrda ko'rinadigan kategoriyalarni boshqaring.
       </p>
 
       <form onSubmit={onCreateOrUpdate} className="grid gap-3 rounded-2xl border border-zinc-200 bg-white p-4 md:grid-cols-[1fr_180px_auto_auto]">
@@ -141,7 +141,7 @@ export default function AdminCategoriesPage() {
                       onClick={() => onDelete(row.id)}
                       className="rounded border border-red-300 px-3 py-1 text-xs text-red-600"
                     >
-                      O&apos;chirish
+                      O'chirish
                     </button>
                   </div>
                 </td>

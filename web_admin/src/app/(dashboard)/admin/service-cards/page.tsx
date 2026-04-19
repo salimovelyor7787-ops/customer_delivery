@@ -103,7 +103,7 @@ export default function AdminServiceCardsPage() {
     <section className="space-y-6">
       <h1 className="text-2xl font-semibold">Xizmat kartochkalari</h1>
       <p className="text-sm text-zinc-500">
-        Bosh sahifadagi do&apos;konlar, restoranlar va kuryer kartochkalarini sozlang.
+        Bosh sahifadagi do'konlar, restoranlar va kuryer kartochkalarini sozlang.
       </p>
 
       <form
@@ -180,7 +180,7 @@ export default function AdminServiceCardsPage() {
                 className="rounded border border-red-300 px-2 py-1 text-xs text-red-600"
                 onClick={() => onDelete(row.id)}
               >
-                O&apos;chirish
+                O'chirish
               </button>
             </div>
           </div>

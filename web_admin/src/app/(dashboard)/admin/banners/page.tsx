@@ -117,7 +117,7 @@ export default function AdminBannersPage() {
           className="rounded-lg border border-zinc-300 px-3 py-2"
         />
         <div className="flex flex-col gap-2 md:col-span-3">
-          <p className="text-xs text-zinc-500">Banner rasmi: URL yoki fayl (majburiy — biri bo&apos;lishi kerak)</p>
+          <p className="text-xs text-zinc-500">Banner rasmi: URL yoki fayl (majburiy — biri bo'lishi kerak)</p>
           <div className="flex flex-wrap items-stretch gap-2">
             <input
               value={imageUrl}
@@ -150,7 +150,7 @@ export default function AdminBannersPage() {
         />
         <div className="flex gap-2 md:col-span-3">
           <button className="rounded-lg bg-zinc-900 px-4 py-2 text-white">
-            {isEditing ? "Yangilash" : "Qo&apos;shish"}
+            {isEditing ? "Yangilash" : "Qo'shish"}
           </button>
           {isEditing ? (
             <button
@@ -171,7 +171,7 @@ export default function AdminBannersPage() {
             <p className="text-xs text-zinc-500">{banner.subtitle ?? "—"}</p>
             <p className="truncate text-xs text-zinc-500">{banner.image_url}</p>
             <p className="truncate text-xs text-zinc-500">Tugma: {banner.button_text ?? "—"}</p>
-            <p className="truncate text-xs text-zinc-500">Yo&apos;l: {banner.action_path ?? "—"}</p>
+            <p className="truncate text-xs text-zinc-500">Yo'l: {banner.action_path ?? "—"}</p>
             <p className="text-xs text-zinc-500">Tartib: {banner.sort_order ?? 0}</p>
             <p className="mt-2 text-xs text-zinc-600">Holat: {banner.active ? "faol" : "o'chirilgan"}</p>
             <div className="mt-3 flex gap-2">
@@ -182,7 +182,7 @@ export default function AdminBannersPage() {
                 Almashirish
               </button>
               <button className="rounded border border-red-300 px-2 py-1 text-xs text-red-600" onClick={() => onDelete(banner.id)}>
-                O&apos;chirish
+                O'chirish
               </button>
             </div>
           </div>

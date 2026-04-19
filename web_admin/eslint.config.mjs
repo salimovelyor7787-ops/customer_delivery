@@ -5,6 +5,13 @@ import nextTs from "eslint-config-next/typescript";
 const eslintConfig = defineConfig([
   ...nextVitals,
   ...nextTs,
+  {
+    rules: {
+      // Uzbek copy uses ASCII apostrophe (o'chirish, qo'shish). `&apos;` in JSX text is fine but
+      // must not appear inside JS string literals (renders literally). Allow `'` in JSX children.
+      "react/no-unescaped-entities": ["error", { forbid: [">", "}", "\""] }],
+    },
+  },
   // Override default ignores of eslint-config-next.
   globalIgnores([
     // Default ignores of eslint-config-next:

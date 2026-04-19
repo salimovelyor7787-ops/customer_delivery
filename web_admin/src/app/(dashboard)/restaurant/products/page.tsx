@@ -251,7 +251,7 @@ export default function RestaurantProductsPage() {
       <div className="space-y-3 rounded-2xl border border-zinc-200 bg-white p-4">
         <h2 className="text-sm font-semibold text-zinc-900">Kategoriyalar</h2>
         <div className="flex flex-wrap items-center gap-2">
-          {categories.length === 0 ? <p className="text-sm text-zinc-500">Kategoriya hali yo&apos;q. Avval admin paneldagi Kategoriyalar bo&apos;limida qo&apos;shing.</p> : null}
+          {categories.length === 0 ? <p className="text-sm text-zinc-500">Kategoriya hali yo'q. Avval admin paneldagi Kategoriyalar bo'limida qo'shing.</p> : null}
           {categories.map((cat) => (
             <div key={cat.id} className="inline-flex items-center gap-2 rounded-full border border-zinc-300 px-3 py-1.5 text-xs">
               <span>{cat.name}</span>
@@ -287,7 +287,7 @@ export default function RestaurantProductsPage() {
           />
           <ImageUpload folder="products" onUploaded={setImageUrl} className="self-start" />
         </div>
-        <button className="rounded-lg bg-zinc-900 px-4 py-2 text-white">{editingId ? "Saqlash" : "Qo&apos;shish"}</button>
+        <button className="rounded-lg bg-zinc-900 px-4 py-2 text-white">{editingId ? "Saqlash" : "Qo'shish"}</button>
         {editingId ? (
           <button
             type="button"
@@ -310,14 +310,14 @@ export default function RestaurantProductsPage() {
           <div key={product.id} className="rounded-xl border border-zinc-200 bg-white p-4">
             <p className="font-medium">{product.name}</p>
             <p className="text-xs text-zinc-500">{product.category ?? "Boshqa"}</p>
-            <p className="text-sm text-zinc-600">so&apos;m {(Number(product.price_cents) / 100).toFixed(0)}</p>
+            <p className="text-sm text-zinc-600">so'm {(Number(product.price_cents) / 100).toFixed(0)}</p>
             {product.image_url ? <p className="truncate text-xs text-zinc-500">{product.image_url}</p> : null}
             <div className="mt-3 flex gap-2">
               <button className="rounded border border-zinc-300 px-2 py-1 text-xs" onClick={() => onEdit(product)}>
                 Tahrirlash
               </button>
               <button className="rounded border border-red-300 px-2 py-1 text-xs text-red-600" onClick={() => onDelete(product.id)}>
-                O&apos;chirish
+                O'chirish
               </button>
             </div>
           </div>
@@ -325,7 +325,7 @@ export default function RestaurantProductsPage() {
       </div>
 
       <div className="space-y-4 rounded-2xl border border-zinc-200 bg-white p-4">
-        <h2 className="text-sm font-semibold text-zinc-900">Qo&apos;shimchalar (соус, имбирь, ...)</h2>
+        <h2 className="text-sm font-semibold text-zinc-900">Qo'shimchalar (соус, имбирь, ...)</h2>
         <div className="grid gap-3 md:grid-cols-[minmax(220px,320px)_1fr]">
           <select
             value={selectedOptionItemId}
@@ -362,7 +362,7 @@ export default function RestaurantProductsPage() {
               required
             />
             <button className="rounded-lg bg-zinc-900 px-4 py-2 text-white">
-              {editingOptionId ? "Saqlash" : "Qo&apos;shish"}
+              {editingOptionId ? "Saqlash" : "Qo'shish"}
             </button>
             {editingOptionId ? (
               <button type="button" onClick={onCancelOptionEdit} className="rounded-lg border border-zinc-300 px-4 py-2 text-zinc-700">
@@ -388,7 +388,7 @@ export default function RestaurantProductsPage() {
                   {options.map((opt, idx) => (
                     <tr key={opt.id} className="border-t border-zinc-100">
                       <td className="px-3 py-2">{opt.name}</td>
-                      <td className="px-3 py-2">so&apos;m {(opt.price_delta_cents / 100).toFixed(0)}</td>
+                      <td className="px-3 py-2">so'm {(opt.price_delta_cents / 100).toFixed(0)}</td>
                       <td className="px-3 py-2">{idx + 1}</td>
                       <td className="px-3 py-2">
                         <div className="flex flex-wrap gap-2">
@@ -420,7 +420,7 @@ export default function RestaurantProductsPage() {
                             className="rounded border border-red-300 px-2 py-1 text-xs text-red-600"
                             onClick={() => void onDeleteOption(opt.id)}
                           >
-                            O&apos;chirish
+                            O'chirish
                           </button>
                         </div>
                       </td>
@@ -430,10 +430,10 @@ export default function RestaurantProductsPage() {
               </table>
             </div>
           ) : (
-            <p className="text-sm text-zinc-500">Bu mahsulot uchun qo&apos;shimcha hali qo&apos;shilmagan.</p>
+            <p className="text-sm text-zinc-500">Bu mahsulot uchun qo'shimcha hali qo'shilmagan.</p>
           )
         ) : (
-          <p className="text-sm text-zinc-500">Qo&apos;shimchalarni boshqarish uchun avval mahsulotni tanlang.</p>
+          <p className="text-sm text-zinc-500">Qo'shimchalarni boshqarish uchun avval mahsulotni tanlang.</p>
         )}
       </div>
     </section>

@@ -82,7 +82,7 @@ export default function AdminPushNotificationsPage() {
           placeholder="Matn (ixtiyoriy)"
           className="min-h-24 rounded-lg border border-zinc-300 px-3 py-2"
         />
-        <button className="w-fit rounded-lg bg-zinc-900 px-4 py-2 text-white">Qo&apos;shish</button>
+        <button className="w-fit rounded-lg bg-zinc-900 px-4 py-2 text-white">Qo'shish</button>
       </form>
 
       <div className="overflow-x-auto rounded-2xl border border-zinc-200 bg-white">
@@ -115,7 +115,7 @@ export default function AdminPushNotificationsPage() {
                       className="rounded border border-red-300 px-2 py-1 text-xs text-red-600"
                       onClick={() => void onDelete(item.id)}
                     >
-                      O&apos;chirish
+                      O'chirish
                     </button>
                   </div>
                 </td>

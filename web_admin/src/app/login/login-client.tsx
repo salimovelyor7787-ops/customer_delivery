@@ -57,7 +57,7 @@ export function LoginClient() {
           </p>
         </div>
         <h1 className="text-2xl font-semibold text-zinc-900">Kirish</h1>
-        <p className="mt-2 text-sm text-zinc-500">Buyurtmalar, profil va tarixni ko&apos;rish uchun tizimga kiring.</p>
+        <p className="mt-2 text-sm text-zinc-500">Buyurtmalar, profil va tarixni ko'rish uchun tizimga kiring.</p>
 
         <form className="mt-6 space-y-4" onSubmit={onSubmit}>
           <label className="block">
@@ -94,9 +94,9 @@ export function LoginClient() {
         </form>
 
         <p className="mt-6 text-center text-sm text-zinc-600">
-          Hisobingiz yo&apos;qmi?{" "}
+          Hisobingiz yo'qmi?{" "}
           <Link href={nextParam ? `/register?next=${encodeURIComponent(nextParam)}` : "/register"} className="font-medium text-zinc-900 underline">
-            Ro&apos;yxatdan o&apos;tish
+            Ro'yxatdan o'tish
           </Link>
         </p>
       </div>
