@@ -51,6 +51,8 @@ export function RestaurantHeroCard({
           alt={name}
           fill
           priority={priority}
+          fetchPriority={priority ? "high" : "low"}
+          decoding={priority ? "sync" : "async"}
           sizes={compact ? "(max-width: 768px) 100vw, 50vw" : "(max-width: 768px) 100vw, 60vw"}
           className="absolute inset-0 h-full w-full object-cover transition duration-300 group-hover:scale-105"
         />

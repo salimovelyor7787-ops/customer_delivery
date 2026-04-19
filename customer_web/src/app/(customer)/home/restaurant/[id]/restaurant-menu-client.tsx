@@ -116,6 +116,7 @@ export function RestaurantMenuClient({ restaurant, items }: { restaurant: Restau
             className="object-cover"
             priority
             fetchPriority="high"
+            decoding="sync"
           />
         ) : null}
       </div>
