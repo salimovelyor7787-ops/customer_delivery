@@ -169,15 +169,22 @@ export default function RestaurantCouriersPage() {
           <h1 className="text-2xl font-semibold">Kuryerlar</h1>
           <p className="text-sm text-zinc-500">Restoranga istalgancha kuryer qo'shishingiz mumkin.</p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
           <button
             type="button"
             onClick={toggleDispatchMode}
-            className={`rounded-lg border px-3 py-2 text-xs font-semibold ${
-              autoAssignOwnCouriers ? "border-green-600 bg-green-50 text-green-700" : "border-zinc-300 bg-white text-zinc-600"
+            role="switch"
+            aria-checked={autoAssignOwnCouriers}
+            aria-label="Buyurtmalarni o'z kuryerlariga avtomatik taqsimlash"
+            className={`relative inline-flex h-7 w-12 items-center rounded-full transition ${
+              autoAssignOwnCouriers ? "bg-green-600" : "bg-zinc-300"
             }`}
           >
-            {autoAssignOwnCouriers ? "VKL" : "VYKL"}
+            <span
+              className={`inline-block h-5 w-5 transform rounded-full bg-white transition ${
+                autoAssignOwnCouriers ? "translate-x-6" : "translate-x-1"
+              }`}
+            />
           </button>
           <button
             type="button"
