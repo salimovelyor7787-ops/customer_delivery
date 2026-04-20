@@ -159,15 +159,7 @@ export function HomePageClient({ initial }: Props) {
     return () => window.clearTimeout(t);
   }, [supabase, initial]);
 
-  const storeCarouselItems = useMemo((): NearbyStoreCard[] => {
-    if (nearbyCards.length > 0) return nearbyCards;
-    return restaurants.slice(0, 10).map((r) => ({
-      id: `fallback-${r.id}`,
-      title: r.name,
-      image_url: r.image_url ?? "",
-      restaurant_id: r.id,
-    }));
-  }, [nearbyCards, restaurants]);
+  const storeCarouselItems = useMemo((): NearbyStoreCard[] => nearbyCards, [nearbyCards]);
 
   const getRestaurantCategoryNames = useCallback(
     (restaurant: Restaurant): string[] => {
@@ -259,14 +251,14 @@ export function HomePageClient({ initial }: Props) {
         </div>
       </div>
 
-      {storeCarouselItems.length > 0 ? (
-        <section className="space-y-2">
-          <div className="flex items-center justify-between gap-2">
-            <h2 className="text-lg font-semibold sm:text-xl">Yaqin do&apos;konlar</h2>
-            <Link href="/search" className="shrink-0 text-sm font-medium text-orange-600 hover:text-orange-700">
-              Hammasi
-            </Link>
-          </div>
+      <section className="space-y-2">
+        <div className="flex items-center justify-between gap-2">
+          <h2 className="text-lg font-semibold sm:text-xl">Yaqin do&apos;konlar</h2>
+          <Link href="/search" className="shrink-0 text-sm font-medium text-orange-600 hover:text-orange-700">
+            Hammasi
+          </Link>
+        </div>
+        {storeCarouselItems.length > 0 ? (
           <div className="-mx-1 flex snap-x snap-mandatory gap-2 overflow-x-auto px-1 pb-1 [scrollbar-width:thin]">
             {storeCarouselItems.map((card) => {
               const inner = (
@@ -303,8 +295,12 @@ export function HomePageClient({ initial }: Props) {
               );
             })}
           </div>
-        </section>
-      ) : null}
+        ) : (
+          <p className="rounded-xl border border-dashed border-zinc-200 bg-zinc-50 px-4 py-6 text-center text-sm text-zinc-500">
+            Tez orada yangi do&apos;konlar qo&apos;shiladi
+          </p>
+        )}
+      </section>
 
       {deals.length > 0 ? (
         <section className="space-y-2">
