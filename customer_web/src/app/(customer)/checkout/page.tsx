@@ -220,8 +220,9 @@ export default function CheckoutPage() {
           <div className="w-full max-w-md rounded-2xl bg-white p-5 shadow-xl">
             <h2 className="text-lg font-semibold">Buyurtma limiti</h2>
             <p className="mt-2 text-sm text-zinc-600">
-              Bir kunda ro'yxatdan o'tmasdan faqat 2 ta buyurtma berish mumkin. Yana buyurtma berish uchun, iltimos ro'yxatdan
-              o'ting.
+              {
+                "Bir kunda ro'yxatdan o'tmasdan faqat 2 ta buyurtma berish mumkin. Yana buyurtma berish uchun, iltimos ro'yxatdan o'ting."
+              }
             </p>
             <div className="mt-4 flex justify-end gap-2">
               <button
@@ -236,7 +237,7 @@ export default function CheckoutPage() {
                 onClick={() => router.push("/register?next=/checkout")}
                 className="rounded-lg bg-zinc-900 px-4 py-2 text-sm text-white"
               >
-                Ro'yxatdan o'tish
+                {"Ro'yxatdan o'tish"}
               </button>
             </div>
           </div>
