@@ -1,11 +1,11 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import toast from "react-hot-toast";
 import { createSupabaseBrowserClient } from "@/lib/supabase";
 
 /** PostgREST may return a single row or a one-element array for nested FK selects. */
-type MenuItemsNested = { name: string | null } | { name: string | null }[] | null;
+type MenuItemsNested = { name: string | null; description: string | null } | { name: string | null; description: string | null }[] | null;
 
 type OrderLine = {
   id: string;
@@ -21,6 +21,14 @@ function menuItemDisplayName(menuItems: MenuItemsNested): string {
     return menuItems[0]?.name?.trim() || "Mahsulot";
   }
   return menuItems.name?.trim() || "Mahsulot";
+}
+
+function menuItemDescription(menuItems: MenuItemsNested): string {
+  if (menuItems == null) return "";
+  if (Array.isArray(menuItems)) {
+    return menuItems[0]?.description?.trim() || "";
+  }
+  return menuItems.description?.trim() || "";
 }
 
 type RestaurantOrder = {
@@ -54,8 +62,37 @@ export default function RestaurantOrdersPage() {
   const [orders, setOrders] = useState<RestaurantOrder[]>([]);
   const [restaurantId, setRestaurantId] = useState<string>("");
   const [tab, setTab] = useState<"active" | "archive">("active");
+  const knownOrderIdsRef = useRef<Set<string>>(new Set());
+  const audioCtxRef = useRef<AudioContext | null>(null);
+  const initialLoadedRef = useRef(false);
 
-  const loadOrders = useCallback(async () => {
+  const playNewOrderSound = useCallback(() => {
+    try {
+      const Ctx = window.AudioContext || (window as typeof window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+      if (!Ctx) return;
+      if (!audioCtxRef.current) audioCtxRef.current = new Ctx();
+      const ctx = audioCtxRef.current;
+      const now = ctx.currentTime;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+
+      osc.type = "sine";
+      osc.frequency.setValueAtTime(880, now);
+      osc.frequency.exponentialRampToValueAtTime(1100, now + 0.14);
+      gain.gain.setValueAtTime(0.0001, now);
+      gain.gain.exponentialRampToValueAtTime(0.12, now + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.16);
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(now);
+      osc.stop(now + 0.18);
+    } catch {
+      // no-op: autoplay/browser policy may block sound until user interaction
+    }
+  }, []);
+
+  const loadOrders = useCallback(async (opts?: { silent?: boolean }) => {
     const {
       data: { user },
     } = await supabase.auth.getUser();
@@ -66,7 +103,7 @@ export default function RestaurantOrdersPage() {
     const { data, error } = await supabase
       .from("orders")
       .select(
-        "id,status,total_cents,restaurant_id,created_at,order_items(id,quantity,unit_price_cents,selected_option_ids,menu_items(name))",
+        "id,status,total_cents,restaurant_id,created_at,order_items(id,quantity,unit_price_cents,selected_option_ids,menu_items(name,description))",
       )
       .eq("restaurant_id", restaurant.id)
       .order("created_at", { ascending: false });
@@ -74,19 +111,65 @@ export default function RestaurantOrdersPage() {
       toast.error(error.message);
       return;
     }
-    setOrders((data ?? []) as RestaurantOrder[]);
-  }, [supabase]);
+    const nextOrders = (data ?? []) as RestaurantOrder[];
+    const nextIds = new Set(nextOrders.map((o) => o.id));
+    const hadInitial = initialLoadedRef.current;
+    const newCount = hadInitial ? nextOrders.filter((o) => !knownOrderIdsRef.current.has(o.id)).length : 0;
+
+    knownOrderIdsRef.current = nextIds;
+    initialLoadedRef.current = true;
+    setOrders(nextOrders);
+
+    if ((opts?.silent ?? false) === false && newCount > 0 && document.visibilityState === "visible") {
+      playNewOrderSound();
+      toast.success(`Yangi buyurtma: +${newCount}`);
+    }
+  }, [supabase, playNewOrderSound]);
 
   useEffect(() => {
     let cancelled = false;
     const t = window.setTimeout(() => {
-      if (!cancelled) void loadOrders();
+      if (!cancelled) void loadOrders({ silent: true });
     }, 0);
     return () => {
       cancelled = true;
       window.clearTimeout(t);
     };
   }, [loadOrders]);
+
+  useEffect(() => {
+    if (!restaurantId) return;
+
+    // Fallback polling in case realtime channel is disrupted.
+    const poll = window.setInterval(() => {
+      void loadOrders();
+    }, 15000);
+
+    const onFocus = () => void loadOrders();
+    const onVisible = () => {
+      if (document.visibilityState === "visible") void loadOrders();
+    };
+    window.addEventListener("focus", onFocus);
+    document.addEventListener("visibilitychange", onVisible);
+
+    const channel = supabase
+      .channel(`restaurant-orders-${restaurantId}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "orders", filter: `restaurant_id=eq.${restaurantId}` },
+        () => {
+          void loadOrders();
+        },
+      )
+      .subscribe();
+
+    return () => {
+      window.clearInterval(poll);
+      window.removeEventListener("focus", onFocus);
+      document.removeEventListener("visibilitychange", onVisible);
+      void supabase.removeChannel(channel);
+    };
+  }, [restaurantId, supabase, loadOrders]);
 
   const activeOrders = useMemo(() => orders.filter((o) => !isArchivedStatus(o.status)), [orders]);
   const archiveOrders = useMemo(() => orders.filter((o) => isArchivedStatus(o.status)), [orders]);
@@ -173,16 +256,20 @@ export default function RestaurantOrdersPage() {
                     <ul className="space-y-2">
                       {lines.map((line) => {
                         const name = menuItemDisplayName(line.menu_items);
+                        const description = menuItemDescription(line.menu_items);
                         const extras =
                           line.selected_option_ids && line.selected_option_ids.length > 0
                             ? ` (+${line.selected_option_ids.length} qo'shimcha)`
                             : "";
                         return (
                           <li key={line.id} className="flex flex-wrap justify-between gap-2 text-sm">
-                            <span className="text-zinc-800">
-                              {name}
-                              {extras}
-                              <span className="text-zinc-500"> × {line.quantity}</span>
+                            <span className="min-w-0 text-zinc-800">
+                              <span>
+                                {name}
+                                {extras}
+                                <span className="text-zinc-500"> × {line.quantity}</span>
+                              </span>
+                              {description ? <span className="mt-0.5 block text-xs text-zinc-500">{description}</span> : null}
                             </span>
                             <span className="tabular-nums text-zinc-600">
                               {((line.unit_price_cents * line.quantity) / 100).toFixed(0)} so'm
