@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { createSupabaseBrowserClient } from "@/lib/supabase";
 
@@ -18,43 +18,58 @@ const supabase = createSupabaseBrowserClient();
 export default function CourierOrdersPage() {
   const [orders, setOrders] = useState<CourierOrder[]>([]);
   const [userId, setUserId] = useState<string>("");
-  const [restaurantId, setRestaurantId] = useState<string>("");
+  const [loading, setLoading] = useState(true);
+
+  const loadOrders = useCallback(
+    async (currentUserId: string) => {
+      const [assignedRes, publicPoolRes] = await Promise.all([
+        supabase
+          .from("orders")
+          .select("id,status,total_cents,courier_id,restaurant_id,guest_lat,guest_lng")
+          .eq("courier_id", currentUserId)
+          .in("status", ["ready", "picked_up", "delivered"]),
+        supabase
+          .from("orders")
+          .select("id,status,total_cents,courier_id,restaurant_id,guest_lat,guest_lng")
+          .is("courier_id", null)
+          .eq("status", "ready"),
+      ]);
+
+      if (assignedRes.error) {
+        toast.error(assignedRes.error.message);
+        return;
+      }
+      if (publicPoolRes.error) {
+        toast.error(publicPoolRes.error.message);
+        return;
+      }
+
+      const merged = [...(assignedRes.data ?? []), ...(publicPoolRes.data ?? [])] as CourierOrder[];
+      const deduped = Array.from(new Map(merged.map((order) => [order.id, order])).values());
+      setOrders(deduped);
+    },
+    [],
+  );
 
   useEffect(() => {
-    const loadOrders = async () => {
+    const boot = async () => {
       const {
         data: { user },
       } = await supabase.auth.getUser();
       if (!user) return;
       setUserId(user.id);
-
-      const { data: relation, error: relationError } = await supabase
-        .from("restaurant_couriers")
-        .select("restaurant_id")
-        .eq("courier_id", user.id)
-        .maybeSingle();
-      if (relationError) {
-        toast.error(relationError.message);
-        return;
-      }
-      if (!relation?.restaurant_id) {
-        setRestaurantId("");
-        setOrders([]);
-        return;
-      }
-      setRestaurantId(relation.restaurant_id);
-
-      const { data } = await supabase
-        .from("orders")
-        .select("id,status,total_cents,courier_id,restaurant_id,guest_lat,guest_lng")
-        .eq("restaurant_id", relation.restaurant_id)
-        .eq("courier_id", user.id)
-        .in("status", ["ready", "picked_up", "delivered"]);
-
-      setOrders((data ?? []) as CourierOrder[]);
+      await loadOrders(user.id);
+      setLoading(false);
     };
-    void loadOrders();
-  }, []);
+    void boot();
+  }, [loadOrders]);
+
+  const acceptOrder = async (orderId: string) => {
+    const { error } = await supabase.from("orders").update({ courier_id: userId, status: "picked_up" }).eq("id", orderId).is("courier_id", null);
+    if (error) return toast.error(error.message);
+    toast.success("Buyurtma qabul qilindi");
+    await loadOrders(userId);
+  };
 
   const markDelivered = async (orderId: string) => {
     const { error } = await supabase
@@ -64,18 +79,15 @@ export default function CourierOrdersPage() {
       .eq("courier_id", userId);
     if (error) return toast.error(error.message);
     toast.success("Yetkazildi deb belgilandi");
-    const { data } = await supabase
-      .from("orders")
-      .select("id,status,total_cents,courier_id,guest_lat,guest_lng")
-      .or(`courier_id.eq.${userId},courier_id.is.null`)
-      .in("status", ["ready", "picked_up", "delivered"]);
-    setOrders((data ?? []) as CourierOrder[]);
+    await loadOrders(userId);
   };
 
   return (
     <section className="space-y-4">
       <h1 className="text-2xl font-semibold">Mening buyurtmalarim</h1>
-      {!restaurantId ? <p className="text-sm text-zinc-500">Siz hali birorta restoranga biriktirilmagansiz.</p> : null}
+      <p className="text-sm text-zinc-500">
+        {loading ? "Yuklanmoqda..." : "Bu yerda sizga biriktirilgan buyurtmalar va umumiy bazadagi tayyor buyurtmalar ko'rsatiladi."}
+      </p>
       <div className="grid gap-3">
         {orders.map((order) => (
           <div key={order.id} className="rounded-xl border border-zinc-200 bg-white p-4">
@@ -94,6 +106,11 @@ export default function CourierOrdersPage() {
                   >
                     Lokatsiya
                   </a>
+                ) : null}
+                {!order.courier_id ? (
+                  <button className="rounded-lg bg-zinc-900 px-3 py-1 text-xs text-white" onClick={() => acceptOrder(order.id)}>
+                    Qabul qilish
+                  </button>
                 ) : null}
                 {order.status === "picked_up" ? (
                   <button className="rounded-lg border border-zinc-300 px-3 py-1 text-xs" onClick={() => markDelivered(order.id)}>

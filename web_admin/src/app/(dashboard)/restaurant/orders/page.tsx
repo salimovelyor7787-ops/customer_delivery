@@ -61,6 +61,7 @@ export default function RestaurantOrdersPage() {
   const supabase = useMemo(() => createSupabaseBrowserClient(), []);
   const [orders, setOrders] = useState<RestaurantOrder[]>([]);
   const [restaurantId, setRestaurantId] = useState<string>("");
+  const [autoAssignOwnCouriers, setAutoAssignOwnCouriers] = useState(true);
   const [tab, setTab] = useState<"active" | "archive">("active");
   const knownOrderIdsRef = useRef<Set<string>>(new Set());
   const audioCtxRef = useRef<AudioContext | null>(null);
@@ -97,9 +98,14 @@ export default function RestaurantOrdersPage() {
       data: { user },
     } = await supabase.auth.getUser();
     if (!user) return;
-    const { data: restaurant } = await supabase.from("restaurants").select("id").eq("owner_id", user.id).single();
+    const { data: restaurant } = await supabase
+      .from("restaurants")
+      .select("id,auto_assign_to_own_couriers")
+      .eq("owner_id", user.id)
+      .single();
     if (!restaurant) return;
     setRestaurantId(restaurant.id);
+    setAutoAssignOwnCouriers(restaurant.auto_assign_to_own_couriers ?? true);
     const { data, error } = await supabase
       .from("orders")
       .select(
@@ -175,10 +181,58 @@ export default function RestaurantOrdersPage() {
   const archiveOrders = useMemo(() => orders.filter((o) => isArchivedStatus(o.status)), [orders]);
   const visibleOrders = tab === "active" ? activeOrders : archiveOrders;
 
+  const distributeUnassignedOrdersToOwnCouriers = useCallback(async () => {
+    if (!restaurantId) return;
+    const { data: links, error: linksError } = await supabase
+      .from("restaurant_couriers")
+      .select("courier_id")
+      .eq("restaurant_id", restaurantId);
+    if (linksError) {
+      toast.error(linksError.message);
+      return;
+    }
+
+    const courierIds = (links ?? []).map((row) => row.courier_id as string).filter(Boolean);
+    if (courierIds.length === 0) {
+      return;
+    }
+
+    const { data: pendingOrders, error: pendingError } = await supabase
+      .from("orders")
+      .select("id")
+      .eq("restaurant_id", restaurantId)
+      .in("status", ["accepted", "cooking", "ready"])
+      .is("courier_id", null)
+      .order("created_at", { ascending: true });
+    if (pendingError) {
+      toast.error(pendingError.message);
+      return;
+    }
+
+    const ordersToAssign = pendingOrders ?? [];
+    for (let index = 0; index < ordersToAssign.length; index += 1) {
+      const order = ordersToAssign[index];
+      const courierId = courierIds[index % courierIds.length];
+      await supabase
+        .from("orders")
+        .update({ courier_id: courierId })
+        .eq("id", order.id)
+        .eq("restaurant_id", restaurantId)
+        .is("courier_id", null);
+    }
+  }, [restaurantId, supabase]);
+
   const updateStatus = async (id: string, status: string) => {
     if (!restaurantId) return;
-    const { error } = await supabase.from("orders").update({ status }).eq("id", id).eq("restaurant_id", restaurantId);
+    const patch: { status: string; courier_id?: string | null } = { status };
+    if (status === "ready" && !autoAssignOwnCouriers) {
+      patch.courier_id = null;
+    }
+    const { error } = await supabase.from("orders").update(patch).eq("id", id).eq("restaurant_id", restaurantId);
     if (error) return toast.error(error.message);
+    if (status === "ready" && autoAssignOwnCouriers) {
+      await distributeUnassignedOrdersToOwnCouriers();
+    }
     toast.success("Buyurtma yangilandi");
     await loadOrders();
   };

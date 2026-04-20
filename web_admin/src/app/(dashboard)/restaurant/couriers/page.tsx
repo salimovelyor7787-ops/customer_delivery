@@ -24,6 +24,7 @@ type RestaurantOrder = {
 export default function RestaurantCouriersPage() {
   const supabase = useMemo(() => createSupabaseBrowserClient(), []);
   const [restaurantId, setRestaurantId] = useState<string>("");
+  const [autoAssignOwnCouriers, setAutoAssignOwnCouriers] = useState(true);
   const [couriers, setCouriers] = useState<RestaurantCourier[]>([]);
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
@@ -36,9 +37,14 @@ export default function RestaurantCouriersPage() {
       data: { user },
     } = await supabase.auth.getUser();
     if (!user) return;
-    const { data: restaurant } = await supabase.from("restaurants").select("id").eq("owner_id", user.id).single();
+    const { data: restaurant } = await supabase
+      .from("restaurants")
+      .select("id,auto_assign_to_own_couriers")
+      .eq("owner_id", user.id)
+      .single();
     if (!restaurant) return;
     setRestaurantId(restaurant.id);
+    setAutoAssignOwnCouriers(restaurant.auto_assign_to_own_couriers ?? true);
 
     const { data: links, error } = await supabase
       .from("restaurant_couriers")
@@ -140,6 +146,22 @@ export default function RestaurantCouriersPage() {
     toast.success(`Taqsimlandi: ${updatedCount} buyurtma.`);
   };
 
+  const toggleDispatchMode = async () => {
+    if (!restaurantId) return;
+    const nextValue = !autoAssignOwnCouriers;
+    setAutoAssignOwnCouriers(nextValue);
+    const { error } = await supabase
+      .from("restaurants")
+      .update({ auto_assign_to_own_couriers: nextValue })
+      .eq("id", restaurantId);
+    if (error) {
+      setAutoAssignOwnCouriers(!nextValue);
+      toast.error(error.message);
+      return;
+    }
+    toast.success(nextValue ? "Avto-taqsimlash yoqildi." : "Umumiy kuryer bazasi rejimi yoqildi.");
+  };
+
   return (
     <section className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -147,15 +169,33 @@ export default function RestaurantCouriersPage() {
           <h1 className="text-2xl font-semibold">Kuryerlar</h1>
           <p className="text-sm text-zinc-500">Restoranga istalgancha kuryer qo'shishingiz mumkin.</p>
         </div>
-        <button
-          type="button"
-          onClick={() => void assignAllOrdersToCouriers()}
-          disabled={assigning}
-          className="rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white disabled:opacity-60"
-        >
-          {assigning ? "Taqsimlanmoqda..." : "Barcha buyurtmalarni kuryerlarga berish"}
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={toggleDispatchMode}
+            className={`rounded-lg border px-3 py-2 text-xs font-semibold ${
+              autoAssignOwnCouriers ? "border-green-600 bg-green-50 text-green-700" : "border-zinc-300 bg-white text-zinc-600"
+            }`}
+          >
+            {autoAssignOwnCouriers ? "VKL" : "VYKL"}
+          </button>
+          <button
+            type="button"
+            onClick={() => void assignAllOrdersToCouriers()}
+            disabled={assigning}
+            className="rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white disabled:opacity-60"
+          >
+            {assigning ? "Taqsimlanmoqda..." : "Barcha buyurtmalarni o'z kuryerlarimga berish"}
+          </button>
+        </div>
       </div>
+      <p className="text-sm text-zinc-600">
+        Rejim:{" "}
+        <span className="font-medium">
+          {autoAssignOwnCouriers ? "buyurtmalar ready bo'lganda avtomatik o'z kuryerlaringizga taqsimlanadi" : "buyurtmalar umumiy kuryer bazasiga chiqadi"}
+        </span>
+        .
+      </p>
 
       <form onSubmit={createCourier} className="grid gap-3 rounded-xl border border-zinc-200 bg-white p-4 md:grid-cols-4">
         <input
