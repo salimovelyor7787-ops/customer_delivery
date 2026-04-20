@@ -30,6 +30,34 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
   bool _locating = false;
   bool _submitting = false;
   String? _error;
+  bool _isGuestDailyLimitError(String message) =>
+      message.contains('Guest daily limit reached (2 orders)');
+
+  Future<void> _showGuestLimitDialog() async {
+    await showDialog<void>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text("Buyurtma limiti"),
+        content: const Text(
+          "Bir kunda ro'yxatdan o'tmasdan faqat 2 ta buyurtma berish mumkin. "
+          "Yana buyurtma berish uchun, iltimos ro'yxatdan o'ting.",
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(),
+            child: const Text('Yopish'),
+          ),
+          FilledButton(
+            onPressed: () {
+              Navigator.of(dialogContext).pop();
+              context.push('/register?next=/checkout');
+            },
+            child: const Text("Ro'yxatdan o'tish"),
+          ),
+        ],
+      ),
+    );
+  }
 
   String get _fullPhone => '+998${_phoneController.text.trim()}';
 
@@ -241,10 +269,21 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                     );
                     if (!mounted) return;
                     res.fold(
-                      (f) => setState(() {
-                        _submitting = false;
-                        _error = f.message;
-                      }),
+                      (f) async {
+                        final msg = f.message;
+                        if (_isGuestDailyLimitError(msg)) {
+                          setState(() {
+                            _submitting = false;
+                            _error = null;
+                          });
+                          await _showGuestLimitDialog();
+                          return;
+                        }
+                        setState(() {
+                          _submitting = false;
+                          _error = msg;
+                        });
+                      },
                       (orderId) {
                         ref.read(cartNotifierProvider.notifier).clear();
                         ref.invalidate(activeOrdersProvider);

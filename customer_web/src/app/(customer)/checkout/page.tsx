@@ -18,6 +18,7 @@ export default function CheckoutPage() {
   /** idle = default (black), locating, success (green), error (red) */
   const [geoState, setGeoState] = useState<"idle" | "locating" | "success" | "error">("idle");
   const [saving, setSaving] = useState(false);
+  const [showGuestLimitModal, setShowGuestLimitModal] = useState(false);
   const phoneDigits = phone.replace(/\D/g, "").slice(0, 9);
 
   const geoButtonLabel =
@@ -148,9 +149,15 @@ export default function CheckoutPage() {
           ? "Telefon va joylashuv majburiy."
           : raw === "Location is required"
             ? "Joylashuv majburiy."
+            : raw === "Guest daily limit reached (2 orders)"
+              ? "Ro'yxatdan o'tmasdan bir kunda faqat 2 ta buyurtma berish mumkin."
             : raw.includes("Requested function was not found") || raw.includes("not found")
               ? "Supabase-da create_order funksiyasi topilmadi yoki yangilanmagan. Supabase Dashboard → Edge Functions dan deploy qiling."
               : raw;
+    if (raw === "Guest daily limit reached (2 orders)") {
+      setShowGuestLimitModal(true);
+      return;
+    }
     toast.error(mapped);
   };
 
@@ -208,6 +215,33 @@ export default function CheckoutPage() {
           {saving ? "Yuborilmoqda..." : "Buyurtma berish"}
         </button>
       </form>
+      {showGuestLimitModal ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+          <div className="w-full max-w-md rounded-2xl bg-white p-5 shadow-xl">
+            <h2 className="text-lg font-semibold">Buyurtma limiti</h2>
+            <p className="mt-2 text-sm text-zinc-600">
+              Bir kunda ro'yxatdan o'tmasdan faqat 2 ta buyurtma berish mumkin. Yana buyurtma berish uchun, iltimos ro'yxatdan
+              o'ting.
+            </p>
+            <div className="mt-4 flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setShowGuestLimitModal(false)}
+                className="rounded-lg border border-zinc-300 px-4 py-2 text-sm"
+              >
+                Yopish
+              </button>
+              <button
+                type="button"
+                onClick={() => router.push("/register?next=/checkout")}
+                className="rounded-lg bg-zinc-900 px-4 py-2 text-sm text-white"
+              >
+                Ro'yxatdan o'tish
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </main>
   );
 }
