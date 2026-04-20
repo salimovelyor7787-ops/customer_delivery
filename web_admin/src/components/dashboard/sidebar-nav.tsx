@@ -59,7 +59,8 @@ export function SidebarNav({ role, onNavigate }: Props) {
 
       <nav className="space-y-1">
         {navByRole[role].map((item) => {
-          const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
+          const isRootDashboardItem = item.href === `/${role}`;
+          const active = isRootDashboardItem ? pathname === item.href : pathname === item.href || pathname.startsWith(`${item.href}/`);
           const Icon = item.icon;
           return (
             <Link
