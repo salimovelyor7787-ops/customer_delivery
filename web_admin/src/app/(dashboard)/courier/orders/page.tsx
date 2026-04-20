@@ -64,6 +64,32 @@ export default function CourierOrdersPage() {
     void boot();
   }, [loadOrders]);
 
+  useEffect(() => {
+    if (!userId) return;
+
+    const refresh = () => void loadOrders(userId);
+    const poll = window.setInterval(refresh, 8000);
+    const onFocus = () => refresh();
+    const onVisible = () => {
+      if (document.visibilityState === "visible") refresh();
+    };
+
+    window.addEventListener("focus", onFocus);
+    document.addEventListener("visibilitychange", onVisible);
+
+    const channel = supabase
+      .channel(`courier-orders-${userId}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "orders" }, refresh)
+      .subscribe();
+
+    return () => {
+      window.clearInterval(poll);
+      window.removeEventListener("focus", onFocus);
+      document.removeEventListener("visibilitychange", onVisible);
+      void supabase.removeChannel(channel);
+    };
+  }, [userId, loadOrders]);
+
   const acceptOrder = async (orderId: string) => {
     const { error } = await supabase.from("orders").update({ courier_id: userId, status: "picked_up" }).eq("id", orderId).is("courier_id", null);
     if (error) return toast.error(error.message);
