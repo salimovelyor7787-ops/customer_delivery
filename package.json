@@ -1,0 +1,19 @@
+{
+  "name": "customer-delivery-monorepo",
+  "private": true,
+  "scripts": {
+    "dev": "npm --prefix web_admin run dev",
+    "build": "npm --prefix web_admin run build",
+    "start": "npm --prefix web_admin run start",
+    "lint": "npm --prefix web_admin run lint",
+    "install:web-admin": "npm --prefix web_admin install",
+    "dev:customer-web": "npm --prefix customer_web run dev",
+    "build:customer-web": "npm --prefix customer_web run build",
+    "start:customer-web": "npm --prefix customer_web run start",
+    "lint:customer-web": "npm --prefix customer_web run lint",
+    "install:customer-web": "npm --prefix customer_web install",
+    "web:run": "flutter run -d chrome",
+    "web:build": "flutter build web --release --output flutter_web_deploy",
+    "web:serve": "npx serve flutter_web_deploy -l 4173"
+  }
+}
