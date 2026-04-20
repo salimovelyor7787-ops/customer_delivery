@@ -9,6 +9,12 @@ type RestaurantCourier = {
   profiles: { full_name: string | null; phone: string | null } | null;
 };
 
+type CourierProfile = { full_name: string | null; phone: string | null };
+type RestaurantCourierRow = {
+  courier_id: string;
+  profiles: CourierProfile | CourierProfile[] | null;
+};
+
 type RestaurantOrder = {
   id: string;
   status: string;
@@ -43,7 +49,14 @@ export default function RestaurantCouriersPage() {
       toast.error(error.message);
       return;
     }
-    setCouriers((links ?? []) as RestaurantCourier[]);
+    const normalized = ((links ?? []) as RestaurantCourierRow[]).map((row) => {
+      const profile = Array.isArray(row.profiles) ? (row.profiles[0] ?? null) : row.profiles;
+      return {
+        courier_id: row.courier_id,
+        profiles: profile,
+      };
+    });
+    setCouriers(normalized);
   }, [supabase]);
 
   useEffect(() => {
