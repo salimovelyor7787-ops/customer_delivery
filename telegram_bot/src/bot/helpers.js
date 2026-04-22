@@ -19,16 +19,25 @@ export function buildRestaurantMenuUrl(restaurantId) {
   return `${config.appBaseUrl}/home/restaurant/${restaurantId}`;
 }
 
-export function restaurantMenuKeyboard(restaurantId) {
+export function restaurantMenuKeyboard(restaurantId, chatType = "private") {
+  const url = buildRestaurantMenuUrl(restaurantId);
+  const button =
+    chatType === "private"
+      ? {
+          text: "📖 Ochish",
+          web_app: { url },
+        }
+      : {
+          // WebApp buttons are not allowed in group/supergroup inline keyboards.
+          // Use a regular URL button there to avoid BUTTON_TYPE_INVALID.
+          text: "📖 Ochish",
+          url,
+        };
+
   return {
     reply_markup: {
       inline_keyboard: [
-        [
-          {
-            text: "📖 Ochish",
-            web_app: { url: buildRestaurantMenuUrl(restaurantId) },
-          },
-        ],
+        [button],
       ],
     },
   };
@@ -56,7 +65,7 @@ export async function isUserGroupAdmin(ctx) {
 }
 
 export async function sendAndTryPinMenuMessage(ctx, restaurantId) {
-  const message = await ctx.reply("🍔 Menyu", restaurantMenuKeyboard(restaurantId));
+  const message = await ctx.reply("🍔 Menyu", restaurantMenuKeyboard(restaurantId, ctx.chat?.type));
   try {
     await ctx.telegram.pinChatMessage(ctx.chat.id, message.message_id, { disable_notification: true });
   } catch (error) {

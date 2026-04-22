@@ -14,7 +14,7 @@ export async function handleMenuCommand(ctx) {
       return;
     }
 
-    await ctx.reply("🍔 Menyu", restaurantMenuKeyboard(group.restaurant_id));
+    await ctx.reply("🍔 Menyu", restaurantMenuKeyboard(group.restaurant_id, ctx.chat?.type));
   } catch (error) {
     console.error("[/menu] error", {
       chatId: ctx.chat?.id,
