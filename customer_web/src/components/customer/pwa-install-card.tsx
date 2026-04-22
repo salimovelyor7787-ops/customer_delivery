@@ -117,13 +117,6 @@ export function PwaInstallCard({ variant = "card" }: PwaInstallCardProps) {
     setDismissed(true);
   };
 
-  const title = android && playStoreUrl ? "Ilovani yuklab oling" : "Ilovani o'rnating";
-  const subtitle =
-    android && playStoreUrl
-      ? "Android uchun Play Market ilovasiga o'ting."
-      : ios
-        ? "Bosh ekranga qo'shish orqali tezroq oching."
-        : "Telefoningizga PWA sifatida o'rnating.";
   const actionLabel = android && playStoreUrl ? "Play Market" : "Yuklab olish";
 
   return (
@@ -155,8 +148,7 @@ export function PwaInstallCard({ variant = "card" }: PwaInstallCardProps) {
               <Smartphone className="h-5 w-5" />
             </div>
             <div className="min-w-0 flex-1">
-              <p className="font-semibold text-zinc-900">{title}</p>
-              <p className="text-sm text-zinc-500">{subtitle}</p>
+              <p className="font-semibold text-zinc-900">{"Ilovani o'rnating"}</p>
             </div>
             <button
               type="button"
