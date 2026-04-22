@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Bell, ChevronRight, CircleHelp, Gift, MapPin, Settings, UserRound } from "lucide-react";
+import { InviteShareButton } from "@/components/customer/invite-share-button";
 import { PwaInstallCard } from "@/components/customer/pwa-install-card";
 import { SignOutButton } from "@/components/customer/sign-out-button";
 import { createSupabaseServerClient } from "@/lib/supabase-server";
@@ -51,9 +52,7 @@ export default async function ProfilePage() {
             <p className="font-semibold text-zinc-900">Do&apos;stlaringizni taklif qiling</p>
             <p className="text-sm text-zinc-500">Bonus va chegirmalar oling!</p>
           </div>
-          <button type="button" className="rounded-full bg-orange-500 px-4 py-2 text-sm font-medium text-white">
-            Taklif qilish
-          </button>
+          <InviteShareButton inviteCode={sessionData.session?.user.id ?? null} />
         </div>
       </section>
 
