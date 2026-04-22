@@ -12,7 +12,7 @@ export type HomeCatalogPayload = {
 export async function loadHomeCatalog(): Promise<HomeCatalogPayload> {
   const supabase = createSupabasePublicServerClient();
   const [{ data: rests }, { data: catRows }, { data: bannerRows }, { data: dealRows }, { data: nearbyRows }, { data: pushRows }] = await Promise.all([
-    supabase.from("restaurants").select("id,name,image_url,is_open,category_id,category_ids").order("name", { ascending: true }),
+    supabase.from("restaurants").select("id,name,image_url,is_open,delivery_fee_cents,category_id,category_ids").order("name", { ascending: true }),
     supabase.from("categories").select("id,name").order("sort_order", { ascending: true }),
     supabase
       .from("banners")

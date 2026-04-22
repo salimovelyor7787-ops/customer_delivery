@@ -510,8 +510,7 @@ class HomeRestaurantCarouselCard extends StatelessWidget {
 
   final Restaurant restaurant;
   final String etaLabel;
-
-  double get _rating => 4.5 + (restaurant.id.hashCode % 6) * 0.1;
+  String get _deliveryStatus => restaurant.deliveryFeeCents <= 0 ? "Yetkazib berish: bepul" : "Yetkazib berish: pullik";
 
   @override
   Widget build(BuildContext context) {
@@ -535,18 +534,28 @@ class HomeRestaurantCarouselCard extends StatelessWidget {
               ),
               Padding(
                 padding: const EdgeInsets.fromLTRB(10, 0, 10, 10),
-                child: Row(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Icon(Icons.star_rounded, size: 18, color: Color(0xFFFFB800)),
-                    Text(_rating.toStringAsFixed(1), style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        etaLabel,
-                        style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSurfaceVariant),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
+                    Text(
+                      restaurant.categoryName ?? 'Restoran',
+                      style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSurfaceVariant),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      _deliveryStatus,
+                      style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSurfaceVariant),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      etaLabel,
+                      style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSurfaceVariant),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ],
                 ),
@@ -618,8 +627,7 @@ class _RestaurantBannerCard extends StatelessWidget {
 
   final Restaurant restaurant;
   final String etaLabel;
-
-  double get _rating => 4.5 + (restaurant.id.hashCode % 6) * 0.1;
+  String get _deliveryStatus => restaurant.deliveryFeeCents <= 0 ? "Yetkazib berish: bepul" : "Yetkazib berish: pullik";
 
   @override
   Widget build(BuildContext context) {
@@ -641,9 +649,9 @@ class _RestaurantBannerCard extends StatelessWidget {
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
                     colors: [
-                      Colors.black.withOpacity(0.14),
-                      Colors.black.withOpacity(0.20),
-                      Colors.black.withOpacity(0.52),
+                      Colors.black.withOpacity(0.36),
+                      Colors.black.withOpacity(0.26),
+                      Colors.black.withOpacity(0.18),
                     ],
                   ),
                 ),
@@ -652,8 +660,8 @@ class _RestaurantBannerCard extends StatelessWidget {
                 padding: const EdgeInsets.all(12),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.start,
                   children: [
-                    const Spacer(),
                     Text(
                       restaurant.name,
                       maxLines: 1,
@@ -667,29 +675,23 @@ class _RestaurantBannerCard extends StatelessWidget {
                     const SizedBox(height: 4),
                     Text(
                       restaurant.categoryName ?? 'Restoran',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                       style: TextStyle(color: Colors.white.withOpacity(0.92)),
                     ),
                     const SizedBox(height: 4),
-                    Row(
-                      children: [
-                        const Icon(Icons.star_rounded, size: 18, color: Color(0xFFFFB800)),
-                        Text(
-                          _rating.toStringAsFixed(1),
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            etaLabel,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(color: Colors.white.withOpacity(0.92)),
-                          ),
-                        ),
-                      ],
+                    Text(
+                      _deliveryStatus,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(color: Colors.white.withOpacity(0.92), fontWeight: FontWeight.w600),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      etaLabel,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(color: Colors.white.withOpacity(0.92)),
                     ),
                   ],
                 ),

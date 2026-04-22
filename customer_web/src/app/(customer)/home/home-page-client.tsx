@@ -13,6 +13,7 @@ export type Restaurant = {
   name: string;
   image_url: string | null;
   is_open: boolean;
+  delivery_fee_cents: number;
   category_id: string | null;
   category_ids: string[] | null;
 };
@@ -116,7 +117,7 @@ export function HomePageClient({ initial }: Props) {
       }
 
       const [{ data: rests }, { data: catRows }, { data: bannerRows }, { data: dealRows }, { data: nearbyRows }, { data: pushRows }] = await Promise.all([
-        supabase.from("restaurants").select("id,name,image_url,is_open,category_id,category_ids").order("name", { ascending: true }),
+        supabase.from("restaurants").select("id,name,image_url,is_open,delivery_fee_cents,category_id,category_ids").order("name", { ascending: true }),
         supabase.from("categories").select("id,name").order("sort_order", { ascending: true }),
         supabase
           .from("banners")
@@ -344,6 +345,7 @@ export function HomePageClient({ initial }: Props) {
               id={restaurant.id}
               name={restaurant.name}
               imageUrl={restaurant.image_url}
+              deliveryFeeCents={restaurant.delivery_fee_cents}
               priority={index === 0}
               categoryLabel={
                 (() => {
