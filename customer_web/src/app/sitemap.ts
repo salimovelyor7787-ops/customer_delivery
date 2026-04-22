@@ -1,8 +1,10 @@
 import type { MetadataRoute } from "next";
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://minut-ka.uz";
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL;
 
 export default function sitemap(): MetadataRoute.Sitemap {
+  if (!siteUrl) return [];
+
   const staticRoutes = [
     "/",
     "/home",

@@ -9,10 +9,10 @@ const inter = Inter({
   subsets: ["latin"],
 });
 
-const adminSiteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://minut-ka.uz";
+const adminSiteUrl = process.env.NEXT_PUBLIC_SITE_URL;
 
 export const metadata: Metadata = {
-  metadataBase: new URL(adminSiteUrl),
+  metadataBase: adminSiteUrl ? new URL(adminSiteUrl) : undefined,
   title: "Yetkazib berish — boshqaruv",
   description: "Supabase va Next.js asosidagi rolli boshqaruv paneli",
   icons: {

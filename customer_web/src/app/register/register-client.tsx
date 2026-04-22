@@ -7,7 +7,7 @@ import toast from "react-hot-toast";
 import { createSupabaseBrowserClient } from "@/lib/supabase";
 import { pathAfterAuth } from "@/lib/auth-redirect";
 
-const GOOGLE_OAUTH_REDIRECT = "https://minut-ka.uz/auth/callback";
+const GOOGLE_OAUTH_REDIRECT = "https://www.minut-ka.uz/auth/callback";
 
 export function RegisterClient() {
   const router = useRouter();

@@ -6,14 +6,15 @@ type InviteShareButtonProps = {
   inviteCode?: string | null;
 };
 
+const PUBLIC_APP_URL = "https://www.minut-ka.uz";
+
 export function InviteShareButton({ inviteCode }: InviteShareButtonProps) {
   const [fallbackOpen, setFallbackOpen] = useState(false);
   const [copied, setCopied] = useState(false);
 
   const inviteUrl = useMemo(() => {
     const basePath = inviteCode ? `/register?ref=${encodeURIComponent(inviteCode)}` : "/register";
-    if (typeof window === "undefined") return basePath;
-    return `${window.location.origin}${basePath}`;
+    return `${PUBLIC_APP_URL}${basePath}`;
   }, [inviteCode]);
 
   const handleShare = async () => {

@@ -11,10 +11,10 @@ const inter = Inter({
   adjustFontFallback: true,
 });
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://minut-ka.uz";
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL;
 
 export const metadata: Metadata = {
-  metadataBase: new URL(siteUrl),
+  metadataBase: siteUrl ? new URL(siteUrl) : undefined,
   title: "Minutka",
   description: "Mijozlar uchun ovqat yetkazib berish veb-ilovasi",
   icons: {
