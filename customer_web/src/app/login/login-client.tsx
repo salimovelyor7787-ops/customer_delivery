@@ -7,6 +7,8 @@ import toast from "react-hot-toast";
 import { createSupabaseBrowserClient } from "@/lib/supabase";
 import { pathAfterAuth } from "@/lib/auth-redirect";
 
+const GOOGLE_OAUTH_REDIRECT = "https://minut-ka.uz/auth/callback";
+
 export function LoginClient() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -32,16 +34,14 @@ export function LoginClient() {
   };
 
   const nextParam = searchParams.get("next");
-  const nextPath = nextParam && nextParam.startsWith("/") ? nextParam : pathAfterAuth();
 
   const onGoogleSignIn = async () => {
     const supabase = createSupabaseBrowserClient();
     setGoogleLoading(true);
     try {
-      const redirectTo = `${window.location.origin}/auth/callback?next=${encodeURIComponent(nextPath)}`;
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
-        options: { redirectTo },
+        options: { redirectTo: GOOGLE_OAUTH_REDIRECT },
       });
       if (error) {
         toast.error(error.message);

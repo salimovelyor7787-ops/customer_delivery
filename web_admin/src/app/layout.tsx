@@ -9,7 +9,7 @@ const inter = Inter({
   subsets: ["latin"],
 });
 
-const adminSiteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://minutka.uz";
+const adminSiteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://minut-ka.uz";
 
 export const metadata: Metadata = {
   metadataBase: new URL(adminSiteUrl),

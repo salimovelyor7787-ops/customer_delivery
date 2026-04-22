@@ -11,7 +11,7 @@ const inter = Inter({
   adjustFontFallback: true,
 });
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://minutka.uz";
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://minut-ka.uz";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
