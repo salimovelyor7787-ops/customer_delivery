@@ -59,12 +59,12 @@ export function RestaurantHeroCard({
         <span className={`absolute right-3 top-3 rounded-full bg-black/55 text-xs font-medium text-white backdrop-blur-sm ${compact ? "px-2 py-0.5" : "px-2.5 py-1"}`}>Yopiq</span>
       ) : null}
       <div className={`absolute inset-x-0 top-0 ${compact ? "p-2.5 sm:p-3" : "p-3 sm:p-4"}`}>
-        <h3 className={`font-extrabold leading-tight text-white drop-shadow-sm ${compact ? "text-[15px] sm:text-base" : "text-base sm:text-lg"}`}>{name}</h3>
-        <p className={`mt-0.5 font-semibold text-white/90 ${compact ? "text-[11px] sm:text-xs" : "text-xs sm:text-sm"}`}>{category}</p>
-        <div className={`mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-white ${compact ? "text-[11px] sm:text-xs" : "text-xs sm:text-sm"}`}>
+        <h3 className={`font-extrabold leading-snug text-white drop-shadow-sm md:leading-tight ${compact ? "text-[18px] sm:text-lg" : "text-xl sm:text-xl"}`}>{name}</h3>
+        <p className={`mt-0.5 font-semibold leading-normal text-white/90 md:leading-snug ${compact ? "text-[14px] sm:text-sm" : "text-base sm:text-base"}`}>{category}</p>
+        <div className={`mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 leading-normal text-white md:leading-snug ${compact ? "text-[14px] sm:text-sm" : "text-base sm:text-base"}`}>
           <span className="font-semibold text-white/90">{deliveryStatus}</span>
         </div>
-        <div className={`mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-white ${compact ? "text-[11px] sm:text-xs" : "text-xs sm:text-sm"}`}>
+        <div className={`mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1 leading-normal text-white md:leading-snug ${compact ? "text-[14px] sm:text-sm" : "text-base sm:text-base"}`}>
           <span className="font-medium text-white/90">{eta}</span>
         </div>
       </div>

@@ -237,11 +237,11 @@ export function HomePageClient({ initial }: Props) {
                 <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/80 via-black/30 to-black/10" aria-hidden />
                 <div className="absolute inset-x-0 top-0 z-10 flex flex-col items-stretch gap-1.5 p-3 text-left md:gap-2 md:p-4">
                   {banner.title?.trim() ? (
-                    <h3 className="text-balance text-base font-bold leading-tight text-white drop-shadow md:text-lg">{banner.title.trim()}</h3>
+                    <h3 className="text-balance text-xl font-bold leading-snug text-white drop-shadow md:text-xl md:leading-tight">{banner.title.trim()}</h3>
                   ) : null}
-                  {sub ? <p className="text-pretty text-xs font-semibold leading-snug text-white/90 md:text-sm">{sub}</p> : null}
+                  {sub ? <p className="text-pretty text-base font-semibold leading-normal text-white/90 md:text-base md:leading-snug">{sub}</p> : null}
                   {showButtonTextAsPlain ? (
-                    <p className="text-pretty text-xs font-semibold leading-snug text-white/95 md:text-sm">{btn}</p>
+                    <p className="text-pretty text-base font-semibold leading-normal text-white/95 md:text-base md:leading-snug">{btn}</p>
                   ) : null}
                   {hasLink ? (
                     <span className="pointer-events-auto mt-0.5 self-start">
