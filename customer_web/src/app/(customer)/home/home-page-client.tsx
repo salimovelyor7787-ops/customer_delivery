@@ -223,7 +223,7 @@ export function HomePageClient({ initial }: Props) {
             const showButtonTextAsPlain =
               !hasLink && btn.length > 0 && (sub.length === 0 || btn !== sub);
             return (
-              <div key={banner.id} className="relative h-36 min-w-[280px] overflow-hidden rounded-2xl bg-zinc-100 md:min-w-0 md:h-40 lg:h-44">
+              <div key={banner.id} className="relative h-[142px] min-w-[280px] overflow-hidden rounded-2xl bg-zinc-100 sm:h-[156px] md:min-w-0 lg:h-[168px]">
                 <Image
                   src={banner.image_url}
                   alt={banner.title ?? "Banner"}
