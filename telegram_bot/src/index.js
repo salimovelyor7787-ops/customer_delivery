@@ -10,7 +10,8 @@ async function start() {
   console.log(`Bot connected as @${me.username}`);
 
   await bot.telegram.setMyCommands([
-    { command: "setup", description: "Groupni restoran UUID bilan bog'lash" },
+    { command: "start", description: "Telegram akkauntni bir martalik kod bilan ulash" },
+    { command: "setup", description: "Group uchun o'zingizga tegishli restoran tanlash" },
     { command: "menu", description: "Restoran menyusini ochish tugmasi" },
   ]);
 

@@ -2,6 +2,8 @@ import { Telegraf } from "telegraf";
 import { config } from "../config.js";
 import { handleSetupCommand } from "./handlers/setup.js";
 import { handleMenuCommand } from "./handlers/menu.js";
+import { handleStartCommand } from "./handlers/start.js";
+import { handleSetupSelection } from "./handlers/setup-select.js";
 
 export function createBot() {
   const bot = new Telegraf(config.botToken);
@@ -18,12 +20,11 @@ export function createBot() {
     await next();
   });
 
-  bot.start(async (ctx) => {
-    await ctx.reply("Bot ishlayapti. Group ichida /setup <restaurant_uuid> va /menu buyruqlarini ishlating.");
-  });
+  bot.start(handleStartCommand);
 
   bot.command("setup", handleSetupCommand);
   bot.command("menu", handleMenuCommand);
+  bot.action(/^setup_rest:/, handleSetupSelection);
 
   bot.catch((error, ctx) => {
     console.error("[bot.catch] unhandled error", {

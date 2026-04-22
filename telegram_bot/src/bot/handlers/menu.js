@@ -10,7 +10,7 @@ export async function handleMenuCommand(ctx) {
 
     const group = await getGroupByChatId(String(ctx.chat.id));
     if (!group?.restaurant_id) {
-      await ctx.reply("Bu chat hali bog'lanmagan. Avval /setup <restaurant_uuid> ishlating.");
+      await ctx.reply("Bu chat hali bog'lanmagan. Avval /setup ishlatib restoran tanlang.");
       return;
     }
 

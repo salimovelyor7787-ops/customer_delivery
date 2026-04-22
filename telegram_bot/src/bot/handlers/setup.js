@@ -1,12 +1,12 @@
-import { getRestaurantById } from "../../services/restaurants.service.js";
+import { listRestaurantsByOwnerId } from "../../services/restaurants.service.js";
 import { upsertGroupRestaurant } from "../../services/groups.service.js";
 import {
   isGroupChat,
   isUserGroupAdmin,
-  isUuid,
-  parseSetupCommand,
+  restaurantSelectionKeyboard,
   sendAndTryPinMenuMessage,
 } from "../helpers.js";
+import { getTelegramUserLink } from "../../services/telegram-users.service.js";
 
 export async function handleSetupCommand(ctx) {
   try {
@@ -21,26 +21,30 @@ export async function handleSetupCommand(ctx) {
       return;
     }
 
-    const restaurantId = parseSetupCommand(ctx.message?.text);
-    if (!restaurantId || !isUuid(restaurantId)) {
-      await ctx.reply("Format: /setup <restaurant_uuid>");
+    const telegramLink = await getTelegramUserLink(ctx.from.id);
+    if (!telegramLink?.owner_id) {
+      await ctx.reply("Avval botni private chatda ulang: /start <code> (kodni web paneldan oling).");
       return;
     }
 
-    const restaurant = await getRestaurantById(restaurantId);
-    if (!restaurant) {
-      await ctx.reply("Restaurant topilmadi. UUID ni tekshiring.");
+    const restaurants = await listRestaurantsByOwnerId(telegramLink.owner_id);
+    if (restaurants.length === 0) {
+      await ctx.reply("Sizga tegishli restoran topilmadi.");
       return;
     }
 
-    // Optional ownership checks can be added here if your business flow maps
-    // Telegram users to restaurant owners.
-    await upsertGroupRestaurant({
-      chatId: String(ctx.chat.id),
-      restaurantId,
-    });
+    if (restaurants.length === 1) {
+      const restaurant = restaurants[0];
+      await upsertGroupRestaurant({
+        chatId: String(ctx.chat.id),
+        restaurantId: restaurant.id,
+        linkedByOwnerId: telegramLink.owner_id,
+      });
+      await sendAndTryPinMenuMessage(ctx, restaurant.id);
+      return;
+    }
 
-    await sendAndTryPinMenuMessage(ctx, restaurantId);
+    await ctx.reply("Restoraningizni tanlang:", restaurantSelectionKeyboard(restaurants));
   } catch (error) {
     console.error("[/setup] error", {
       chatId: ctx.chat?.id,

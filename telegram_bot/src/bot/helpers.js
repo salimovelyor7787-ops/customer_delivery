@@ -34,6 +34,19 @@ export function restaurantMenuKeyboard(restaurantId) {
   };
 }
 
+export function restaurantSelectionKeyboard(restaurants) {
+  return {
+    reply_markup: {
+      inline_keyboard: restaurants.map((restaurant) => [
+        {
+          text: restaurant.name,
+          callback_data: `setup_rest:${restaurant.id}`,
+        },
+      ]),
+    },
+  };
+}
+
 export async function isUserGroupAdmin(ctx) {
   const fromId = ctx.from?.id;
   const chatId = ctx.chat?.id;
