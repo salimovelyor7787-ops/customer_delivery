@@ -11,10 +11,18 @@ export default async function ProfilePage() {
   const supabase = await createSupabaseServerClient();
   const { data: sessionData } = await supabase.auth.getSession();
   const isGuest = !sessionData.session;
+  const sessionUser = sessionData.session?.user ?? null;
 
   const { data: profile } = isGuest
     ? { data: null as { full_name: string | null; phone: string | null; role: string | null } | null }
     : await supabase.from("profiles").select("full_name,phone,role").eq("id", sessionData.session.user.id).single();
+
+  const displayName =
+    profile?.full_name?.trim() ||
+    (typeof sessionUser?.user_metadata?.full_name === "string" ? sessionUser.user_metadata.full_name.trim() : "") ||
+    (typeof sessionUser?.user_metadata?.name === "string" ? sessionUser.user_metadata.name.trim() : "") ||
+    sessionUser?.email?.trim() ||
+    (isGuest ? "Mehmon foydalanuvchi" : "Foydalanuvchi");
 
   return (
     <main className="space-y-5 p-4 sm:p-6 lg:p-8">
@@ -33,7 +41,7 @@ export default async function ProfilePage() {
           <UserRound className="h-7 w-7" />
         </div>
         <div className="min-w-0 flex-1">
-          <p className="truncate text-xl font-semibold text-zinc-900">{profile?.full_name?.trim() || "Mehmon foydalanuvchi"}</p>
+          <p className="truncate text-xl font-semibold text-zinc-900">{displayName}</p>
           <p className="truncate text-sm text-zinc-500">
             {isGuest
               ? "Profil va manzillar uchun tizimga kiring"
