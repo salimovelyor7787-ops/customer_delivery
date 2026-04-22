@@ -86,6 +86,16 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                           ? const SizedBox(height: 22, width: 22, child: CircularProgressIndicator(strokeWidth: 2))
                           : const Text('Create account'),
                     ),
+                    const SizedBox(height: 12),
+                    OutlinedButton.icon(
+                      onPressed: action.loading
+                          ? null
+                          : () async {
+                              await ref.read(authActionNotifierProvider.notifier).signInWithGoogle();
+                            },
+                      icon: const Icon(Icons.g_mobiledata_rounded, size: 22),
+                      label: const Text('Continue with Google'),
+                    ),
                     TextButton(
                       onPressed: () => context.go(withNextQuery('/login', next)),
                       child: const Text('Back to sign in'),

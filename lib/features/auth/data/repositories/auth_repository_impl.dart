@@ -4,6 +4,7 @@ import 'package:customer_delivery/core/utils/result.dart';
 import 'package:customer_delivery/features/auth/data/datasources/profile_remote_datasource.dart';
 import 'package:customer_delivery/features/auth/domain/entities/app_user.dart';
 import 'package:customer_delivery/features/auth/domain/repositories/auth_repository.dart';
+import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class AuthRepositoryImpl implements AuthRepository {
@@ -110,6 +111,21 @@ class AuthRepositoryImpl implements AuthRepository {
       }
       _cachedProfile = profile;
       return Success(profile);
+    } on AuthException catch (e) {
+      return FailureResult(AuthFailure(e.message));
+    } catch (e) {
+      return FailureResult(NetworkFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Result<bool>> signInWithGoogle() async {
+    try {
+      await _client.auth.signInWithOAuth(
+        Provider.google,
+        redirectTo: kIsWeb ? null : 'com.delivery.customer.minutka://login-callback',
+      );
+      return const Success(true);
     } on AuthException catch (e) {
       return FailureResult(AuthFailure(e.message));
     } catch (e) {

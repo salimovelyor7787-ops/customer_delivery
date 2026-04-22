@@ -48,6 +48,19 @@ class AuthActionNotifier extends Notifier<AuthActionState> {
     );
   }
 
+  Future<bool> signInWithGoogle() async {
+    state = state.copyWith(loading: true, error: null);
+    final res = await _auth.signInWithGoogle();
+    state = state.copyWith(loading: false);
+    return res.fold(
+      (f) {
+        state = state.copyWith(error: f.message);
+        return false;
+      },
+      (_) => true,
+    );
+  }
+
   Future<void> signOut() async {
     state = state.copyWith(loading: true, error: null);
     final res = await _auth.signOut();

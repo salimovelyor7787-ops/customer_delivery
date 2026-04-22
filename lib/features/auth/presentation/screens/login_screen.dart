@@ -78,6 +78,16 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           ? const SizedBox(height: 22, width: 22, child: CircularProgressIndicator(strokeWidth: 2))
                           : const Text('Sign in'),
                     ),
+                    const SizedBox(height: 12),
+                    OutlinedButton.icon(
+                      onPressed: action.loading
+                          ? null
+                          : () async {
+                              await ref.read(authActionNotifierProvider.notifier).signInWithGoogle();
+                            },
+                      icon: const Icon(Icons.g_mobiledata_rounded, size: 22),
+                      label: const Text('Continue with Google'),
+                    ),
                     TextButton(
                       onPressed: () => context.push(withNextQuery('/register', next)),
                       child: const Text('Create account'),

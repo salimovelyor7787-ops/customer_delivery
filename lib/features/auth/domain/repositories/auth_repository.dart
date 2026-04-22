@@ -14,6 +14,9 @@ abstract class AuthRepository {
     required String fullName,
   });
 
+  /// Starts Google OAuth flow. Session/profile are delivered via [authStateChanges].
+  Future<Result<bool>> signInWithGoogle();
+
   /// Returns [Success] with `true` when session cleared.
   Future<Result<bool>> signOut();
 }
