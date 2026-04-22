@@ -5,6 +5,7 @@ import Image from "next/image";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Bell, Search, Store } from "lucide-react";
 import { RestaurantHeroCard } from "@/components/customer/restaurant-hero-card";
+import { PwaInstallCard } from "@/components/customer/pwa-install-card";
 import { setCachedValue } from "@/lib/client-cache";
 import { createSupabaseBrowserClient } from "@/lib/supabase";
 
@@ -209,6 +210,8 @@ export function HomePageClient({ initial }: Props) {
           autoComplete="off"
         />
       </label>
+
+      <PwaInstallCard variant="banner" />
 
       <div className="space-y-2">
         <div className="flex gap-2 overflow-x-auto pb-1 md:grid md:grid-cols-2 md:overflow-x-visible lg:grid-cols-3">

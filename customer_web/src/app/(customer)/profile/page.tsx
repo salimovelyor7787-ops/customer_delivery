@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Bell, ChevronRight, CircleHelp, Gift, MapPin, Settings, UserRound } from "lucide-react";
+import { PwaInstallCard } from "@/components/customer/pwa-install-card";
 import { SignOutButton } from "@/components/customer/sign-out-button";
 import { createSupabaseServerClient } from "@/lib/supabase-server";
 
@@ -55,6 +56,8 @@ export default async function ProfilePage() {
           </button>
         </div>
       </section>
+
+      <PwaInstallCard />
 
       <section className="space-y-3">
         <h2 className="text-3xl font-semibold">Yordam va profil</h2>
