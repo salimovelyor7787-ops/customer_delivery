@@ -3,6 +3,12 @@ import { createBot } from "./bot/index.js";
 const bot = createBot();
 
 async function start() {
+  // Polling and webhook cannot work together; ensure stale webhook is cleared.
+  await bot.telegram.deleteWebhook({ drop_pending_updates: true });
+
+  const me = await bot.telegram.getMe();
+  console.log(`Bot connected as @${me.username}`);
+
   await bot.telegram.setMyCommands([
     { command: "setup", description: "Groupni restoran UUID bilan bog'lash" },
     { command: "menu", description: "Restoran menyusini ochish tugmasi" },
