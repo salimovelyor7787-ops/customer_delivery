@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import { isLikelyJwt } from "@/lib/edge-function-error";
 import { createOrderDirect, isEdgeFunctionNotFound, type CreateOrderBody } from "@/lib/server/create-order-impl";
 import { createSupabaseServerClient } from "@/lib/supabase-server";
 
@@ -25,15 +24,10 @@ export async function POST(req: Request) {
   const {
     data: { session },
   } = await supabase.auth.getSession();
-
-  const clientAuth = req.headers.get("authorization") ?? req.headers.get("Authorization");
-  let bearerFromClient: string | null = null;
-  if (clientAuth?.startsWith("Bearer ")) {
-    const raw = clientAuth.slice(7).trim();
-    if (isLikelyJwt(raw)) bearerFromClient = raw;
-  }
-
-  const accessToken = bearerFromClient ?? session?.access_token ?? anonKey;
+  // Do not trust incoming Authorization header from browsers/proxies.
+  // Some environments inject non-Supabase JWTs (e.g. ES256), which breaks
+  // Supabase auth checks for create_order.
+  const accessToken = session?.access_token ?? anonKey;
 
   const base = supabaseUrl.replace(/\/$/, "");
   const upstreamUrl = `${base}/functions/v1/create_order`;
