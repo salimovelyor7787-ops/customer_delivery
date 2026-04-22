@@ -128,37 +128,48 @@ export function PwaInstallCard({ variant = "card" }: PwaInstallCardProps) {
 
   return (
     <>
-      <section
-        className={
-          variant === "banner"
-            ? "rounded-2xl bg-orange-50/70 p-3 ring-1 ring-orange-100"
-            : "rounded-2xl bg-white p-4 ring-1 ring-zinc-200"
-        }
-      >
-        <div className="flex items-center gap-3">
-          <div className="rounded-lg bg-orange-50 p-2 text-orange-500">
-            <Smartphone className="h-5 w-5" />
-          </div>
-          <div className="min-w-0 flex-1">
-            <p className="font-semibold text-zinc-900">{title}</p>
-            <p className="text-sm text-zinc-500">{subtitle}</p>
-          </div>
-          <button
-            type="button"
-            onClick={() => void onInstall()}
-            disabled={installing}
-            className="inline-flex items-center gap-1 rounded-lg bg-zinc-900 px-3 py-2 text-sm font-medium text-white disabled:opacity-60"
-          >
-            <Download className="h-4 w-4" />
-            {installing ? "Kutilmoqda..." : actionLabel}
-          </button>
-          {variant === "banner" ? (
+      {variant === "banner" ? (
+        <section className="rounded-2xl bg-orange-50/70 p-2.5 ring-1 ring-orange-100">
+          <div className="flex items-center gap-2">
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-sm font-semibold text-zinc-900">{"Ilovani o'rnating"}</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => void onInstall()}
+              disabled={installing}
+              className="inline-flex items-center gap-1 rounded-lg bg-zinc-900 px-2.5 py-1.5 text-xs font-medium text-white disabled:opacity-60"
+            >
+              <Download className="h-3.5 w-3.5" />
+              {installing ? "Kutilmoqda..." : actionLabel}
+            </button>
             <button type="button" onClick={hideBannerTemporarily} className="rounded-md p-1 text-zinc-500 hover:bg-zinc-100" aria-label="Yopish">
               <X className="h-4 w-4" />
             </button>
-          ) : null}
-        </div>
-      </section>
+          </div>
+        </section>
+      ) : (
+        <section className="rounded-2xl bg-white p-4 ring-1 ring-zinc-200">
+          <div className="flex items-center gap-3">
+            <div className="rounded-lg bg-orange-50 p-2 text-orange-500">
+              <Smartphone className="h-5 w-5" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="font-semibold text-zinc-900">{title}</p>
+              <p className="text-sm text-zinc-500">{subtitle}</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => void onInstall()}
+              disabled={installing}
+              className="inline-flex items-center gap-1 rounded-lg bg-zinc-900 px-3 py-2 text-sm font-medium text-white disabled:opacity-60"
+            >
+              <Download className="h-4 w-4" />
+              {installing ? "Kutilmoqda..." : actionLabel}
+            </button>
+          </div>
+        </section>
+      )}
 
       {showIosGuide ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/45 p-4">
