@@ -6,12 +6,14 @@ import { createSupabaseBrowserClient } from "@/lib/supabase";
 
 type RestaurantCourier = {
   courier_id: string;
+  login_email: string | null;
   profiles: { full_name: string | null; phone: string | null } | null;
 };
 
 type CourierProfile = { full_name: string | null; phone: string | null };
 type RestaurantCourierRow = {
   courier_id: string;
+  login_email: string | null;
   profiles: CourierProfile | CourierProfile[] | null;
 };
 
@@ -27,6 +29,7 @@ export default function RestaurantCouriersPage() {
   const [autoAssignOwnCouriers, setAutoAssignOwnCouriers] = useState(true);
   const [couriers, setCouriers] = useState<RestaurantCourier[]>([]);
   const [fullName, setFullName] = useState("");
+  const [login, setLogin] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [creating, setCreating] = useState(false);
@@ -48,7 +51,7 @@ export default function RestaurantCouriersPage() {
 
     const { data: links, error } = await supabase
       .from("restaurant_couriers")
-      .select("courier_id,profiles(full_name,phone)")
+      .select("courier_id,login_email,profiles(full_name,phone)")
       .eq("restaurant_id", restaurant.id)
       .order("created_at", { ascending: false });
     if (error) {
@@ -59,6 +62,7 @@ export default function RestaurantCouriersPage() {
       const profile = Array.isArray(row.profiles) ? (row.profiles[0] ?? null) : row.profiles;
       return {
         courier_id: row.courier_id,
+        login_email: row.login_email,
         profiles: profile,
       };
     });
@@ -82,7 +86,7 @@ export default function RestaurantCouriersPage() {
     const response = await fetch("/api/restaurant/couriers", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ fullName, email, password }),
+      body: JSON.stringify({ fullName, login, email, password }),
     });
     const payload = (await response.json().catch(() => ({}))) as { error?: string };
     setCreating(false);
@@ -92,6 +96,7 @@ export default function RestaurantCouriersPage() {
     }
     toast.success("Kuryer yaratildi.");
     setFullName("");
+    setLogin("");
     setEmail("");
     setPassword("");
     await loadData();
@@ -204,7 +209,7 @@ export default function RestaurantCouriersPage() {
         .
       </p>
 
-      <form onSubmit={createCourier} className="grid gap-3 rounded-xl border border-zinc-200 bg-white p-4 md:grid-cols-4">
+      <form onSubmit={createCourier} className="grid gap-3 rounded-xl border border-zinc-200 bg-white p-4 md:grid-cols-5">
         <input
           value={fullName}
           onChange={(event) => setFullName(event.target.value)}
@@ -213,11 +218,17 @@ export default function RestaurantCouriersPage() {
           className="rounded-lg border border-zinc-300 px-3 py-2 text-sm"
         />
         <input
+          value={login}
+          onChange={(event) => setLogin(event.target.value)}
+          placeholder="Login"
+          required
+          className="rounded-lg border border-zinc-300 px-3 py-2 text-sm"
+        />
+        <input
           type="email"
           value={email}
           onChange={(event) => setEmail(event.target.value)}
-          placeholder="Email"
-          required
+          placeholder="Email (ixtiyoriy)"
           className="rounded-lg border border-zinc-300 px-3 py-2 text-sm"
         />
         <input
@@ -239,6 +250,7 @@ export default function RestaurantCouriersPage() {
           <thead className="bg-zinc-50 text-left text-zinc-500">
             <tr>
               <th className="px-4 py-3">Kuryer</th>
+              <th className="px-4 py-3">Login</th>
               <th className="px-4 py-3">Telefon</th>
               <th className="px-4 py-3">ID</th>
             </tr>
@@ -246,7 +258,7 @@ export default function RestaurantCouriersPage() {
           <tbody>
             {couriers.length === 0 ? (
               <tr>
-                <td colSpan={3} className="px-4 py-6 text-center text-zinc-500">
+                <td colSpan={4} className="px-4 py-6 text-center text-zinc-500">
                   Hozircha kuryerlar yo'q.
                 </td>
               </tr>
@@ -254,6 +266,7 @@ export default function RestaurantCouriersPage() {
               couriers.map((courier) => (
                 <tr key={courier.courier_id} className="border-t border-zinc-100">
                   <td className="px-4 py-3">{courier.profiles?.full_name || "Nomsiz kuryer"}</td>
+                  <td className="px-4 py-3">{courier.login_email || "—"}</td>
                   <td className="px-4 py-3">{courier.profiles?.phone || "—"}</td>
                   <td className="px-4 py-3 text-xs text-zinc-500">{courier.courier_id}</td>
                 </tr>

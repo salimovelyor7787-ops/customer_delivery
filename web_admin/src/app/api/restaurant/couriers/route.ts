@@ -4,18 +4,37 @@ import { createSupabaseServerClient } from "@/lib/supabase-server";
 
 type CreateCourierBody = {
   fullName?: string;
+  login?: string;
   email?: string;
   password?: string;
 };
 
+const LOGIN_EMAIL_DOMAIN = "minut-ka.uz";
+
+function normalizeLogin(value: string): string {
+  return value.trim().toLowerCase();
+}
+
+function isValidLogin(login: string): boolean {
+  return /^[a-z0-9._-]{3,32}$/.test(login);
+}
+
 export async function POST(request: Request) {
   const body = (await request.json().catch(() => null)) as CreateCourierBody | null;
   const fullName = body?.fullName?.trim() ?? "";
+  const login = normalizeLogin(body?.login ?? "");
   const email = body?.email?.trim().toLowerCase() ?? "";
   const password = body?.password ?? "";
+  const loginEmail = `${login}@${LOGIN_EMAIL_DOMAIN}`;
 
-  if (!fullName || !email || password.length < 6) {
-    return NextResponse.json({ error: "F.I.O, email va kamida 6 belgili parol kerak." }, { status: 400 });
+  if (!fullName || !login || password.length < 6) {
+    return NextResponse.json({ error: "F.I.O, login va kamida 6 belgili parol kerak." }, { status: 400 });
+  }
+  if (!isValidLogin(login)) {
+    return NextResponse.json({ error: "Login 3-32 belgi bo'lishi va faqat lotin harflari, raqamlar hamda . _ - dan iborat bo'lishi kerak." }, { status: 400 });
+  }
+  if (email && email !== loginEmail) {
+    return NextResponse.json({ error: `Email login bilan mos bo'lishi kerak: ${loginEmail}` }, { status: 400 });
   }
 
   const supabase = await createSupabaseServerClient();
@@ -44,10 +63,10 @@ export async function POST(request: Request) {
 
   const admin = createClient(url, serviceRoleKey);
   const created = await admin.auth.admin.createUser({
-    email,
+    email: loginEmail,
     password,
     email_confirm: true,
-    user_metadata: { full_name: fullName },
+    user_metadata: { full_name: fullName, login },
   });
 
   if (created.error || !created.data.user) {
@@ -69,6 +88,7 @@ export async function POST(request: Request) {
       {
         restaurant_id: restaurant.id,
         courier_id: courierId,
+        login_email: loginEmail,
       },
       { onConflict: "restaurant_id,courier_id" },
     ),
@@ -82,7 +102,8 @@ export async function POST(request: Request) {
     courier: {
       id: courierId,
       full_name: fullName,
-      email,
+      login,
+      email: loginEmail,
     },
   });
 }
