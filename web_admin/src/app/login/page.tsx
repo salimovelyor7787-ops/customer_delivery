@@ -1,5 +1,14 @@
 import { Suspense } from "react";
+import type { Metadata } from "next";
 import { LoginClient } from "./login-client";
+
+export const metadata: Metadata = {
+  title: "Kirish",
+  description: "Minutka Biznes tizimiga kirish sahifasi.",
+  alternates: {
+    canonical: "/login",
+  },
+};
 
 function LoginFallback() {
   return (

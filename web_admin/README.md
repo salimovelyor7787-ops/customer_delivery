@@ -21,6 +21,8 @@ cp .env.example .env.local
 
 - `NEXT_PUBLIC_SUPABASE_URL`
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+- `NEXT_PUBLIC_SITE_URL` (masalan: `https://www.minut-ka.uz`)
+- `GOOGLE_SITE_VERIFICATION` (Search Console token, ixtiyoriy lekin tavsiya etiladi)
 
 3. Install + run:
 
@@ -81,3 +83,16 @@ After login, users are redirected by role:
 - Restaurant: products CRUD with image upload, order status updates
 - Courier: assigned orders, accept and deliver flow
 - Realtime: live order list in admin dashboard via Supabase Realtime
+
+## SEO va Google indeksatsiya
+
+- `src/app/robots.ts` avtomatik `robots.txt` yaratadi.
+- `src/app/sitemap.ts` avtomatik `sitemap.xml` yaratadi.
+- Public sahifalar (`/`, `/login`, `/register`) sitemapga qo'shilgan.
+- Xizmat bo'limlari (`/admin`, `/restaurant`, `/courier`, `/api`) robots orqali cheklangan.
+
+Google Search Console uchun:
+
+1. Saytni qo'shing (`URL prefix`).
+2. `GOOGLE_SITE_VERIFICATION` ni `.env.local` va production env ga qo'ying.
+3. `https://<domain>/sitemap.xml` ni Search Console sitemap sifatida yuboring.

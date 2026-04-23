@@ -11,18 +11,54 @@ const inter = Inter({
 });
 
 const adminSiteUrl = process.env.NEXT_PUBLIC_SITE_URL;
+const googleSiteVerification = process.env.GOOGLE_SITE_VERIFICATION;
+const siteUrl = adminSiteUrl?.replace(/\/$/, "");
 
 export const metadata: Metadata = {
   metadataBase: adminSiteUrl ? new URL(adminSiteUrl) : undefined,
-  title: "Yetkazib berish — boshqaruv",
-  description: "Supabase va Next.js asosidagi rolli boshqaruv paneli",
+  title: {
+    default: "Minutka Biznes",
+    template: "%s | Minutka Biznes",
+  },
+  description: "Minutka Biznes boshqaruv paneli: admin, restoran va kuryerlar uchun buyurtma boshqaruvi.",
+  applicationName: "Minutka Biznes",
+  keywords: ["Minutka Biznes", "yetkazib berish", "boshqaruv paneli", "restoran paneli", "kuryer paneli"],
+  alternates: {
+    canonical: siteUrl ? `${siteUrl}/` : "/",
+  },
+  openGraph: {
+    type: "website",
+    locale: "uz_UZ",
+    url: siteUrl ? `${siteUrl}/` : undefined,
+    siteName: "Minutka Biznes",
+    title: "Minutka Biznes",
+    description: "Admin, restoran va kuryerlar uchun buyurtma boshqaruvi paneli.",
+  },
+  twitter: {
+    card: "summary",
+    title: "Minutka Biznes",
+    description: "Yetkazib berish biznesini boshqarish uchun panel.",
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-snippet": -1,
+      "max-image-preview": "large",
+      "max-video-preview": -1,
+    },
+  },
+  verification: googleSiteVerification
+    ? {
+        google: googleSiteVerification,
+      }
+    : undefined,
   icons: {
     icon: [
-      { url: "/favicon.ico", sizes: "any" },
       { url: "/favicon.svg", type: "image/svg+xml" },
-      { url: "/favicon-96x96.png", sizes: "96x96", type: "image/png" },
     ],
-    apple: [{ url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" }],
   },
   manifest: "/site.webmanifest",
 };

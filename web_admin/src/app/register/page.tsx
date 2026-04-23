@@ -1,5 +1,14 @@
 import { Suspense } from "react";
+import type { Metadata } from "next";
 import { RegisterClient } from "./register-client";
+
+export const metadata: Metadata = {
+  title: "Ro'yxatdan o'tish",
+  description: "Minutka Biznes uchun yangi akkaunt yaratish sahifasi.",
+  alternates: {
+    canonical: "/register",
+  },
+};
 
 function RegisterFallback() {
   return (
