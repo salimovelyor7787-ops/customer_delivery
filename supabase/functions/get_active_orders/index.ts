@@ -1,6 +1,5 @@
 // deno-lint-ignore-file no-explicit-any
-import { serve } from "@std/http/server";
-import { createClient } from "@supabase/supabase-js";
+import { createClient } from "npm:@supabase/supabase-js@2";
 
 const cors = {
   "Access-Control-Allow-Origin": "*",
@@ -16,7 +15,7 @@ const ACTIVE_STATUSES = [
   "on_the_way",
 ];
 
-serve(async (req) => {
+Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: cors });
   }

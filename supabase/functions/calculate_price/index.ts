@@ -1,7 +1,6 @@
 // deno-lint-ignore-file no-explicit-any
 // Standalone pricing endpoint (Flutter / tools). `create_order` inlines the same logic so checkout works if only that function is deployed.
-import { serve } from "@std/http/server";
-import { createClient } from "@supabase/supabase-js";
+import { createClient } from "npm:@supabase/supabase-js@2";
 import { resolveOrderPromo } from "../_shared/order_promo.ts";
 
 const cors = {
@@ -9,7 +8,7 @@ const cors = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-serve(async (req) => {
+Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: cors });
   }

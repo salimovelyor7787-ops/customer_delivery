@@ -1,6 +1,5 @@
 // deno-lint-ignore-file no-explicit-any
-import { serve } from "@std/http/server";
-import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import { createClient, type SupabaseClient } from "npm:@supabase/supabase-js@2";
 import { resolveOrderPromo } from "../_shared/order_promo.ts";
 
 const cors = {
@@ -103,7 +102,7 @@ async function calculateOrderPrice(
   };
 }
 
-serve(async (req) => {
+Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: cors });
   }

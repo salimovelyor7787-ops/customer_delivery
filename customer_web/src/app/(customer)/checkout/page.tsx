@@ -131,6 +131,7 @@ export default function CheckoutPage() {
 
     const row = json as { order_id?: string; error?: string } | null;
     if (row?.order_id) {
+      window.localStorage.setItem("customer_last_order_id", row.order_id);
       clear();
       toast.success("Buyurtma yuborildi");
       if (isGuest) return router.push("/home");
