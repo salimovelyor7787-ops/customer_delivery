@@ -11,8 +11,10 @@ const inter = Inter({
 });
 
 const adminSiteUrl = process.env.NEXT_PUBLIC_SITE_URL;
-const googleSiteVerification = process.env.GOOGLE_SITE_VERIFICATION;
 const siteUrl = adminSiteUrl?.replace(/\/$/, "");
+const googleSiteVerificationRaw =
+  process.env.GOOGLE_SITE_VERIFICATION ?? "google-site-verification=sLe5wBC0k3gR9NbQauR_JAKDyqeiFGhmCW9wrl6XikI";
+const googleSiteVerification = googleSiteVerificationRaw.replace(/^google-site-verification=/i, "").trim();
 
 export const metadata: Metadata = {
   metadataBase: adminSiteUrl ? new URL(adminSiteUrl) : undefined,
