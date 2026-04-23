@@ -22,7 +22,7 @@ serve(async (req) => {
   }
 
   try {
-    const authHeader = req.headers.get("Authorization");
+    const authHeader = normalizeBearerJwt(req.headers.get("Authorization"));
     if (!authHeader) {
       return json({ error: "Missing Authorization" }, 401);
     }
@@ -33,7 +33,16 @@ serve(async (req) => {
       { global: { headers: { Authorization: authHeader } } },
     );
 
-    const { data: userData, error: userErr } = await supabase.auth.getUser();
+    let userData: { user: { id: string } | null } = { user: null };
+    let userErr: { message: string } | null = null;
+    try {
+      const result = await supabase.auth.getUser();
+      userData = { user: result.data.user ? { id: result.data.user.id } : null };
+      userErr = result.error ? { message: result.error.message } : null;
+    } catch (error) {
+      console.warn("get_active_orders: auth token rejected", error);
+      userErr = { message: "Invalid or unsupported auth token" };
+    }
     if (userErr || !userData.user) {
       return json({ error: "Unauthorized" }, 401);
     }
@@ -73,4 +82,15 @@ function json(data: any, status = 200) {
     status,
     headers: { ...cors, "Content-Type": "application/json" },
   });
+}
+
+function normalizeBearerJwt(authHeader: string | null): string | null {
+  if (!authHeader) return null;
+  const match = authHeader.match(/^Bearer\s+(.+)$/i);
+  if (!match) return null;
+
+  const token = match[1].trim();
+  if (token.split(".").length !== 3) return null;
+
+  return `Bearer ${token}`;
 }

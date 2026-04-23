@@ -109,7 +109,7 @@ serve(async (req) => {
   }
 
   try {
-    const authHeader = req.headers.get("Authorization");
+    const authHeader = normalizeBearerJwt(req.headers.get("Authorization"));
     let uid: string | null = null;
     if (authHeader) {
       const userClient = createClient(
@@ -117,8 +117,16 @@ serve(async (req) => {
         Deno.env.get("SUPABASE_ANON_KEY") ?? "",
         { global: { headers: { Authorization: authHeader } } },
       );
-      const { data: userData } = await userClient.auth.getUser();
-      uid = userData.user?.id ?? null;
+      try {
+        const { data: userData, error: userErr } = await userClient.auth.getUser();
+        if (userErr) {
+          console.warn("create_order: could not resolve auth user", userErr.message);
+        } else {
+          uid = userData.user?.id ?? null;
+        }
+      } catch (error) {
+        console.warn("create_order: auth token rejected, continuing as guest", error);
+      }
     }
     const body = await req.json();
     const restaurantId = body.restaurant_id as string;
@@ -264,4 +272,16 @@ function json(data: any, status = 200) {
     status,
     headers: { ...cors, "Content-Type": "application/json" },
   });
+}
+
+function normalizeBearerJwt(authHeader: string | null): string | null {
+  if (!authHeader) return null;
+  const match = authHeader.match(/^Bearer\s+(.+)$/i);
+  if (!match) return null;
+
+  const token = match[1].trim();
+  // Ignore non-JWT bearer values (e.g. publishable keys), they are not user sessions.
+  if (token.split(".").length !== 3) return null;
+
+  return `Bearer ${token}`;
 }

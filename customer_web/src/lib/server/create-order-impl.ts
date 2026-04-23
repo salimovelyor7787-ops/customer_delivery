@@ -125,11 +125,21 @@ export async function createOrderDirect(params: {
 }): Promise<{ ok: true; order_id: string } | { ok: false; status: number; body: Record<string, unknown> }> {
   const { supabaseUrl, anonKey, serviceRoleKey, authorizationHeader, body } = params;
 
-  const userClient = createClient(supabaseUrl, anonKey, {
-    global: { headers: { Authorization: authorizationHeader } },
-  });
-  const { data: userData } = await userClient.auth.getUser();
-  const uid = userData.user?.id ?? null;
+  let uid: string | null = null;
+  const safeAuthorizationHeader = normalizeBearerJwt(authorizationHeader);
+  if (safeAuthorizationHeader) {
+    const userClient = createClient(supabaseUrl, anonKey, {
+      global: { headers: { Authorization: safeAuthorizationHeader } },
+    });
+    try {
+      const { data: userData, error: userErr } = await userClient.auth.getUser();
+      if (!userErr) {
+        uid = userData.user?.id ?? null;
+      }
+    } catch (error) {
+      console.warn("createOrderDirect: auth token rejected, continuing as guest", error);
+    }
+  }
 
   const restaurantId = body.restaurant_id;
   const addressId = body.address_id;
@@ -268,4 +278,15 @@ export function isEdgeFunctionNotFound(status: number, text: string, parsed: unk
     if (m.includes("not found") && m.includes("function")) return true;
   }
   return false;
+}
+
+function normalizeBearerJwt(authHeader: string | null): string | null {
+  if (!authHeader) return null;
+  const match = authHeader.match(/^Bearer\s+(.+)$/i);
+  if (!match) return null;
+
+  const token = match[1].trim();
+  if (token.split(".").length !== 3) return null;
+
+  return `Bearer ${token}`;
 }
