@@ -13,13 +13,28 @@ type LineItem = {
   selected_option_ids: string[];
 };
 
+type PricedLine = {
+  menu_item_id: string;
+  quantity: number;
+  selected_option_ids: string[];
+  unit_price_cents: number;
+};
+
 /** Same rules as calculate_price, inlined so only `create_order` must be deployed. */
 async function calculateOrderPrice(
   admin: SupabaseClient,
   restaurantId: string,
   items: LineItem[],
 ): Promise<
-  | { ok: true; subtotal_cents: number; delivery_fee_cents: number; tax_cents: number; total_cents: number; is_open: boolean }
+  | {
+      ok: true;
+      subtotal_cents: number;
+      delivery_fee_cents: number;
+      tax_cents: number;
+      total_cents: number;
+      is_open: boolean;
+      priced_lines: PricedLine[];
+    }
   | { ok: false; status: number; body: Record<string, unknown> }
 > {
   const { data: restaurant, error: rErr } = await admin
@@ -32,46 +47,78 @@ async function calculateOrderPrice(
     return { ok: false, status: 404, body: { error: "Restaurant not found" } };
   }
 
-  let subtotal = 0;
-
-  for (const line of items) {
+  const normalizedLines = items.map((line) => ({
+    menu_item_id: line.menu_item_id,
+    quantity: line.quantity,
+    selected_option_ids: Array.isArray(line.selected_option_ids) ? line.selected_option_ids : [],
+  }));
+  for (const line of normalizedLines) {
     if (!line.menu_item_id || line.quantity < 1) {
       return { ok: false, status: 400, body: { error: "Invalid line item" } };
     }
+  }
 
-    const { data: menuItem, error: mErr } = await admin
-      .from("menu_items")
-      .select("id, price_cents, restaurant_id, is_available")
-      .eq("id", line.menu_item_id)
-      .maybeSingle();
-
-    if (mErr || !menuItem || menuItem.restaurant_id !== restaurantId) {
+  const uniqueMenuItemIds = [...new Set(normalizedLines.map((line) => line.menu_item_id))];
+  const { data: menuItems, error: menuErr } = await admin
+    .from("menu_items")
+    .select("id, price_cents, restaurant_id, is_available")
+    .in("id", uniqueMenuItemIds);
+  if (menuErr || !menuItems || menuItems.length !== uniqueMenuItemIds.length) {
+    return { ok: false, status: 400, body: { error: "Invalid menu item" } };
+  }
+  const menuById = new Map(menuItems.map((item) => [item.id as string, item]));
+  for (const itemId of uniqueMenuItemIds) {
+    const menuItem = menuById.get(itemId);
+    if (!menuItem || menuItem.restaurant_id !== restaurantId) {
       return { ok: false, status: 400, body: { error: "Invalid menu item" } };
     }
     if (!menuItem.is_available) {
-      return { ok: false, status: 400, body: { error: `Item unavailable: ${line.menu_item_id}` } };
+      return { ok: false, status: 400, body: { error: `Item unavailable: ${itemId}` } };
+    }
+  }
+
+  const uniqueOptionIds = [...new Set(normalizedLines.flatMap((line) => line.selected_option_ids))];
+  let optionById = new Map<string, { menu_item_id: string; price_delta_cents: number }>();
+  if (uniqueOptionIds.length) {
+    const { data: options, error: optionsErr } = await admin
+      .from("menu_item_options")
+      .select("id, menu_item_id, price_delta_cents")
+      .in("id", uniqueOptionIds);
+    if (optionsErr || !options || options.length !== uniqueOptionIds.length) {
+      return { ok: false, status: 400, body: { error: "Invalid options" } };
+    }
+    optionById = new Map(
+      options.map((option) => [
+        option.id as string,
+        { menu_item_id: option.menu_item_id as string, price_delta_cents: option.price_delta_cents as number },
+      ]),
+    );
+  }
+
+  let subtotal = 0;
+  const pricedLines: PricedLine[] = [];
+  for (const line of normalizedLines) {
+    const menuItem = menuById.get(line.menu_item_id);
+    if (!menuItem) {
+      return { ok: false, status: 400, body: { error: "Invalid menu item" } };
     }
 
     let lineUnit = menuItem.price_cents as number;
-
-    if (line.selected_option_ids?.length) {
-      const { data: opts, error: oErr } = await admin
-        .from("menu_item_options")
-        .select("id, price_delta_cents, menu_item_id")
-        .in("id", line.selected_option_ids);
-
-      if (oErr || !opts || opts.length !== line.selected_option_ids.length) {
-        return { ok: false, status: 400, body: { error: "Invalid options" } };
+    for (const optionId of line.selected_option_ids) {
+      const option = optionById.get(optionId);
+      if (!option || option.menu_item_id !== line.menu_item_id) {
+        return { ok: false, status: 400, body: { error: "Option mismatch" } };
       }
-      for (const o of opts) {
-        if (o.menu_item_id !== line.menu_item_id) {
-          return { ok: false, status: 400, body: { error: "Option mismatch" } };
-        }
-        lineUnit += o.price_delta_cents as number;
-      }
+      lineUnit += option.price_delta_cents;
     }
 
     subtotal += lineUnit * line.quantity;
+    pricedLines.push({
+      menu_item_id: line.menu_item_id,
+      quantity: line.quantity,
+      selected_option_ids: line.selected_option_ids,
+      unit_price_cents: lineUnit,
+    });
   }
 
   const delivery = restaurant.delivery_fee_cents as number;
@@ -99,6 +146,7 @@ async function calculateOrderPrice(
     tax_cents: tax,
     total_cents: total,
     is_open: Boolean(restaurant.is_open),
+    priced_lines: pricedLines,
   };
 }
 
@@ -136,6 +184,8 @@ Deno.serve(async (req) => {
     const guestLng = body.guest_lng as number | undefined;
     const guestDeviceId = body.guest_device_id as string | undefined;
     const promoCode = body.promo_code as string | undefined;
+    const requestIdRaw = typeof body.request_id === "string" ? body.request_id.trim() : "";
+    const requestId = requestIdRaw && requestIdRaw.length <= 120 ? requestIdRaw : null;
     const items = body.items as LineItem[];
 
     if (!restaurantId || !paymentMethod || !Array.isArray(items) || items.length === 0) {
@@ -179,6 +229,16 @@ Deno.serve(async (req) => {
       }
     }
 
+    if (requestId) {
+      const lookup = admin.from("orders").select("id").eq("client_request_id", requestId);
+      const { data: existingOrder } = uid
+        ? await lookup.eq("user_id", uid).maybeSingle()
+        : await lookup.eq("guest_device_id", guestDeviceId ?? "__missing__").maybeSingle();
+      if (existingOrder?.id) {
+        return json({ order_id: existingOrder.id as string });
+      }
+    }
+
     const priced = await calculateOrderPrice(admin, restaurantId, items);
     if (!priced.ok) {
       return json(priced.body, priced.status);
@@ -219,44 +279,38 @@ Deno.serve(async (req) => {
         promo_code: promoRes.promoCodeStored,
         promocode_id: promoRes.promocodeId,
         promo_discount_cents: promoRes.promoDiscountCents,
+        client_request_id: requestId,
       })
       .select("id")
       .single();
 
     if (orderErr || !orderRow) {
+      if (requestId && orderErr?.code === "23505") {
+        const lookup = admin.from("orders").select("id").eq("client_request_id", requestId);
+        const { data: existingOrder } = uid
+          ? await lookup.eq("user_id", uid).maybeSingle()
+          : await lookup.eq("guest_device_id", guestDeviceId ?? "__missing__").maybeSingle();
+        if (existingOrder?.id) {
+          return json({ order_id: existingOrder.id as string });
+        }
+      }
       console.error(orderErr);
       return json({ error: "Could not create order" }, 500);
     }
 
     const orderId = orderRow.id as string;
-
-    for (const line of items) {
-      const { data: menuItem } = await admin
-        .from("menu_items")
-        .select("id, price_cents")
-        .eq("id", line.menu_item_id)
-        .maybeSingle();
-
-      if (!menuItem) continue;
-
-      let unit = menuItem.price_cents as number;
-      if (line.selected_option_ids?.length) {
-        const { data: opts } = await admin
-          .from("menu_item_options")
-          .select("price_delta_cents")
-          .in("id", line.selected_option_ids);
-        for (const o of opts ?? []) {
-          unit += o.price_delta_cents as number;
-        }
-      }
-
-      await admin.from("order_items").insert({
-        order_id: orderId,
-        menu_item_id: line.menu_item_id,
-        quantity: line.quantity,
-        unit_price_cents: unit,
-        selected_option_ids: line.selected_option_ids ?? [],
-      });
+    const orderItemsPayload = priced.priced_lines.map((line) => ({
+      order_id: orderId,
+      menu_item_id: line.menu_item_id,
+      quantity: line.quantity,
+      unit_price_cents: line.unit_price_cents,
+      selected_option_ids: line.selected_option_ids,
+    }));
+    const { error: orderItemsErr } = await admin.from("order_items").insert(orderItemsPayload);
+    if (orderItemsErr) {
+      console.error("create_order: order_items insert failed", orderItemsErr);
+      await admin.from("orders").delete().eq("id", orderId);
+      return json({ error: "Could not create order items" }, 500);
     }
 
     return json({ order_id: orderId });

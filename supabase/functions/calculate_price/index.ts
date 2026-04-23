@@ -62,43 +62,68 @@ Deno.serve(async (req) => {
       return json({ error: "Restaurant not found" }, 404);
     }
 
-    let subtotal = 0;
-
-    for (const line of items) {
+    const normalizedLines = items.map((line) => ({
+      menu_item_id: line.menu_item_id,
+      quantity: line.quantity,
+      selected_option_ids: Array.isArray(line.selected_option_ids) ? line.selected_option_ids : [],
+    }));
+    for (const line of normalizedLines) {
       if (!line.menu_item_id || line.quantity < 1) {
         return json({ error: "Invalid line item" }, 400);
       }
+    }
 
-      const { data: menuItem, error: mErr } = await admin
-        .from("menu_items")
-        .select("id, price_cents, restaurant_id, is_available")
-        .eq("id", line.menu_item_id)
-        .maybeSingle();
-
-      if (mErr || !menuItem || menuItem.restaurant_id !== restaurantId) {
+    const uniqueMenuItemIds = [...new Set(normalizedLines.map((line) => line.menu_item_id))];
+    const { data: menuItems, error: menuErr } = await admin
+      .from("menu_items")
+      .select("id, price_cents, restaurant_id, is_available")
+      .in("id", uniqueMenuItemIds);
+    if (menuErr || !menuItems || menuItems.length !== uniqueMenuItemIds.length) {
+      return json({ error: "Invalid menu item" }, 400);
+    }
+    const menuById = new Map(menuItems.map((item) => [item.id as string, item]));
+    for (const itemId of uniqueMenuItemIds) {
+      const menuItem = menuById.get(itemId);
+      if (!menuItem || menuItem.restaurant_id !== restaurantId) {
         return json({ error: "Invalid menu item" }, 400);
       }
       if (!menuItem.is_available) {
-        return json({ error: `Item unavailable: ${line.menu_item_id}` }, 400);
+        return json({ error: `Item unavailable: ${itemId}` }, 400);
+      }
+    }
+
+    const uniqueOptionIds = [...new Set(normalizedLines.flatMap((line) => line.selected_option_ids))];
+    let optionById = new Map<string, { menu_item_id: string; price_delta_cents: number }>();
+    if (uniqueOptionIds.length) {
+      const { data: options, error: optionsErr } = await admin
+        .from("menu_item_options")
+        .select("id, menu_item_id, price_delta_cents")
+        .in("id", uniqueOptionIds);
+      if (optionsErr || !options || options.length !== uniqueOptionIds.length) {
+        return json({ error: "Invalid options" }, 400);
+      }
+      optionById = new Map(
+        options.map((option) => [
+          option.id as string,
+          { menu_item_id: option.menu_item_id as string, price_delta_cents: option.price_delta_cents as number },
+        ]),
+      );
+    }
+
+    let subtotal = 0;
+    for (const line of normalizedLines) {
+      const menuItem = menuById.get(line.menu_item_id);
+      if (!menuItem) {
+        return json({ error: "Invalid menu item" }, 400);
       }
 
       let lineUnit = menuItem.price_cents as number;
-
-      if (line.selected_option_ids?.length) {
-        const { data: opts, error: oErr } = await admin
-          .from("menu_item_options")
-          .select("id, price_delta_cents, menu_item_id")
-          .in("id", line.selected_option_ids);
-
-        if (oErr || !opts || opts.length !== line.selected_option_ids.length) {
-          return json({ error: "Invalid options" }, 400);
+      for (const optionId of line.selected_option_ids) {
+        const option = optionById.get(optionId);
+        if (!option || option.menu_item_id !== line.menu_item_id) {
+          return json({ error: "Option mismatch" }, 400);
         }
-        for (const o of opts) {
-          if (o.menu_item_id !== line.menu_item_id) {
-            return json({ error: "Option mismatch" }, 400);
-          }
-          lineUnit += o.price_delta_cents as number;
-        }
+        lineUnit += option.price_delta_cents;
       }
 
       subtotal += lineUnit * line.quantity;

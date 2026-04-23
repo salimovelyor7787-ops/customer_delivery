@@ -19,6 +19,7 @@ export default function CheckoutPage() {
   const [geoState, setGeoState] = useState<"idle" | "locating" | "success" | "error">("idle");
   const [saving, setSaving] = useState(false);
   const [showGuestLimitModal, setShowGuestLimitModal] = useState(false);
+  const [requestId, setRequestId] = useState<string | null>(null);
   const phoneDigits = phone.replace(/\D/g, "").slice(0, 9);
 
   const geoButtonLabel =
@@ -93,6 +94,11 @@ export default function CheckoutPage() {
         selected_option_ids: item.id.includes(":") ? item.id.split(":")[1]?.split(",").filter(Boolean) ?? [] : [],
       })),
     };
+    const activeRequestId = requestId ?? crypto.randomUUID();
+    if (!requestId) {
+      setRequestId(activeRequestId);
+    }
+    payload.request_id = activeRequestId;
     if (promoCode.trim()) {
       payload.promo_code = promoCode.trim();
     }
@@ -132,6 +138,7 @@ export default function CheckoutPage() {
     const row = json as { order_id?: string; error?: string } | null;
     if (row?.order_id) {
       window.localStorage.setItem("customer_last_order_id", row.order_id);
+      setRequestId(null);
       clear();
       toast.success("Buyurtma yuborildi");
       if (isGuest) return router.push("/home");

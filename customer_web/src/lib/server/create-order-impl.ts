@@ -9,6 +9,7 @@ export type CreateOrderBody = {
   guest_lat: number | null | undefined;
   guest_lng: number | null | undefined;
   guest_device_id: string | null | undefined;
+  request_id?: string | null;
   promo_code?: string | null;
   items: Array<{
     menu_item_id: string;
@@ -148,6 +149,8 @@ export async function createOrderDirect(params: {
   const guestLat = body.guest_lat;
   const guestLng = body.guest_lng;
   const guestDeviceId = body.guest_device_id;
+  const requestIdRaw = typeof body.request_id === "string" ? body.request_id.trim() : "";
+  const requestId = requestIdRaw && requestIdRaw.length <= 120 ? requestIdRaw : null;
   const promoCode = body.promo_code;
   const items = body.items;
 
@@ -191,6 +194,16 @@ export async function createOrderDirect(params: {
     }
   }
 
+  if (requestId) {
+    const lookup = admin.from("orders").select("id").eq("client_request_id", requestId);
+    const { data: existingOrder } = uid
+      ? await lookup.eq("user_id", uid).maybeSingle()
+      : await lookup.eq("guest_device_id", guestDeviceId ?? "__missing__").maybeSingle();
+    if (existingOrder?.id) {
+      return { ok: true, order_id: existingOrder.id as string };
+    }
+  }
+
   const priced = await calculateOrderPrice(admin, restaurantId, items);
   if (!priced.ok) {
     return { ok: false, status: priced.status, body: priced.body };
@@ -231,11 +244,21 @@ export async function createOrderDirect(params: {
       promo_code: promoRes.promoCodeStored,
       promocode_id: promoRes.promocodeId,
       promo_discount_cents: promoRes.promoDiscountCents,
+      client_request_id: requestId,
     })
     .select("id")
     .single();
 
   if (orderErr || !orderRow) {
+    if (requestId && orderErr?.code === "23505") {
+      const lookup = admin.from("orders").select("id").eq("client_request_id", requestId);
+      const { data: existingOrder } = uid
+        ? await lookup.eq("user_id", uid).maybeSingle()
+        : await lookup.eq("guest_device_id", guestDeviceId ?? "__missing__").maybeSingle();
+      if (existingOrder?.id) {
+        return { ok: true, order_id: existingOrder.id as string };
+      }
+    }
     console.error(orderErr);
     return { ok: false, status: 500, body: { error: "Could not create order" } };
   }
