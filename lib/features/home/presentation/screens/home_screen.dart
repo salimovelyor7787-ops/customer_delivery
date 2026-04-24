@@ -103,6 +103,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             )),
             const SliverToBoxAdapter(child: SizedBox(height: 8)),
             SliverToBoxAdapter(child: HomePromoBannerCarousel(banners: banners)),
+            const SliverToBoxAdapter(child: SizedBox(height: 12)),
+            const SliverToBoxAdapter(child: _HomeInfoHighlightsRow()),
             SliverToBoxAdapter(
               child: HomeSectionHeader(
                 title: "Yaqin do'konlar",
@@ -287,6 +289,142 @@ class _SearchRow extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+class _HomeInfoHighlightsRow extends StatelessWidget {
+  const _HomeInfoHighlightsRow();
+
+  @override
+  Widget build(BuildContext context) {
+    final borderColor = Colors.black.withOpacity(0.06);
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: borderColor),
+          boxShadow: const [
+            BoxShadow(
+              color: Color(0x0A000000),
+              blurRadius: 10,
+              offset: Offset(0, 2),
+            ),
+          ],
+        ),
+        child: const Row(
+          children: [
+            Expanded(
+              child: _HomeInfoHighlightsItem(
+                icon: Icons.local_shipping_outlined,
+                iconColor: Color(0xFFFB8C00),
+                title: '15-40 daqiqa',
+                subtitle: 'Tez yetkazib berish',
+              ),
+            ),
+            _HomeInfoDivider(),
+            Expanded(
+              child: _HomeInfoHighlightsItem(
+                icon: Icons.shield_outlined,
+                iconColor: Color(0xFF43A047),
+                title: 'Xavfsiz to\'lov',
+                subtitle: '100% himoyalangan',
+              ),
+            ),
+            _HomeInfoDivider(),
+            Expanded(
+              child: _HomeInfoHighlightsItem(
+                icon: Icons.local_offer_outlined,
+                iconColor: Color(0xFF1E88E5),
+                title: 'Aksiya',
+                subtitle: 'Doimiy chegirmalar',
+              ),
+            ),
+            _HomeInfoDivider(),
+            Expanded(
+              child: _HomeInfoHighlightsItem(
+                icon: Icons.support_agent_outlined,
+                iconColor: Color(0xFFF9A825),
+                title: '24/7 yordam',
+                subtitle: 'Savolingiz bormi?',
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _HomeInfoHighlightsItem extends StatelessWidget {
+  const _HomeInfoHighlightsItem({
+    required this.icon,
+    required this.iconColor,
+    required this.title,
+    required this.subtitle,
+  });
+
+  final IconData icon;
+  final Color iconColor;
+  final String title;
+  final String subtitle;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Icon(icon, size: 16, color: iconColor),
+          const SizedBox(width: 4),
+          Expanded(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontSize: 9.5,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                Text(
+                  subtitle,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 8.5,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    fontWeight: FontWeight.w400,
+                    height: 1.2,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _HomeInfoDivider extends StatelessWidget {
+  const _HomeInfoDivider();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 1,
+      height: 24,
+      color: Colors.black.withOpacity(0.07),
+      margin: const EdgeInsets.symmetric(horizontal: 1),
     );
   }
 }
