@@ -296,9 +296,9 @@ export function HomePageClient({ initial }: Props) {
                 key={card.id}
                 type="button"
                 onClick={() => setSearchQuery(card.title)}
-                className="group w-[96px] shrink-0 snap-start rounded-2xl border border-zinc-200 bg-white p-2 text-left shadow-sm transition hover:border-zinc-300"
+                className="group w-[96px] shrink-0 snap-start text-left"
               >
-                <div className="relative h-[72px] w-full overflow-hidden rounded-xl bg-zinc-100">
+                <div className="relative aspect-square w-full overflow-hidden rounded-2xl border border-zinc-200 bg-zinc-100 transition group-hover:border-zinc-300">
                   {card.image_url ? (
                     <Image src={card.image_url} alt={card.title} fill sizes="96px" className="h-full w-full object-cover" loading="lazy" />
                   ) : (
@@ -307,7 +307,7 @@ export function HomePageClient({ initial }: Props) {
                     </div>
                   )}
                 </div>
-                <p className="mt-1.5 line-clamp-2 text-xs font-medium leading-tight text-zinc-700 group-hover:text-zinc-900">{card.title}</p>
+                <p className="mt-1.5 line-clamp-2 text-center text-xs font-medium leading-tight text-zinc-700 group-hover:text-zinc-900">{card.title}</p>
               </button>
             ))}
           </div>
