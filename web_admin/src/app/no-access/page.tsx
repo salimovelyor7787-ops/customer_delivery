@@ -5,23 +5,28 @@ import { createSupabaseServerClient } from "@/lib/supabase-server";
 import { SignOutButton } from "./sign-out-button";
 
 export default async function NoAccessPage() {
-  const supabase = await createSupabaseServerClient();
-  const { data: sessionData } = await supabase.auth.getSession();
+  try {
+    const supabase = await createSupabaseServerClient();
+    const { data: sessionData } = await supabase.auth.getSession();
 
-  if (!sessionData.session) {
+    if (!sessionData.session) {
+      redirect("/login");
+    }
+
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("role,full_name")
+      .eq("id", sessionData.session.user.id)
+      .single();
+
+    const role = profile?.role ?? "customer";
+
+    if (role !== "customer") {
+      redirect(pathAfterAuth(role));
+    }
+  } catch (error) {
+    console.error("no-access page bootstrap failed", error);
     redirect("/login");
-  }
-
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("role,full_name")
-    .eq("id", sessionData.session.user.id)
-    .single();
-
-  const role = profile?.role ?? "customer";
-
-  if (role !== "customer") {
-    redirect(pathAfterAuth(role));
   }
 
   return (
