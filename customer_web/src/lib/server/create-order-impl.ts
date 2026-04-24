@@ -173,6 +173,13 @@ export async function createOrderDirect(params: {
       return { ok: false, status: 403, body: { error: "Forbidden" } };
     }
     customerPhone = (profile.phone as string | null) ?? null;
+    if (!customerPhone) {
+      const { data: authUserData } = await admin.auth.admin.getUserById(uid);
+      const authPhone = authUserData.user?.phone ?? null;
+      const metaPhoneRaw = authUserData.user?.user_metadata?.phone;
+      const metaPhone = typeof metaPhoneRaw === "string" ? metaPhoneRaw : null;
+      customerPhone = authPhone || metaPhone || null;
+    }
     if (addressId) {
       const { data: address } = await admin.from("addresses").select("id, user_id").eq("id", addressId).maybeSingle();
       if (!address || address.user_id !== uid) {
