@@ -36,10 +36,10 @@ function MenuItemRow({ item }: { item: MenuItem }) {
   };
 
   return (
-    <article className="flex min-h-[5.5rem] gap-3 rounded-2xl border border-zinc-200 bg-white p-3">
-      <div className="h-16 w-16 shrink-0 overflow-hidden rounded-xl bg-zinc-100">
+    <article className="flex min-h-[6.5rem] gap-3 rounded-2xl border border-zinc-200 bg-white p-3">
+      <div className="h-20 w-20 shrink-0 overflow-hidden rounded-xl bg-zinc-100">
         {item.image_url ? (
-          <Image src={item.image_url} alt={item.name} width={64} height={64} className="h-full w-full object-cover" sizes="64px" />
+          <Image src={item.image_url} alt={item.name} width={80} height={80} className="h-full w-full object-cover" sizes="80px" />
         ) : null}
       </div>
       <div className="flex min-w-0 flex-1 flex-col pr-1">

@@ -8,8 +8,8 @@ export default function RestaurantLoading() {
         <div className="h-6 w-32 animate-pulse rounded-md bg-zinc-200" aria-hidden />
         <div className="grid gap-2 sm:gap-3 lg:grid-cols-2">
           {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="flex min-h-[5.5rem] gap-3 rounded-2xl border border-zinc-100 bg-white p-3">
-              <div className="h-16 w-16 shrink-0 rounded-xl bg-zinc-200" aria-hidden />
+            <div key={i} className="flex min-h-[6.5rem] gap-3 rounded-2xl border border-zinc-100 bg-white p-3">
+              <div className="h-20 w-20 shrink-0 rounded-xl bg-zinc-200" aria-hidden />
               <div className="flex flex-1 flex-col gap-2 py-0.5">
                 <div className="h-4 w-[60%] max-w-[12rem] animate-pulse rounded bg-zinc-200" aria-hidden />
                 <div className="h-3 w-full max-w-[16rem] animate-pulse rounded bg-zinc-100" aria-hidden />
