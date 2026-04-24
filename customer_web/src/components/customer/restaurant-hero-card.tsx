@@ -38,7 +38,7 @@ export function RestaurantHeroCard({
   return (
     <Link
       href={`/home/restaurant/${id}`}
-      className={`group relative block w-full overflow-hidden rounded-[18px] shadow-[0_3px_14px_rgba(0,0,0,0.12)] ring-1 ring-black/5 transition active:scale-[0.99] ${compact ? "h-[142px] sm:h-[156px] lg:h-[168px]" : "h-[166px] sm:h-[182px] lg:h-[196px]"}`}
+      className={`group relative block w-full overflow-hidden rounded-[18px] ring-1 ring-black/5 transition active:scale-[0.99] ${compact ? "h-[142px] sm:h-[156px] lg:h-[168px]" : "h-[166px] sm:h-[182px] lg:h-[196px]"}`}
     >
       {imageUrl ? (
         <Image
@@ -59,7 +59,7 @@ export function RestaurantHeroCard({
         <span className={`absolute right-3 top-3 rounded-full bg-black/55 text-xs font-medium text-white backdrop-blur-sm ${compact ? "px-2 py-0.5" : "px-2.5 py-1"}`}>Yopiq</span>
       ) : null}
       <div className={`absolute inset-x-0 top-0 ${compact ? "p-2.5 sm:p-3" : "p-3 sm:p-4"}`}>
-        <h3 className={`font-extrabold leading-snug text-white drop-shadow-sm md:leading-tight ${compact ? "text-[18px] sm:text-lg" : "text-xl sm:text-xl"}`}>{name}</h3>
+        <h3 className={`font-extrabold leading-snug text-white md:leading-tight ${compact ? "text-[18px] sm:text-lg" : "text-xl sm:text-xl"}`}>{name}</h3>
         <p className={`mt-0.5 font-semibold leading-normal text-white/90 md:leading-snug ${compact ? "text-[14px] sm:text-sm" : "text-base sm:text-base"}`}>{category}</p>
         <div className={`mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 leading-normal text-white md:leading-snug ${compact ? "text-[14px] sm:text-sm" : "text-base sm:text-base"}`}>
           <span className="font-semibold text-white/90">{deliveryStatus}</span>
