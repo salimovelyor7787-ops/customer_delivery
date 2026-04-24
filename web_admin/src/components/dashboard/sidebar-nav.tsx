@@ -14,7 +14,7 @@ const navByRole: Record<UserRole, NavItem[]> = {
     { href: "/admin/restaurants", label: "Restoranlar", icon: ShoppingBag },
     { href: "/admin/menu-items", label: "Menu kartochkalari", icon: Package },
     { href: "/admin/categories", label: "Kategoriyalar", icon: Tag },
-    { href: "/admin/service-cards", label: "Xizmat kartochkalari", icon: Package },
+    { href: "/admin/service-cards", label: "Karusel kategoriyalar", icon: Package },
     { href: "/admin/nearby-cards", label: "Yaqin kartochkalar", icon: Package },
     { href: "/admin/deals", label: "Aksiyalar", icon: Percent },
     { href: "/admin/banners", label: "Bannerlar", icon: Package },

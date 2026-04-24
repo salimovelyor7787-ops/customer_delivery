@@ -124,9 +124,9 @@ export default function AdminServiceCardsPage() {
 
   return (
     <section className="space-y-6">
-      <h1 className="text-2xl font-semibold">Xizmat kartochkalari</h1>
+      <h1 className="text-2xl font-semibold">Karusel kategoriyalar</h1>
       <p className="text-sm text-zinc-500">
-        Bosh sahifadagi umumiy kategoriya kartochkalarini sozlang (masalan: restoranlar, gullar, mahsulotlar).
+        Bosh sahifadagi kategoriya karuselini boshqaring: rasm yuklang, matnni o'zgartiring, tartib va holatini belgilang.
       </p>
 
       <form
