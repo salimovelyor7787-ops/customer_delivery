@@ -31,6 +31,13 @@ function bannerHasActionUrl(actionPath: string | null | undefined): boolean {
   return Boolean(actionPath && String(actionPath).trim().length > 0);
 }
 
+function splitBannerLines(text: string): string[] {
+  return text
+    .split(",")
+    .map((part) => part.trim())
+    .filter((part) => part.length > 0);
+}
+
 function BannerCta({ href, label }: { href: string; label: string }) {
   const h = href.trim();
   const external = /^https?:\/\//i.test(h);
@@ -218,6 +225,7 @@ export function HomePageClient({ initial }: Props) {
           {banners.map((banner, index) => {
             const hasLink = bannerHasActionUrl(banner.action_path);
             const sub = banner.subtitle?.trim() ?? "";
+            const subtitleLines = sub ? splitBannerLines(sub) : [];
             const btn = banner.button_text?.trim() ?? "";
             /** Promo line often lives in `button_text` even when there is no URL — show as text, not only hide the button. */
             const showButtonTextAsPlain =
@@ -239,7 +247,15 @@ export function HomePageClient({ initial }: Props) {
                   {banner.title?.trim() ? (
                     <h3 className="text-balance text-xl font-bold leading-snug text-white drop-shadow md:text-xl md:leading-tight">{banner.title.trim()}</h3>
                   ) : null}
-                  {sub ? <p className="text-pretty text-sm font-semibold leading-normal text-white/90 md:text-sm md:leading-snug">{sub}</p> : null}
+                  {subtitleLines.length > 0 ? (
+                    <p className="text-pretty text-sm font-semibold leading-normal text-white/90 md:text-sm md:leading-snug">
+                      {subtitleLines.map((line, lineIdx) => (
+                        <span key={`${banner.id}-subtitle-${lineIdx}`} className="block">
+                          {line}
+                        </span>
+                      ))}
+                    </p>
+                  ) : null}
                   {showButtonTextAsPlain ? (
                     <p className="text-pretty text-sm font-semibold leading-normal text-white/95 md:text-sm md:leading-snug">{btn}</p>
                   ) : null}
