@@ -38,33 +38,35 @@ export function RestaurantHeroCard({
   return (
     <Link
       href={`/home/restaurant/${id}`}
-      className={`group relative block w-full overflow-hidden rounded-[18px] ring-1 ring-black/5 transition active:scale-[0.99] ${compact ? "h-[142px] sm:h-[156px] lg:h-[168px]" : "h-[166px] sm:h-[182px] lg:h-[196px]"}`}
+      className="group block w-full overflow-hidden rounded-[18px] bg-white ring-1 ring-black/5 transition active:scale-[0.99]"
     >
-      {imageUrl ? (
-        <Image
-          src={imageUrl}
-          alt={name}
-          fill
-          priority={priority}
-          fetchPriority={priority ? "high" : "low"}
-          decoding={priority ? "sync" : "async"}
-          sizes={compact ? "(max-width: 768px) 100vw, 50vw" : "(max-width: 768px) 100vw, 60vw"}
-          className="absolute inset-0 h-full w-full object-cover transition duration-300 group-hover:scale-105"
-        />
-      ) : (
-        <div className="absolute inset-0 bg-gradient-to-br from-zinc-400 to-zinc-600" aria-hidden />
-      )}
-      {!isOpen ? (
-        <span className={`absolute right-3 top-3 rounded-full bg-black/55 text-xs font-medium text-white backdrop-blur-sm ${compact ? "px-2 py-0.5" : "px-2.5 py-1"}`}>Yopiq</span>
-      ) : null}
-      <div className={`absolute inset-x-0 top-0 ${compact ? "p-2.5 sm:p-3" : "p-3 sm:p-4"}`}>
-        <h3 className={`font-extrabold leading-snug text-white md:leading-tight ${compact ? "text-[18px] sm:text-lg" : "text-xl sm:text-xl"}`}>{name}</h3>
-        <p className={`mt-0.5 font-semibold leading-normal text-white/90 md:leading-snug ${compact ? "text-[14px] sm:text-sm" : "text-base sm:text-base"}`}>{category}</p>
-        <div className={`mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 leading-normal text-white md:leading-snug ${compact ? "text-[14px] sm:text-sm" : "text-base sm:text-base"}`}>
-          <span className="font-semibold text-white/90">{deliveryStatus}</span>
+      <div className={`relative overflow-hidden ${compact ? "h-[96px] sm:h-[108px] lg:h-[116px]" : "h-[118px] sm:h-[132px] lg:h-[144px]"}`}>
+        {imageUrl ? (
+          <Image
+            src={imageUrl}
+            alt={name}
+            fill
+            priority={priority}
+            fetchPriority={priority ? "high" : "low"}
+            decoding={priority ? "sync" : "async"}
+            sizes={compact ? "(max-width: 768px) 100vw, 50vw" : "(max-width: 768px) 100vw, 60vw"}
+            className="absolute inset-0 h-full w-full object-cover transition duration-300 group-hover:scale-105"
+          />
+        ) : (
+          <div className="absolute inset-0 bg-gradient-to-br from-zinc-200 to-zinc-300" aria-hidden />
+        )}
+        {!isOpen ? (
+          <span className={`absolute right-3 top-3 rounded-full bg-black/60 text-xs font-medium text-white ${compact ? "px-2 py-0.5" : "px-2.5 py-1"}`}>Yopiq</span>
+        ) : null}
+      </div>
+      <div className={compact ? "space-y-1.5 p-2.5 sm:p-3" : "space-y-2 p-3 sm:p-4"}>
+        <h3 className={`font-extrabold leading-snug text-zinc-900 md:leading-tight ${compact ? "text-[17px] sm:text-lg" : "text-xl sm:text-xl"}`}>{name}</h3>
+        <p className={`font-semibold leading-normal text-zinc-700 md:leading-snug ${compact ? "text-[14px] sm:text-sm" : "text-base sm:text-base"}`}>{category}</p>
+        <div className={`flex flex-wrap items-center gap-x-2 gap-y-1 leading-normal text-zinc-700 md:leading-snug ${compact ? "text-[14px] sm:text-sm" : "text-base sm:text-base"}`}>
+          <span className="font-semibold">{deliveryStatus}</span>
         </div>
-        <div className={`mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1 leading-normal text-white md:leading-snug ${compact ? "text-[14px] sm:text-sm" : "text-base sm:text-base"}`}>
-          <span className="font-medium text-white/90">{eta}</span>
+        <div className={`flex flex-wrap items-center gap-x-2 gap-y-1 leading-normal text-zinc-700 md:leading-snug ${compact ? "text-[14px] sm:text-sm" : "text-base sm:text-base"}`}>
+          <span className="font-medium">{eta}</span>
         </div>
       </div>
     </Link>
