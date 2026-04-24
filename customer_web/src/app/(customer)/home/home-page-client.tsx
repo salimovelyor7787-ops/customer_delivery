@@ -284,10 +284,10 @@ export function HomePageClient({ initial }: Props) {
                 />
                 <div className="absolute inset-x-0 top-0 z-10 flex flex-col items-stretch gap-1.5 p-3 text-left md:gap-2 md:p-4">
                   {banner.title?.trim() ? (
-                    <h3 className="text-balance text-xl font-bold leading-snug text-white md:text-xl md:leading-tight">{banner.title.trim()}</h3>
+                    <h3 className="text-balance text-xl font-bold leading-snug text-black md:text-xl md:leading-tight">{banner.title.trim()}</h3>
                   ) : null}
                   {subtitleLines.length > 0 ? (
-                    <p className="text-pretty text-sm font-semibold leading-normal text-white/90 md:text-sm md:leading-snug">
+                    <p className="text-pretty text-sm font-semibold leading-normal text-black/90 md:text-sm md:leading-snug">
                       {subtitleLines.map((line, lineIdx) => (
                         <span key={`${banner.id}-subtitle-${lineIdx}`} className="block">
                           {line}
@@ -296,7 +296,7 @@ export function HomePageClient({ initial }: Props) {
                     </p>
                   ) : null}
                   {showButtonTextAsPlain ? (
-                    <p className="text-pretty text-sm font-semibold leading-normal text-white/95 md:text-sm md:leading-snug">{btn}</p>
+                    <p className="text-pretty text-sm font-semibold leading-normal text-black/95 md:text-sm md:leading-snug">{btn}</p>
                   ) : null}
                   {hasLink ? (
                     <span className="pointer-events-auto mt-0.5 self-start">
