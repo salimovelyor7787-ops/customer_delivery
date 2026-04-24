@@ -239,9 +239,9 @@ export function HomePageClient({ initial }: Props) {
                   {banner.title?.trim() ? (
                     <h3 className="text-balance text-xl font-bold leading-snug text-white drop-shadow md:text-xl md:leading-tight">{banner.title.trim()}</h3>
                   ) : null}
-                  {sub ? <p className="text-pretty text-base font-semibold leading-normal text-white/90 md:text-base md:leading-snug">{sub}</p> : null}
+                  {sub ? <p className="text-pretty text-sm font-semibold leading-normal text-white/90 md:text-sm md:leading-snug">{sub}</p> : null}
                   {showButtonTextAsPlain ? (
-                    <p className="text-pretty text-base font-semibold leading-normal text-white/95 md:text-base md:leading-snug">{btn}</p>
+                    <p className="text-pretty text-sm font-semibold leading-normal text-white/95 md:text-sm md:leading-snug">{btn}</p>
                   ) : null}
                   {hasLink ? (
                     <span className="pointer-events-auto mt-0.5 self-start">
