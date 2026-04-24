@@ -66,12 +66,12 @@ export type DealItem = {
   deal_price_cents: number | null;
 };
 export type NearbyStoreCard = { id: string; title: string | null; image_url: string; restaurant_id: string | null };
-export type CategoryCard = { id: string; name: string; image_url: string | null };
+export type ServiceCard = { id: string; key: string; title: string; image_url: string | null };
 
 export type HomePageInitialPayload = {
   restaurants: Restaurant[];
   categories: Record<string, string>;
-  categoryCards: CategoryCard[];
+  serviceCards: ServiceCard[];
   banners: Banner[];
   deals: DealItem[];
   nearbyCards: NearbyStoreCard[];
@@ -90,7 +90,7 @@ export function HomePageClient({ initial }: Props) {
   const supabase = useMemo(() => createSupabaseBrowserClient(), []);
   const [restaurants, setRestaurants] = useState<Restaurant[]>(() => initial.restaurants);
   const [banners, setBanners] = useState<Banner[]>(() => initial.banners);
-  const [categoryCards, setCategoryCards] = useState<CategoryCard[]>(() => initial.categoryCards ?? []);
+  const [serviceCards, setServiceCards] = useState<ServiceCard[]>(() => initial.serviceCards ?? []);
   const [deals, setDeals] = useState<DealItem[]>(() => initial.deals);
   const [nearbyCards, setNearbyCards] = useState<NearbyStoreCard[]>(() => initial.nearbyCards);
   const [categoryNames, setCategoryNames] = useState<Record<string, string>>(() => initial.categories);
@@ -119,7 +119,7 @@ export function HomePageClient({ initial }: Props) {
       if (fromApi) {
         setRestaurants(fromApi.restaurants);
         setCategoryNames(fromApi.categories);
-        setCategoryCards(Array.isArray(fromApi.categoryCards) ? fromApi.categoryCards : []);
+        setServiceCards(Array.isArray(fromApi.serviceCards) ? fromApi.serviceCards : []);
         // Keep SSR banners stable to avoid short-lived cache rollbacks after admin edits.
         setDeals(fromApi.deals);
         setNearbyCards(fromApi.nearbyCards);
@@ -128,9 +128,11 @@ export function HomePageClient({ initial }: Props) {
         return;
       }
 
-      const [{ data: rests }, { data: catRows }, { data: bannerRows }, { data: dealRows }, { data: nearbyRows }, { data: pushRows }] = await Promise.all([
+      const [{ data: rests }, { data: catRows }, { data: serviceRows }, { data: bannerRows }, { data: dealRows }, { data: nearbyRows }, { data: pushRows }] =
+        await Promise.all([
         supabase.from("restaurants").select("id,name,image_url,is_open,delivery_fee_cents,category_id,category_ids").order("name", { ascending: true }),
-        supabase.from("categories").select("id,name,image_url,sort_order").order("sort_order", { ascending: true }),
+        supabase.from("categories").select("id,name").order("sort_order", { ascending: true }),
+        supabase.from("home_service_cards").select("id,service_key,title,image_url,sort_order").eq("is_active", true).order("sort_order", { ascending: true }),
         supabase
           .from("banners")
           .select("id,image_url,title,subtitle,button_text,action_path,sort_order")
@@ -151,9 +153,10 @@ export function HomePageClient({ initial }: Props) {
       const nextPayload: HomePageInitialPayload = {
         restaurants: (rests ?? []) as Restaurant[],
         categories: Object.fromEntries((catRows ?? []).map((c: { id: string; name: string }) => [c.id, c.name])),
-        categoryCards: (catRows ?? []).map((c: { id: string; name: string; image_url: string | null }) => ({
+        serviceCards: (serviceRows ?? []).map((c: { id: string; service_key: string; title: string; image_url: string | null }) => ({
           id: c.id,
-          name: c.name,
+          key: c.service_key,
+          title: c.title,
           image_url: c.image_url ?? null,
         })),
         banners: (bannerRows ?? []) as Banner[],
@@ -164,7 +167,7 @@ export function HomePageClient({ initial }: Props) {
 
       setRestaurants(nextPayload.restaurants);
       setCategoryNames(nextPayload.categories);
-      setCategoryCards(nextPayload.categoryCards);
+      setServiceCards(nextPayload.serviceCards);
       setBanners(nextPayload.banners);
       setDeals(nextPayload.deals);
       setNearbyCards(nextPayload.nearbyCards);
@@ -281,27 +284,27 @@ export function HomePageClient({ initial }: Props) {
         </div>
       </div>
 
-      {categoryCards.length > 0 ? (
+      {serviceCards.length > 0 ? (
         <section className="space-y-2">
           <h2 className="text-lg font-semibold sm:text-xl">Kategoriyalar</h2>
           <div className="-mx-1 flex snap-x snap-mandatory gap-2 overflow-x-auto px-1 pb-1 [scrollbar-width:thin]">
-            {categoryCards.map((card) => (
+            {serviceCards.map((card) => (
               <button
                 key={card.id}
                 type="button"
-                onClick={() => setSearchQuery(card.name)}
+                onClick={() => setSearchQuery(card.title)}
                 className="group w-[96px] shrink-0 snap-start rounded-2xl border border-zinc-200 bg-white p-2 text-left shadow-sm transition hover:border-zinc-300"
               >
                 <div className="relative h-[72px] w-full overflow-hidden rounded-xl bg-zinc-100">
                   {card.image_url ? (
-                    <Image src={card.image_url} alt={card.name} fill sizes="96px" className="h-full w-full object-cover" loading="lazy" />
+                    <Image src={card.image_url} alt={card.title} fill sizes="96px" className="h-full w-full object-cover" loading="lazy" />
                   ) : (
                     <div className="flex h-full w-full items-center justify-center text-zinc-400">
                       <Store className="h-6 w-6" aria-hidden />
                     </div>
                   )}
                 </div>
-                <p className="mt-1.5 line-clamp-2 text-xs font-medium leading-tight text-zinc-700 group-hover:text-zinc-900">{card.name}</p>
+                <p className="mt-1.5 line-clamp-2 text-xs font-medium leading-tight text-zinc-700 group-hover:text-zinc-900">{card.title}</p>
               </button>
             ))}
           </div>

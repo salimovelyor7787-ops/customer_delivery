@@ -5,11 +5,9 @@ import toast from "react-hot-toast";
 import { ImageUpload } from "@/components/ui/image-upload";
 import { createSupabaseBrowserClient } from "@/lib/supabase";
 
-type ServiceKey = "stores" | "restaurants" | "courier";
-
 type ServiceCard = {
   id: string;
-  service_key: ServiceKey;
+  service_key: string;
   title: string;
   image_url: string;
   sort_order: number;
@@ -18,15 +16,10 @@ type ServiceCard = {
 
 const supabase = createSupabaseBrowserClient();
 
-const serviceOptions: { value: ServiceKey; label: string }[] = [
-  { value: "stores", label: "Do'konlar" },
-  { value: "restaurants", label: "Restoranlar" },
-  { value: "courier", label: "Kuryer" },
-];
-
 export default function AdminServiceCardsPage() {
   const [rows, setRows] = useState<ServiceCard[]>([]);
-  const [serviceKey, setServiceKey] = useState<ServiceKey>("stores");
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [serviceKey, setServiceKey] = useState("");
   const [title, setTitle] = useState("");
   const [imageUrl, setImageUrl] = useState("");
   const [sortOrder, setSortOrder] = useState(0);
@@ -49,32 +42,53 @@ export default function AdminServiceCardsPage() {
   }, []);
 
   const resetForm = () => {
-    setServiceKey("stores");
+    setEditingId(null);
+    setServiceKey("");
     setTitle("");
     setImageUrl("");
     setSortOrder(0);
     setIsActive(true);
   };
 
+  const slugify = (value: string): string =>
+    value
+      .trim()
+      .toLowerCase()
+      .replace(/\s+/g, "-")
+      .replace(/[^a-z0-9-_]/g, "");
+
   const onSubmit = async (event: FormEvent) => {
     event.preventDefault();
+    const cleanTitle = title.trim();
+    const key = slugify(serviceKey || cleanTitle);
+    if (!cleanTitle) {
+      toast.error("Kategoriya nomini kiriting");
+      return;
+    }
+    if (!key) {
+      toast.error("Slug noto'g'ri");
+      return;
+    }
+    if (!imageUrl.trim()) {
+      toast.error("Rasm kiriting");
+      return;
+    }
     const payload = {
-      service_key: serviceKey,
-      title,
-      image_url: imageUrl,
+      service_key: key,
+      title: cleanTitle,
+      image_url: imageUrl.trim(),
       sort_order: sortOrder,
       is_active: isActive,
     };
-
-    const existing = rows.find((row) => row.service_key === serviceKey);
-    const query = existing
-      ? supabase.from("home_service_cards").update(payload).eq("id", existing.id)
-      : supabase.from("home_service_cards").insert(payload);
+    const query =
+      editingId == null
+        ? supabase.from("home_service_cards").insert(payload)
+        : supabase.from("home_service_cards").update(payload).eq("id", editingId);
 
     const { error } = await query;
     if (error) return toast.error(error.message);
 
-    toast.success(existing ? "Kartochka yangilandi" : "Kartochka yaratildi");
+    toast.success(editingId == null ? "Kartochka yaratildi" : "Kartochka yangilandi");
     resetForm();
     await loadRows();
   };
@@ -99,32 +113,36 @@ export default function AdminServiceCardsPage() {
     );
   };
 
+  const onEdit = (row: ServiceCard) => {
+    setEditingId(row.id);
+    setServiceKey(row.service_key);
+    setTitle(row.title);
+    setImageUrl(row.image_url);
+    setSortOrder(row.sort_order);
+    setIsActive(row.is_active);
+  };
+
   return (
     <section className="space-y-6">
       <h1 className="text-2xl font-semibold">Xizmat kartochkalari</h1>
       <p className="text-sm text-zinc-500">
-        Bosh sahifadagi do'konlar, restoranlar va kuryer kartochkalarini sozlang.
+        Bosh sahifadagi umumiy kategoriya kartochkalarini sozlang (masalan: restoranlar, gullar, mahsulotlar).
       </p>
 
       <form
         onSubmit={onSubmit}
-        className="grid gap-3 rounded-2xl border border-zinc-200 bg-white p-4 md:grid-cols-5"
+        className="grid gap-3 rounded-2xl border border-zinc-200 bg-white p-4 md:grid-cols-6"
       >
-        <select
+        <input
           value={serviceKey}
-          onChange={(e) => setServiceKey(e.target.value as ServiceKey)}
+          onChange={(e) => setServiceKey(e.target.value)}
+          placeholder="Slug (ixtiyoriy): flowers-shop"
           className="rounded-lg border border-zinc-300 px-3 py-2"
-        >
-          {serviceOptions.map((option) => (
-            <option key={option.value} value={option.value}>
-              {option.label}
-            </option>
-          ))}
-        </select>
+        />
         <input
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          placeholder="Sarlavha"
+          placeholder="Kategoriya nomi"
           required
           className="rounded-lg border border-zinc-300 px-3 py-2"
         />
@@ -153,9 +171,12 @@ export default function AdminServiceCardsPage() {
           />
           Faol
         </label>
-        <button className="rounded-lg bg-zinc-900 px-4 py-2 text-white md:col-span-5">
-          Saqlash
-        </button>
+        <button className="rounded-lg bg-zinc-900 px-4 py-2 text-white">{editingId == null ? "Qo'shish" : "Saqlash"}</button>
+        {editingId ? (
+          <button type="button" onClick={resetForm} className="rounded-lg border border-zinc-300 px-4 py-2">
+            Bekor qilish
+          </button>
+        ) : null}
       </form>
 
       <div className="grid gap-3 md:grid-cols-2">
@@ -170,6 +191,12 @@ export default function AdminServiceCardsPage() {
               Holat: {row.is_active ? "faol" : "o'chirilgan"}
             </p>
             <div className="mt-3 flex gap-2">
+              <button
+                className="rounded border border-zinc-300 px-2 py-1 text-xs"
+                onClick={() => onEdit(row)}
+              >
+                Tahrirlash
+              </button>
               <button
                 className="rounded border border-zinc-300 px-2 py-1 text-xs"
                 onClick={() => onToggle(row)}
