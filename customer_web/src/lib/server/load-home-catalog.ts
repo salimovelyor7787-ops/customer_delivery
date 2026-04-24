@@ -4,6 +4,7 @@ export type HomeCatalogPayload = {
   restaurants: unknown[];
   categories: Record<string, string>;
   serviceCards: unknown[];
+  serviceCardsVersion: string | null;
   banners: unknown[];
   deals: unknown[];
   nearbyCards: unknown[];
@@ -15,7 +16,7 @@ export async function loadHomeCatalog(): Promise<HomeCatalogPayload> {
   const [{ data: rests }, { data: catRows }, { data: serviceRows }, { data: bannerRows }, { data: dealRows }, { data: nearbyRows }, { data: pushRows }] = await Promise.all([
     supabase.from("restaurants").select("id,name,image_url,is_open,delivery_fee_cents,category_id,category_ids").order("name", { ascending: true }),
     supabase.from("categories").select("id,name").order("sort_order", { ascending: true }),
-    supabase.from("home_service_cards").select("id,service_key,title,image_url,sort_order").eq("is_active", true).order("sort_order", { ascending: true }),
+    supabase.from("home_service_cards").select("id,service_key,title,image_url,sort_order,updated_at").eq("is_active", true).order("sort_order", { ascending: true }),
     supabase
       .from("banners")
       .select("id,image_url,title,subtitle,button_text,action_path,sort_order")
@@ -27,15 +28,30 @@ export async function loadHomeCatalog(): Promise<HomeCatalogPayload> {
     supabase.from("push_notifications").select("id").eq("is_active", true).limit(1),
   ]);
 
+  const normalizedServiceRows = (serviceRows ?? []) as Array<{
+    id: string;
+    service_key: string;
+    title: string;
+    image_url: string | null;
+    updated_at: string | null;
+  }>;
+  const serviceCardsVersion =
+    normalizedServiceRows.reduce<string | null>((latest, row) => {
+      if (!row.updated_at) return latest;
+      if (!latest || row.updated_at > latest) return row.updated_at;
+      return latest;
+    }, null) ?? null;
+
   return {
     restaurants: rests ?? [],
     categories: Object.fromEntries((catRows ?? []).map((c: { id: string; name: string }) => [c.id, c.name])),
-    serviceCards: (serviceRows ?? []).map((c: { id: string; service_key: string; title: string; image_url: string | null }) => ({
+    serviceCards: normalizedServiceRows.map((c) => ({
       id: c.id,
       key: c.service_key,
       title: c.title,
       image_url: c.image_url ?? null,
     })),
+    serviceCardsVersion,
     banners: bannerRows ?? [],
     deals: dealRows ?? [],
     nearbyCards: nearbyRows ?? [],

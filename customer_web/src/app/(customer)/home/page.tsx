@@ -10,6 +10,7 @@ export default async function HomePage() {
     restaurants: raw.restaurants as HomePageInitialPayload["restaurants"],
     categories: raw.categories,
     serviceCards: raw.serviceCards as HomePageInitialPayload["serviceCards"],
+    serviceCardsVersion: raw.serviceCardsVersion,
     banners: raw.banners as HomePageInitialPayload["banners"],
     deals: raw.deals as HomePageInitialPayload["deals"],
     nearbyCards: raw.nearbyCards as HomePageInitialPayload["nearbyCards"],

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Bell, Search, Store } from "lucide-react";
 import { RestaurantHeroCard } from "@/components/customer/restaurant-hero-card";
 import { PwaInstallCard } from "@/components/customer/pwa-install-card";
@@ -72,6 +72,7 @@ export type HomePageInitialPayload = {
   restaurants: Restaurant[];
   categories: Record<string, string>;
   serviceCards: ServiceCard[];
+  serviceCardsVersion: string | null;
   banners: Banner[];
   deals: DealItem[];
   nearbyCards: NearbyStoreCard[];
@@ -91,6 +92,7 @@ export function HomePageClient({ initial }: Props) {
   const [restaurants, setRestaurants] = useState<Restaurant[]>(() => initial.restaurants);
   const [banners, setBanners] = useState<Banner[]>(() => initial.banners);
   const [serviceCards, setServiceCards] = useState<ServiceCard[]>(() => initial.serviceCards ?? []);
+  const serviceCardsVersionRef = useRef<string | null>(initial.serviceCardsVersion ?? null);
   const [deals, setDeals] = useState<DealItem[]>(() => initial.deals);
   const [nearbyCards, setNearbyCards] = useState<NearbyStoreCard[]>(() => initial.nearbyCards);
   const [categoryNames, setCategoryNames] = useState<Record<string, string>>(() => initial.categories);
@@ -119,9 +121,15 @@ export function HomePageClient({ initial }: Props) {
       if (fromApi) {
         setRestaurants(fromApi.restaurants);
         setCategoryNames(fromApi.categories);
-        // Keep current cards when edge cache returns an older payload without serviceCards.
-        if (Array.isArray(fromApi.serviceCards)) {
+        // Apply service cards only when API returned a strictly newer version.
+        // This prevents stale edge cache from rolling back fresh admin edits.
+        if (
+          Array.isArray(fromApi.serviceCards) &&
+          fromApi.serviceCardsVersion &&
+          (!serviceCardsVersionRef.current || fromApi.serviceCardsVersion > serviceCardsVersionRef.current)
+        ) {
           setServiceCards(fromApi.serviceCards);
+          serviceCardsVersionRef.current = fromApi.serviceCardsVersion;
         }
         // Keep SSR banners stable to avoid short-lived cache rollbacks after admin edits.
         setDeals(fromApi.deals);
@@ -135,7 +143,7 @@ export function HomePageClient({ initial }: Props) {
         await Promise.all([
         supabase.from("restaurants").select("id,name,image_url,is_open,delivery_fee_cents,category_id,category_ids").order("name", { ascending: true }),
         supabase.from("categories").select("id,name").order("sort_order", { ascending: true }),
-        supabase.from("home_service_cards").select("id,service_key,title,image_url,sort_order").eq("is_active", true).order("sort_order", { ascending: true }),
+        supabase.from("home_service_cards").select("id,service_key,title,image_url,sort_order,updated_at").eq("is_active", true).order("sort_order", { ascending: true }),
         supabase
           .from("banners")
           .select("id,image_url,title,subtitle,button_text,action_path,sort_order")
@@ -153,15 +161,30 @@ export function HomePageClient({ initial }: Props) {
         supabase.from("home_nearby_cards").select("id,title,image_url,restaurant_id").eq("is_active", true).order("sort_order", { ascending: true }).limit(20),
         supabase.from("push_notifications").select("id").eq("is_active", true).limit(1),
       ]);
+      const normalizedServiceRows = (serviceRows ?? []) as Array<{
+        id: string;
+        service_key: string;
+        title: string;
+        image_url: string | null;
+        updated_at: string | null;
+      }>;
+      const serviceCardsVersion =
+        normalizedServiceRows.reduce<string | null>((latest, row) => {
+          if (!row.updated_at) return latest;
+          if (!latest || row.updated_at > latest) return row.updated_at;
+          return latest;
+        }, null) ?? null;
+
       const nextPayload: HomePageInitialPayload = {
         restaurants: (rests ?? []) as Restaurant[],
         categories: Object.fromEntries((catRows ?? []).map((c: { id: string; name: string }) => [c.id, c.name])),
-        serviceCards: (serviceRows ?? []).map((c: { id: string; service_key: string; title: string; image_url: string | null }) => ({
+        serviceCards: normalizedServiceRows.map((c) => ({
           id: c.id,
           key: c.service_key,
           title: c.title,
           image_url: c.image_url ?? null,
         })),
+        serviceCardsVersion,
         banners: (bannerRows ?? []) as Banner[],
         deals: (dealRows ?? []) as DealItem[],
         nearbyCards: (nearbyRows ?? []) as NearbyStoreCard[],
@@ -171,6 +194,7 @@ export function HomePageClient({ initial }: Props) {
       setRestaurants(nextPayload.restaurants);
       setCategoryNames(nextPayload.categories);
       setServiceCards(nextPayload.serviceCards);
+      serviceCardsVersionRef.current = nextPayload.serviceCardsVersion;
       setBanners(nextPayload.banners);
       setDeals(nextPayload.deals);
       setNearbyCards(nextPayload.nearbyCards);
@@ -325,7 +349,7 @@ export function HomePageClient({ initial }: Props) {
           <div className="-mx-1 flex snap-x snap-mandatory gap-2 overflow-x-auto px-1 pb-1 [scrollbar-width:thin]">
             {storeCarouselItems.map((card) => {
               const inner = (
-                <div className="relative h-[74px] w-[108px] shrink-0 snap-start overflow-hidden rounded-xl border border-zinc-200/90 bg-white shadow-sm">
+                <div className="relative h-[74px] w-[108px] shrink-0 snap-start overflow-hidden rounded-xl border border-zinc-200/90 bg-white">
                   {card.image_url ? (
                     <Image
                       src={card.image_url}
@@ -376,7 +400,7 @@ export function HomePageClient({ initial }: Props) {
                 <Link
                   href={`/home/restaurant/${deal.restaurant_id}`}
                   key={deal.id}
-                  className="w-[148px] shrink-0 snap-start overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-sm sm:w-[156px]"
+                  className="w-[148px] shrink-0 snap-start overflow-hidden rounded-xl border border-zinc-200 bg-white sm:w-[156px]"
                 >
                   <div className="relative h-[72px] bg-zinc-100">
                     {deal.image_url ? (
