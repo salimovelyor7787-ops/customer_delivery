@@ -225,14 +225,12 @@ export default function RestaurantOrdersPage() {
   const updateStatus = async (id: string, status: string) => {
     if (!restaurantId) return;
     const patch: { status: string; courier_id?: string | null } = { status };
-    if (status === "ready" && !autoAssignOwnCouriers) {
+    if (status === "ready") {
+      // Keep ready orders unassigned so all linked couriers can see and accept them.
       patch.courier_id = null;
     }
     const { error } = await supabase.from("orders").update(patch).eq("id", id).eq("restaurant_id", restaurantId);
     if (error) return toast.error(error.message);
-    if (status === "ready" && autoAssignOwnCouriers) {
-      await distributeUnassignedOrdersToOwnCouriers();
-    }
     toast.success("Buyurtma yangilandi");
     await loadOrders();
   };

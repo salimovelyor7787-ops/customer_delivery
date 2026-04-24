@@ -15,6 +15,7 @@ type CourierOrder = {
 };
 const supabase = createSupabaseBrowserClient();
 const ASSIGNED_ACTIVE_STATUSES = ["placed", "confirmed", "preparing", "ready_for_pickup", "accepted", "cooking", "ready", "picked_up", "on_the_way"];
+const SHARED_READY_STATUSES = ["ready", "ready_for_pickup"];
 const READY_TO_PICKUP_STATUSES = ["ready", "ready_for_pickup"];
 
 export default function CourierOrdersPage() {
@@ -34,7 +35,7 @@ export default function CourierOrdersPage() {
           .from("orders")
           .select("id,status,total_cents,courier_id,restaurant_id,guest_lat,guest_lng")
           .is("courier_id", null)
-          .eq("status", "ready"),
+          .in("status", SHARED_READY_STATUSES),
       ]);
 
       if (assignedRes.error) {
