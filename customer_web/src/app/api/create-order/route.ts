@@ -30,6 +30,24 @@ export async function POST(req: Request) {
   const accessToken = session?.access_token ?? anonKey;
 
   const base = supabaseUrl.replace(/\/$/, "");
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+  // Prefer server-side direct flow when service key is available, so checkout logic
+  // stays in sync with repository code and does not depend on edge deployment lag.
+  if (serviceKey) {
+    const direct = await createOrderDirect({
+      supabaseUrl: base,
+      anonKey,
+      serviceRoleKey: serviceKey,
+      authorizationHeader: `Bearer ${accessToken}`,
+      body: body as CreateOrderBody,
+    });
+    if (direct.ok) {
+      return NextResponse.json({ order_id: direct.order_id }, { status: 200 });
+    }
+    return NextResponse.json(direct.body, { status: direct.status });
+  }
+
   const upstreamUrl = `${base}/functions/v1/create_order`;
 
   const ac = new AbortController();
@@ -73,22 +91,7 @@ export async function POST(req: Request) {
     return NextResponse.json(parsed, { status: upstream.status });
   }
 
-  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (serviceKey && isEdgeFunctionNotFound(upstream.status, text, parsed)) {
-    const direct = await createOrderDirect({
-      supabaseUrl: base,
-      anonKey,
-      serviceRoleKey: serviceKey,
-      authorizationHeader: `Bearer ${accessToken}`,
-      body: body as CreateOrderBody,
-    });
-    if (direct.ok) {
-      return NextResponse.json({ order_id: direct.order_id }, { status: 200 });
-    }
-    return NextResponse.json(direct.body, { status: direct.status });
-  }
-
-  if (!serviceKey && isEdgeFunctionNotFound(upstream.status, text, parsed)) {
+  if (isEdgeFunctionNotFound(upstream.status, text, parsed)) {
     return NextResponse.json(
       {
         error:

@@ -242,7 +242,7 @@ export async function createOrderDirect(params: {
       address_id: addressId,
       status: "placed",
       payment_method: paymentMethod,
-      guest_phone: uid ? null : guestPhone ?? null,
+      guest_phone: String(guestPhone).trim(),
       customer_phone: customerPhone,
       guest_lat: guestLat ?? null,
       guest_lng: guestLng ?? null,
