@@ -116,7 +116,7 @@ export function HomePageClient({ initial }: Props) {
       if (fromApi) {
         setRestaurants(fromApi.restaurants);
         setCategoryNames(fromApi.categories);
-        setBanners(fromApi.banners);
+        // Keep SSR banners stable to avoid short-lived cache rollbacks after admin edits.
         setDeals(fromApi.deals);
         setNearbyCards(fromApi.nearbyCards);
         setHasNotifications(fromApi.hasNotifications);
