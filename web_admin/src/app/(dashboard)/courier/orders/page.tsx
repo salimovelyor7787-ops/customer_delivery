@@ -14,7 +14,8 @@ type CourierOrder = {
   guest_lng: number | null;
 };
 const supabase = createSupabaseBrowserClient();
-const ASSIGNED_ACTIVE_STATUSES = ["accepted", "cooking", "ready", "picked_up", "on_the_way"];
+const ASSIGNED_ACTIVE_STATUSES = ["placed", "confirmed", "preparing", "ready_for_pickup", "accepted", "cooking", "ready", "picked_up", "on_the_way"];
+const READY_TO_PICKUP_STATUSES = ["ready", "ready_for_pickup"];
 
 export default function CourierOrdersPage() {
   const [orders, setOrders] = useState<CourierOrder[]>([]);
@@ -98,13 +99,14 @@ export default function CourierOrdersPage() {
     await loadOrders(userId);
   };
 
-  const startDelivery = async (orderId: string) => {
+  const startDelivery = async (orderId: string, status: string) => {
+    if (!READY_TO_PICKUP_STATUSES.includes(status)) return;
     const { error } = await supabase
       .from("orders")
       .update({ status: "picked_up" })
       .eq("id", orderId)
       .eq("courier_id", userId)
-      .eq("status", "ready");
+      .eq("status", status);
     if (error) return toast.error(error.message);
     toast.success("Buyurtma olib ketildi");
     await loadOrders(userId);
@@ -151,8 +153,8 @@ export default function CourierOrdersPage() {
                     Qabul qilish
                   </button>
                 ) : null}
-                {order.courier_id === userId && order.status === "ready" ? (
-                  <button className="rounded-lg bg-zinc-900 px-3 py-1 text-xs text-white" onClick={() => startDelivery(order.id)}>
+                {order.courier_id === userId && READY_TO_PICKUP_STATUSES.includes(order.status) ? (
+                  <button className="rounded-lg bg-zinc-900 px-3 py-1 text-xs text-white" onClick={() => startDelivery(order.id, order.status)}>
                     Olib ketdim
                   </button>
                 ) : null}
