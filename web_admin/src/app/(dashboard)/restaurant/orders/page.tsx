@@ -59,6 +59,13 @@ function isArchivedStatus(status: string): boolean {
   return status === "delivered" || status === "cancelled";
 }
 
+function normalizePhoneForTel(value: string): string {
+  const trimmed = value.trim();
+  if (!trimmed) return "";
+  if (trimmed.startsWith("+")) return trimmed;
+  return `+${trimmed.replace(/^\+/, "")}`;
+}
+
 export default function RestaurantOrdersPage() {
   const supabase = useMemo(() => createSupabaseBrowserClient(), []);
   const [orders, setOrders] = useState<RestaurantOrder[]>([]);
@@ -290,7 +297,19 @@ export default function RestaurantOrdersPage() {
                       ) : null}
                     </p>
                     <p className="mt-1 text-sm font-semibold text-zinc-900">Jami: {(order.total_cents / 100).toFixed(0)} so'm</p>
-                    <p className="mt-1 text-sm text-zinc-600">Mijoz telefoni: {order.customer_phone || order.guest_phone || "—"}</p>
+                    {order.customer_phone || order.guest_phone ? (
+                      <div className="mt-2 inline-flex items-center gap-2 rounded-lg bg-zinc-100 px-2.5 py-1.5 text-sm">
+                        <span className="text-zinc-600">Mijoz telefoni:</span>
+                        <a
+                          href={`tel:${normalizePhoneForTel(order.customer_phone || order.guest_phone || "")}`}
+                          className="font-semibold text-zinc-900 underline-offset-2 hover:underline"
+                        >
+                          {order.customer_phone || order.guest_phone}
+                        </a>
+                      </div>
+                    ) : (
+                      <p className="mt-2 text-sm text-red-600">Mijoz telefoni topilmadi</p>
+                    )}
                   </div>
                   {tab === "active" && next ? (
                     <button

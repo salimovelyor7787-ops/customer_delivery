@@ -9,6 +9,8 @@ type AdminOrder = {
   total_cents: number;
   restaurant_id: string;
   courier_id: string | null;
+  customer_phone: string | null;
+  guest_phone: string | null;
   created_at: string;
 };
 const supabase = createSupabaseBrowserClient();
@@ -43,6 +45,7 @@ export default function AdminOrdersPage() {
               <th className="px-4 py-3">Buyurtma</th>
               <th className="px-4 py-3">Holat</th>
               <th className="px-4 py-3">Jami</th>
+              <th className="px-4 py-3">Telefon</th>
               <th className="px-4 py-3">Restoran</th>
               <th className="px-4 py-3">Kuryer</th>
             </tr>
@@ -53,6 +56,7 @@ export default function AdminOrdersPage() {
                 <td className="px-4 py-3">#{order.id.slice(0, 8)}</td>
                 <td className="px-4 py-3">{order.status}</td>
                 <td className="px-4 py-3">${(Number(order.total_cents) / 100).toFixed(2)}</td>
+                <td className="px-4 py-3">{order.customer_phone || order.guest_phone || "—"}</td>
                 <td className="px-4 py-3 text-xs">{order.restaurant_id}</td>
                 <td className="px-4 py-3 text-xs">{order.courier_id ?? "yo'q"}</td>
               </tr>
