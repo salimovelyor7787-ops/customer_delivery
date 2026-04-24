@@ -314,7 +314,7 @@ export function HomePageClient({ initial }: Props) {
       {serviceCards.length > 0 ? (
         <section className="space-y-2">
           <h2 className="text-lg font-semibold sm:text-xl">Kategoriyalar</h2>
-          <div className="-mx-1 flex snap-x snap-mandatory gap-2 overflow-x-auto px-1 pb-1 [scrollbar-width:thin]">
+          <div className="-mx-1 flex snap-x snap-mandatory gap-2 overflow-x-auto px-1 pb-1 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
             {serviceCards.map((card) => (
               <button
                 key={card.id}
@@ -346,7 +346,7 @@ export function HomePageClient({ initial }: Props) {
           </Link>
         </div>
         {storeCarouselItems.length > 0 ? (
-          <div className="-mx-1 flex snap-x snap-mandatory gap-2 overflow-x-auto px-1 pb-1 [scrollbar-width:thin]">
+          <div className="-mx-1 flex snap-x snap-mandatory gap-2 overflow-x-auto px-1 pb-1 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
             {storeCarouselItems.map((card) => {
               const inner = (
                 <div className="relative h-[74px] w-[108px] shrink-0 snap-start overflow-hidden rounded-xl border border-zinc-200/90 bg-white">
@@ -392,7 +392,7 @@ export function HomePageClient({ initial }: Props) {
       {deals.length > 0 ? (
         <section className="space-y-2">
           <h2 className="text-lg font-semibold sm:text-xl">Chegirmalar va bonuslar</h2>
-          <div className="-mx-1 flex snap-x snap-mandatory gap-2 overflow-x-auto px-1 pb-1 [scrollbar-width:thin]">
+          <div className="-mx-1 flex snap-x snap-mandatory gap-2 overflow-x-auto px-1 pb-1 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
             {deals.map((deal) => {
               const oldCents = deal.price_cents;
               const newCents = deal.deal_price_cents ?? oldCents;
