@@ -54,7 +54,6 @@ export function RestaurantHeroCard({
       ) : (
         <div className="absolute inset-0 bg-gradient-to-br from-zinc-400 to-zinc-600" aria-hidden />
       )}
-      <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/35 to-black/10" />
       {!isOpen ? (
         <span className={`absolute right-3 top-3 rounded-full bg-black/55 text-xs font-medium text-white backdrop-blur-sm ${compact ? "px-2 py-0.5" : "px-2.5 py-1"}`}>Yopiq</span>
       ) : null}
