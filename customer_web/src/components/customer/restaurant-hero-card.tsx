@@ -40,7 +40,7 @@ export function RestaurantHeroCard({
       href={`/home/restaurant/${id}`}
       className="group block w-full overflow-hidden rounded-[18px] bg-white ring-1 ring-black/5 transition active:scale-[0.99]"
     >
-      <div className={`relative overflow-hidden ${compact ? "h-[108px] sm:h-[120px] lg:h-[128px]" : "h-[136px] sm:h-[152px] lg:h-[164px]"}`}>
+      <div className={`relative overflow-hidden ${compact ? "h-[124px] sm:h-[136px] lg:h-[144px]" : "h-[156px] sm:h-[172px] lg:h-[186px]"}`}>
         {imageUrl ? (
           <Image
             src={imageUrl}
@@ -62,7 +62,7 @@ export function RestaurantHeroCard({
           <span className={`absolute right-3 top-3 rounded-full bg-black/60 text-xs font-medium text-white ${compact ? "px-2 py-0.5" : "px-2.5 py-1"}`}>Yopiq</span>
         ) : null}
       </div>
-      <div className={compact ? "space-y-1 p-2.5 sm:p-3" : "space-y-1.5 p-3 sm:p-3.5"}>
+      <div className={compact ? "space-y-0.5 p-2 sm:p-2.5" : "space-y-1 p-2.5 sm:p-3"}>
         <h3 className={`font-extrabold leading-snug text-zinc-900 md:leading-tight ${compact ? "text-[17px] sm:text-lg" : "text-xl sm:text-xl"}`}>{name}</h3>
         <div className={`flex flex-wrap items-center gap-x-2 gap-y-1 leading-normal text-zinc-700 md:leading-snug ${compact ? "text-[14px] sm:text-sm" : "text-base sm:text-base"}`}>
           <span className="font-medium">{eta}</span>
