@@ -197,14 +197,17 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
     );
 
+    let customerPhone: string | null = null;
+
     if (uid) {
       if (guestLat == null || guestLng == null) {
         return json({ error: "Location is required" }, 400);
       }
-      const { data: profile } = await admin.from("profiles").select("role").eq("id", uid).maybeSingle();
+      const { data: profile } = await admin.from("profiles").select("role,phone").eq("id", uid).maybeSingle();
       if (!profile || profile.role !== "customer") {
         return json({ error: "Forbidden" }, 403);
       }
+      customerPhone = (profile.phone as string | null) ?? null;
       if (addressId) {
         const { data: address } = await admin.from("addresses").select("id, user_id").eq("id", addressId).maybeSingle();
         if (!address || address.user_id !== uid) {
@@ -215,6 +218,7 @@ Deno.serve(async (req) => {
       if (!guestPhone || guestLat == null || guestLng == null || !guestDeviceId) {
         return json({ error: "Guest checkout requires phone and location" }, 400);
       }
+      customerPhone = guestPhone;
       const now = new Date();
       const dayStartUtc = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 0, 0, 0, 0)).toISOString();
       const dayEndUtc = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 23, 59, 59, 999)).toISOString();
@@ -269,6 +273,7 @@ Deno.serve(async (req) => {
         status: "placed",
         payment_method: paymentMethod,
         guest_phone: uid ? null : guestPhone ?? null,
+        customer_phone: customerPhone,
         guest_lat: guestLat ?? null,
         guest_lng: guestLng ?? null,
         guest_device_id: uid ? null : guestDeviceId ?? null,

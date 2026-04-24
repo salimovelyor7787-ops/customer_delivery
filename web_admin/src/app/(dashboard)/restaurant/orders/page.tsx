@@ -37,6 +37,8 @@ type RestaurantOrder = {
   total_cents: number;
   restaurant_id: string;
   created_at: string | null;
+  guest_phone: string | null;
+  customer_phone: string | null;
   order_items: OrderLine[] | null;
 };
 
@@ -109,7 +111,7 @@ export default function RestaurantOrdersPage() {
     const { data, error } = await supabase
       .from("orders")
       .select(
-        "id,status,total_cents,restaurant_id,created_at,order_items(id,quantity,unit_price_cents,selected_option_ids,menu_items(name,description))",
+        "id,status,total_cents,restaurant_id,created_at,guest_phone,customer_phone,order_items(id,quantity,unit_price_cents,selected_option_ids,menu_items(name,description))",
       )
       .eq("restaurant_id", restaurant.id)
       .order("created_at", { ascending: false });
@@ -288,6 +290,7 @@ export default function RestaurantOrdersPage() {
                       ) : null}
                     </p>
                     <p className="mt-1 text-sm font-semibold text-zinc-900">Jami: {(order.total_cents / 100).toFixed(0)} so'm</p>
+                    <p className="mt-1 text-sm text-zinc-600">Mijoz telefoni: {order.customer_phone || order.guest_phone || "—"}</p>
                   </div>
                   {tab === "active" && next ? (
                     <button
