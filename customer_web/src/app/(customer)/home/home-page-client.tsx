@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Bell, Search, Store } from "lucide-react";
+import { Bell, Headset, Search, ShieldCheck, Store, Tag, Truck } from "lucide-react";
 import { RestaurantHeroCard } from "@/components/customer/restaurant-hero-card";
 import { PwaInstallCard } from "@/components/customer/pwa-install-card";
 import { setCachedValue } from "@/lib/client-cache";
@@ -309,6 +309,39 @@ export function HomePageClient({ initial }: Props) {
           })}
         </div>
       </div>
+
+      <section className="rounded-2xl border border-zinc-200 bg-white px-2.5 py-2 shadow-[0_2px_10px_rgba(0,0,0,0.04)]">
+        <div className="grid grid-cols-4">
+          <div className="flex items-center gap-1.5 pr-1.5">
+            <Truck className="h-4 w-4 shrink-0 text-orange-500" aria-hidden />
+            <div className="min-w-0">
+              <p className="truncate text-[10px] font-semibold leading-none text-zinc-900">15-40 daqiqa</p>
+              <p className="mt-0.5 truncate text-[9px] leading-none text-zinc-500">Tez yetkazib berish</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-1.5 border-l border-zinc-200 px-1.5">
+            <ShieldCheck className="h-4 w-4 shrink-0 text-emerald-600" aria-hidden />
+            <div className="min-w-0">
+              <p className="truncate text-[10px] font-semibold leading-none text-zinc-900">Xavfsiz to&apos;lov</p>
+              <p className="mt-0.5 truncate text-[9px] leading-none text-zinc-500">100% himoyalangan</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-1.5 border-l border-zinc-200 px-1.5">
+            <Tag className="h-4 w-4 shrink-0 text-blue-600" aria-hidden />
+            <div className="min-w-0">
+              <p className="truncate text-[10px] font-semibold leading-none text-zinc-900">Aksiya</p>
+              <p className="mt-0.5 truncate text-[9px] leading-none text-zinc-500">Doimiy chegirmalar</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-1.5 border-l border-zinc-200 pl-1.5">
+            <Headset className="h-4 w-4 shrink-0 text-amber-500" aria-hidden />
+            <div className="min-w-0">
+              <p className="truncate text-[10px] font-semibold leading-none text-zinc-900">24/7 yordam</p>
+              <p className="mt-0.5 truncate text-[9px] leading-none text-zinc-500">Savolingiz bormi?</p>
+            </div>
+          </div>
+        </div>
+      </section>
 
       {serviceCards.length > 0 ? (
         <section className="space-y-2">
