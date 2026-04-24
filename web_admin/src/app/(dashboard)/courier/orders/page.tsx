@@ -14,6 +14,7 @@ type CourierOrder = {
   guest_lng: number | null;
 };
 const supabase = createSupabaseBrowserClient();
+const ASSIGNED_ACTIVE_STATUSES = ["accepted", "cooking", "ready", "picked_up", "on_the_way"];
 
 export default function CourierOrdersPage() {
   const [orders, setOrders] = useState<CourierOrder[]>([]);
@@ -27,7 +28,7 @@ export default function CourierOrdersPage() {
           .from("orders")
           .select("id,status,total_cents,courier_id,restaurant_id,guest_lat,guest_lng")
           .eq("courier_id", currentUserId)
-          .in("status", ["ready", "picked_up", "delivered"]),
+          .in("status", ASSIGNED_ACTIVE_STATUSES),
         supabase
           .from("orders")
           .select("id,status,total_cents,courier_id,restaurant_id,guest_lat,guest_lng")
@@ -97,6 +98,18 @@ export default function CourierOrdersPage() {
     await loadOrders(userId);
   };
 
+  const startDelivery = async (orderId: string) => {
+    const { error } = await supabase
+      .from("orders")
+      .update({ status: "picked_up" })
+      .eq("id", orderId)
+      .eq("courier_id", userId)
+      .eq("status", "ready");
+    if (error) return toast.error(error.message);
+    toast.success("Buyurtma olib ketildi");
+    await loadOrders(userId);
+  };
+
   const markDelivered = async (orderId: string) => {
     const { error } = await supabase
       .from("orders")
@@ -136,6 +149,11 @@ export default function CourierOrdersPage() {
                 {!order.courier_id ? (
                   <button className="rounded-lg bg-zinc-900 px-3 py-1 text-xs text-white" onClick={() => acceptOrder(order.id)}>
                     Qabul qilish
+                  </button>
+                ) : null}
+                {order.courier_id === userId && order.status === "ready" ? (
+                  <button className="rounded-lg bg-zinc-900 px-3 py-1 text-xs text-white" onClick={() => startDelivery(order.id)}>
+                    Olib ketdim
                   </button>
                 ) : null}
                 {order.status === "picked_up" ? (
