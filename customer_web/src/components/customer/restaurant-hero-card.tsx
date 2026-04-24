@@ -32,15 +32,15 @@ export function RestaurantHeroCard({
   priority = false,
 }: RestaurantHeroCardProps) {
   const eta = ETA_LABELS[listIndex % ETA_LABELS.length];
-  const category = categoryLabel?.trim() || "Restoran";
   const deliveryStatus = (deliveryFeeCents ?? 0) <= 0 ? "Yetkazib berish: bepul" : "Yetkazib berish: pullik";
+  const deliveryBadgeClass = (deliveryFeeCents ?? 0) <= 0 ? "bg-emerald-600/95 text-white" : "bg-amber-500/95 text-zinc-950";
 
   return (
     <Link
       href={`/home/restaurant/${id}`}
       className="group block w-full overflow-hidden rounded-[18px] bg-white ring-1 ring-black/5 transition active:scale-[0.99]"
     >
-      <div className={`relative overflow-hidden ${compact ? "h-[96px] sm:h-[108px] lg:h-[116px]" : "h-[118px] sm:h-[132px] lg:h-[144px]"}`}>
+      <div className={`relative overflow-hidden ${compact ? "h-[108px] sm:h-[120px] lg:h-[128px]" : "h-[136px] sm:h-[152px] lg:h-[164px]"}`}>
         {imageUrl ? (
           <Image
             src={imageUrl}
@@ -55,16 +55,15 @@ export function RestaurantHeroCard({
         ) : (
           <div className="absolute inset-0 bg-gradient-to-br from-zinc-200 to-zinc-300" aria-hidden />
         )}
+        <span className={`absolute left-3 top-3 rounded-full text-xs font-semibold ${compact ? "px-2 py-0.5" : "px-2.5 py-1"} ${deliveryBadgeClass}`}>
+          {deliveryStatus}
+        </span>
         {!isOpen ? (
           <span className={`absolute right-3 top-3 rounded-full bg-black/60 text-xs font-medium text-white ${compact ? "px-2 py-0.5" : "px-2.5 py-1"}`}>Yopiq</span>
         ) : null}
       </div>
-      <div className={compact ? "space-y-1.5 p-2.5 sm:p-3" : "space-y-2 p-3 sm:p-4"}>
+      <div className={compact ? "space-y-1 p-2.5 sm:p-3" : "space-y-1.5 p-3 sm:p-3.5"}>
         <h3 className={`font-extrabold leading-snug text-zinc-900 md:leading-tight ${compact ? "text-[17px] sm:text-lg" : "text-xl sm:text-xl"}`}>{name}</h3>
-        <p className={`font-semibold leading-normal text-zinc-700 md:leading-snug ${compact ? "text-[14px] sm:text-sm" : "text-base sm:text-base"}`}>{category}</p>
-        <div className={`flex flex-wrap items-center gap-x-2 gap-y-1 leading-normal text-zinc-700 md:leading-snug ${compact ? "text-[14px] sm:text-sm" : "text-base sm:text-base"}`}>
-          <span className="font-semibold">{deliveryStatus}</span>
-        </div>
         <div className={`flex flex-wrap items-center gap-x-2 gap-y-1 leading-normal text-zinc-700 md:leading-snug ${compact ? "text-[14px] sm:text-sm" : "text-base sm:text-base"}`}>
           <span className="font-medium">{eta}</span>
         </div>
