@@ -42,7 +42,7 @@ function BannerCta({ href, label }: { href: string; label: string }) {
   const h = href.trim();
   const external = /^https?:\/\//i.test(h);
   const className =
-    "inline-flex items-center justify-center rounded-full bg-white px-3 py-1.5 text-xs font-semibold text-zinc-900 shadow-sm ring-1 ring-black/5 transition hover:bg-zinc-100 active:scale-[0.98] md:px-4 md:text-sm";
+    "inline-flex items-center justify-center rounded-full bg-white px-3 py-1.5 text-xs font-semibold text-zinc-900 ring-1 ring-black/5 transition hover:bg-zinc-100 active:scale-[0.98] md:px-4 md:text-sm";
   if (external) {
     return (
       <a href={h} target="_blank" rel="noopener noreferrer" className={className}>
@@ -282,10 +282,9 @@ export function HomePageClient({ initial }: Props) {
                   fetchPriority={index === 0 ? "high" : "low"}
                   decoding={index === 0 ? "sync" : "async"}
                 />
-                <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/80 via-black/30 to-black/10" aria-hidden />
                 <div className="absolute inset-x-0 top-0 z-10 flex flex-col items-stretch gap-1.5 p-3 text-left md:gap-2 md:p-4">
                   {banner.title?.trim() ? (
-                    <h3 className="text-balance text-xl font-bold leading-snug text-white drop-shadow md:text-xl md:leading-tight">{banner.title.trim()}</h3>
+                    <h3 className="text-balance text-xl font-bold leading-snug text-white md:text-xl md:leading-tight">{banner.title.trim()}</h3>
                   ) : null}
                   {subtitleLines.length > 0 ? (
                     <p className="text-pretty text-sm font-semibold leading-normal text-white/90 md:text-sm md:leading-snug">
