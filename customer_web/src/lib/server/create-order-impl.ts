@@ -157,12 +157,15 @@ export async function createOrderDirect(params: {
   if (!restaurantId || !paymentMethod || !Array.isArray(items) || items.length === 0) {
     return { ok: false, status: 400, body: { error: "Invalid payload" } };
   }
+  if (!guestPhone || String(guestPhone).trim().length === 0) {
+    return { ok: false, status: 400, body: { error: "Phone is required" } };
+  }
 
   const admin = createClient(supabaseUrl, serviceRoleKey, {
     auth: { persistSession: false, autoRefreshToken: false },
   });
 
-  let customerPhone: string | null = null;
+  let customerPhone: string | null = String(guestPhone).trim();
 
   if (uid) {
     if (guestLat == null || guestLng == null) {
@@ -172,13 +175,8 @@ export async function createOrderDirect(params: {
     if (!profile || profile.role !== "customer") {
       return { ok: false, status: 403, body: { error: "Forbidden" } };
     }
-    customerPhone = (profile.phone as string | null) ?? null;
     if (!customerPhone) {
-      const { data: authUserData } = await admin.auth.admin.getUserById(uid);
-      const authPhone = authUserData.user?.phone ?? null;
-      const metaPhoneRaw = authUserData.user?.user_metadata?.phone;
-      const metaPhone = typeof metaPhoneRaw === "string" ? metaPhoneRaw : null;
-      customerPhone = authPhone || metaPhone || null;
+      customerPhone = (profile.phone as string | null) ?? null;
     }
     if (addressId) {
       const { data: address } = await admin.from("addresses").select("id, user_id").eq("id", addressId).maybeSingle();
@@ -187,10 +185,10 @@ export async function createOrderDirect(params: {
       }
     }
   } else {
-    if (!guestPhone || guestLat == null || guestLng == null || !guestDeviceId) {
+    if (guestLat == null || guestLng == null || !guestDeviceId) {
       return { ok: false, status: 400, body: { error: "Guest checkout requires phone and location" } };
     }
-    customerPhone = guestPhone;
+    customerPhone = String(guestPhone).trim();
     const now = new Date();
     const dayStartUtc = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 0, 0, 0, 0)).toISOString();
     const dayEndUtc = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 23, 59, 59, 999)).toISOString();

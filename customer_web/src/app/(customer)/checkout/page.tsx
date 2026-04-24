@@ -65,10 +65,28 @@ export default function CheckoutPage() {
     const { data: userData } = await supabase.auth.getUser();
     const user = userData.user;
     const isGuest = !user;
-    if (isGuest && phoneDigits.length !== 9) {
+    const normalizedPhone = phoneDigits.length === 9 ? `+998${phoneDigits}` : "";
+    if (phoneDigits.length !== 9) {
       setSaving(false);
-      toast.error("Mehmon buyurtma uchun 9 xonali telefon kiriting");
+      toast.error("Buyurtma uchun 9 xonali telefon kiriting");
       return;
+    }
+    if (!isGuest) {
+      const { data: profile } = await supabase.from("profiles").select("phone").eq("id", user.id).maybeSingle();
+      const profilePhone = typeof profile?.phone === "string" ? profile.phone.trim() : "";
+      if (!profilePhone && !normalizedPhone) {
+        setSaving(false);
+        toast.error("Buyurtma uchun telefon raqamingizni kiriting");
+        return;
+      }
+      if (normalizedPhone && normalizedPhone !== profilePhone) {
+        const { error: phoneUpdateError } = await supabase.from("profiles").update({ phone: normalizedPhone }).eq("id", user.id);
+        if (phoneUpdateError) {
+          setSaving(false);
+          toast.error("Telefonni saqlab bo'lmadi, qayta urinib ko'ring");
+          return;
+        }
+      }
     }
 
     let guestDeviceId: string | null = null;
@@ -84,7 +102,7 @@ export default function CheckoutPage() {
       restaurant_id: restaurantId,
       address_id: null,
       payment_method: "cash",
-      guest_phone: isGuest ? `+998${phoneDigits}` : null,
+      guest_phone: normalizedPhone,
       guest_lat: lat,
       guest_lng: lng,
       guest_device_id: isGuest ? guestDeviceId : null,
