@@ -9,7 +9,8 @@ export type ImageUploadFolder =
   | "restaurants"
   | "banners"
   | "home-service-cards"
-  | "home-nearby-cards";
+  | "home-nearby-cards"
+  | "categories";
 
 type ImageUploadProps = {
   onUploaded: (url: string) => void;

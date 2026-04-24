@@ -1,13 +1,16 @@
 "use client";
 
 import { FormEvent, useEffect, useState } from "react";
+import Image from "next/image";
 import toast from "react-hot-toast";
 import { createSupabaseBrowserClient } from "@/lib/supabase";
+import { ImageUpload } from "@/components/ui/image-upload";
 
 type CategoryRow = {
   id: string;
   name: string;
   sort_order: number | null;
+  image_url: string | null;
 };
 
 const supabase = createSupabaseBrowserClient();
@@ -16,11 +19,12 @@ export default function AdminCategoriesPage() {
   const [rows, setRows] = useState<CategoryRow[]>([]);
   const [name, setName] = useState("");
   const [sortOrder, setSortOrder] = useState("0");
+  const [imageUrl, setImageUrl] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
   const loadRows = async () => {
-    const { data, error } = await supabase.from("categories").select("id,name,sort_order").order("sort_order", { ascending: true }).order("name");
+    const { data, error } = await supabase.from("categories").select("id,name,sort_order,image_url").order("sort_order", { ascending: true }).order("name");
     if (error) return toast.error(error.message);
     setRows((data ?? []) as CategoryRow[]);
   };
@@ -33,6 +37,7 @@ export default function AdminCategoriesPage() {
     setEditingId(null);
     setName("");
     setSortOrder("0");
+    setImageUrl("");
   };
 
   const onCreateOrUpdate = async (event: FormEvent) => {
@@ -46,6 +51,7 @@ export default function AdminCategoriesPage() {
     const payload = {
       name: cleanName,
       sort_order: Number.isFinite(Number(sortOrder)) ? Number(sortOrder) : 0,
+      image_url: imageUrl.trim() ? imageUrl.trim() : null,
     };
 
     const result =
@@ -63,6 +69,7 @@ export default function AdminCategoriesPage() {
     setEditingId(row.id);
     setName(row.name);
     setSortOrder(String(row.sort_order ?? 0));
+    setImageUrl(row.image_url ?? "");
   };
 
   const onDelete = async (id: string) => {
@@ -80,7 +87,7 @@ export default function AdminCategoriesPage() {
         Bosh sahifadagi qidiruv yonidagi filtrda ko'rinadigan kategoriyalarni boshqaring.
       </p>
 
-      <form onSubmit={onCreateOrUpdate} className="grid gap-3 rounded-2xl border border-zinc-200 bg-white p-4 md:grid-cols-[1fr_180px_auto_auto]">
+      <form onSubmit={onCreateOrUpdate} className="grid gap-3 rounded-2xl border border-zinc-200 bg-white p-4 md:grid-cols-[1fr_180px_1fr_auto_auto]">
         <input
           value={name}
           onChange={(e) => setName(e.target.value)}
@@ -95,6 +102,15 @@ export default function AdminCategoriesPage() {
           placeholder="Sort order"
           className="rounded-lg border border-zinc-300 px-3 py-2"
         />
+        <div className="space-y-2">
+          <input
+            value={imageUrl}
+            onChange={(e) => setImageUrl(e.target.value)}
+            placeholder="Rasm URL (ixtiyoriy)"
+            className="w-full rounded-lg border border-zinc-300 px-3 py-2"
+          />
+          <ImageUpload folder="categories" onUploaded={setImageUrl} />
+        </div>
         <button
           type="submit"
           disabled={saving}
@@ -118,6 +134,7 @@ export default function AdminCategoriesPage() {
           <thead className="bg-zinc-50 text-left text-zinc-500">
             <tr>
               <th className="px-4 py-3">Nomi</th>
+              <th className="px-4 py-3">Rasm</th>
               <th className="px-4 py-3">Sort</th>
               <th className="px-4 py-3">Amallar</th>
             </tr>
@@ -126,6 +143,15 @@ export default function AdminCategoriesPage() {
             {rows.map((row) => (
               <tr key={row.id} className="border-t border-zinc-100">
                 <td className="px-4 py-3">{row.name}</td>
+                <td className="px-4 py-3">
+                  {row.image_url ? (
+                    <div className="relative h-10 w-10 overflow-hidden rounded-lg">
+                      <Image src={row.image_url} alt={row.name} fill sizes="40px" className="object-cover" />
+                    </div>
+                  ) : (
+                    <span className="text-xs text-zinc-400">—</span>
+                  )}
+                </td>
                 <td className="px-4 py-3">{row.sort_order ?? 0}</td>
                 <td className="px-4 py-3">
                   <div className="flex gap-2">
