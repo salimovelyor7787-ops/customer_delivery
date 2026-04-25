@@ -58,20 +58,6 @@ export function LoginClient() {
       <div className="w-full max-w-md rounded-2xl border border-zinc-200 bg-white p-8 shadow-sm">
         <h1 className="text-2xl font-semibold text-zinc-900">Kirish</h1>
         <p className="mt-2 text-sm text-zinc-500">Buyurtmalar, profil va tarixni ko&apos;rish uchun tizimga kiring.</p>
-        <button
-          type="button"
-          onClick={onGoogleSignIn}
-          disabled={loading || googleLoading}
-          className="mt-6 flex w-full items-center justify-center gap-2 rounded-lg border border-zinc-300 bg-white px-4 py-2 font-medium text-zinc-900 transition hover:bg-zinc-50 disabled:opacity-60"
-        >
-          <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-zinc-100 text-sm font-semibold">G</span>
-          {googleLoading ? "Google bilan kirilmoqda…" : "Google bilan kirish"}
-        </button>
-        <div className="my-4 flex items-center gap-3 text-xs text-zinc-400">
-          <span className="h-px flex-1 bg-zinc-200" />
-          yoki
-          <span className="h-px flex-1 bg-zinc-200" />
-        </div>
         <form className="mt-6 space-y-4" onSubmit={onSubmit}>
           <label className="block">
             <span className="mb-1 block text-sm text-zinc-600">Email</span>
@@ -83,6 +69,20 @@ export function LoginClient() {
           </label>
           <button type="submit" disabled={loading} className="w-full rounded-lg bg-zinc-900 px-4 py-2 font-medium text-white disabled:opacity-60">
             {loading ? "Kirilmoqda…" : "Kirish"}
+          </button>
+          <div className="my-1 flex items-center gap-3 text-xs text-zinc-400">
+            <span className="h-px flex-1 bg-zinc-200" />
+            yoki
+            <span className="h-px flex-1 bg-zinc-200" />
+          </div>
+          <button
+            type="button"
+            onClick={onGoogleSignIn}
+            disabled={loading || googleLoading}
+            className="flex w-full items-center justify-center gap-2 rounded-lg border border-zinc-300 bg-white px-4 py-2 font-medium text-zinc-900 transition hover:bg-zinc-50 disabled:opacity-60"
+          >
+            <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-zinc-100 text-sm font-semibold">G</span>
+            {googleLoading ? "Google bilan kirilmoqda…" : "Google bilan kirish"}
           </button>
         </form>
         <p className="mt-6 text-center text-sm text-zinc-600">
