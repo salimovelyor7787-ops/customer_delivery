@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { Search } from "lucide-react";
 
 type Restaurant = {
@@ -27,6 +27,7 @@ export type SearchPageInitialPayload = {
   restaurants: Restaurant[];
   categories: Record<string, string>;
   serviceCards: ServiceCard[];
+  initialQuery: string;
 };
 
 type Props = {
@@ -35,16 +36,13 @@ type Props = {
 
 export function SearchPageClient({ initial }: Props) {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const [query, setQuery] = useState(() => searchParams.get("q") ?? "");
+  const [query, setQuery] = useState(() => initial.initialQuery ?? "");
 
   const applyQuery = (value: string) => {
     const next = value.trim();
-    const params = new URLSearchParams(searchParams.toString());
+    const params = new URLSearchParams();
     if (next.length > 0) {
       params.set("q", next);
-    } else {
-      params.delete("q");
     }
     router.push(`/search${params.toString() ? `?${params.toString()}` : ""}`);
     setQuery(value);
