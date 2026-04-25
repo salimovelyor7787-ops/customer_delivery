@@ -10,6 +10,7 @@ type ServiceCard = {
   service_key: string;
   title: string;
   image_url: string;
+  banner_image_url: string | null;
   sort_order: number;
   is_active: boolean;
 };
@@ -22,6 +23,7 @@ export default function AdminServiceCardsPage() {
   const [serviceKey, setServiceKey] = useState("");
   const [title, setTitle] = useState("");
   const [imageUrl, setImageUrl] = useState("");
+  const [bannerImageUrl, setBannerImageUrl] = useState("");
   const [sortOrder, setSortOrder] = useState(0);
   const [isActive, setIsActive] = useState(true);
 
@@ -46,6 +48,7 @@ export default function AdminServiceCardsPage() {
     setServiceKey("");
     setTitle("");
     setImageUrl("");
+    setBannerImageUrl("");
     setSortOrder(0);
     setIsActive(true);
   };
@@ -77,6 +80,7 @@ export default function AdminServiceCardsPage() {
       service_key: key,
       title: cleanTitle,
       image_url: imageUrl.trim(),
+      banner_image_url: bannerImageUrl.trim() || null,
       sort_order: sortOrder,
       is_active: isActive,
     };
@@ -118,6 +122,7 @@ export default function AdminServiceCardsPage() {
     setServiceKey(row.service_key);
     setTitle(row.title);
     setImageUrl(row.image_url);
+    setBannerImageUrl(row.banner_image_url ?? "");
     setSortOrder(row.sort_order);
     setIsActive(row.is_active);
   };
@@ -156,6 +161,15 @@ export default function AdminServiceCardsPage() {
           />
           <ImageUpload folder="home-service-cards" onUploaded={setImageUrl} className="self-start" />
         </div>
+        <div className="flex min-w-0 flex-col gap-2">
+          <input
+            value={bannerImageUrl}
+            onChange={(e) => setBannerImageUrl(e.target.value)}
+            placeholder="Banner rasmi URL (Qidiruv sahifasi)"
+            className="w-full rounded-lg border border-zinc-300 px-3 py-2"
+          />
+          <ImageUpload folder="home-service-cards" onUploaded={setBannerImageUrl} className="self-start" />
+        </div>
         <input
           type="number"
           value={sortOrder}
@@ -186,6 +200,7 @@ export default function AdminServiceCardsPage() {
               {row.title} <span className="text-xs text-zinc-500">({row.service_key})</span>
             </p>
             <p className="truncate text-xs text-zinc-500">{row.image_url}</p>
+            <p className="truncate text-xs text-zinc-500">Banner: {row.banner_image_url || "yo'q"}</p>
             <p className="mt-1 text-xs text-zinc-500">Tartib: {row.sort_order}</p>
             <p className="mt-1 text-xs text-zinc-600">
               Holat: {row.is_active ? "faol" : "o'chirilgan"}
