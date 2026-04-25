@@ -42,13 +42,13 @@ export default function ProductDetailPage() {
     <main className="space-y-4 p-4 sm:p-6 lg:p-8">
       <h1 className="text-2xl font-semibold">{item.name}</h1>
       {item.image_url ? (
-        <div className="relative h-52 w-full overflow-hidden rounded-2xl bg-zinc-100 p-2">
+        <div className="relative h-52 w-full overflow-hidden rounded-2xl">
           <Image
             src={item.image_url}
             alt={item.name}
             fill
             sizes="(max-width: 768px) 100vw, 80vw"
-            className="object-contain"
+            className="object-cover"
             priority
           />
         </div>
