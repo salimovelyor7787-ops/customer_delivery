@@ -343,10 +343,9 @@ export function HomePageClient({ initial }: Props) {
           <h2 className="text-lg font-semibold sm:text-xl">Kategoriyalar</h2>
           <div className="-mx-1 flex snap-x snap-mandatory gap-2 overflow-x-auto px-1 pb-1 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
             {serviceCards.map((card) => (
-              <button
+              <Link
                 key={card.id}
-                type="button"
-                onClick={() => setSearchQuery(card.title)}
+                href={`/search/category/${encodeURIComponent(card.key)}`}
                 className="group w-[96px] shrink-0 snap-start text-left"
               >
                 <div className="relative aspect-square w-full overflow-hidden rounded-2xl border border-zinc-200 bg-zinc-100 transition group-hover:border-zinc-300">
@@ -359,7 +358,7 @@ export function HomePageClient({ initial }: Props) {
                   )}
                 </div>
                 <p className="mt-1.5 line-clamp-2 text-center text-xs font-medium leading-tight text-zinc-700 group-hover:text-zinc-900">{card.title}</p>
-              </button>
+              </Link>
             ))}
           </div>
         </section>

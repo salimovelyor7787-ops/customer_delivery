@@ -3,7 +3,6 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
 import { Search } from "lucide-react";
 
 type Restaurant = {
@@ -35,18 +34,7 @@ type Props = {
 };
 
 export function SearchPageClient({ initial }: Props) {
-  const router = useRouter();
   const [query, setQuery] = useState(() => initial.initialQuery ?? "");
-
-  const applyQuery = (value: string) => {
-    const next = value.trim();
-    const params = new URLSearchParams();
-    if (next.length > 0) {
-      params.set("q", next);
-    }
-    router.push(`/search${params.toString() ? `?${params.toString()}` : ""}`);
-    setQuery(value);
-  };
 
   const filteredRestaurants = useMemo(() => {
     const needle = query.trim().toLowerCase();
@@ -87,7 +75,7 @@ export function SearchPageClient({ initial }: Props) {
       <section className="space-y-3">
         {initial.serviceCards.map((card) => {
           const imageUrl = card.banner_image_url || card.image_url;
-          const targetHref = `/search?q=${encodeURIComponent(card.title)}`;
+          const targetHref = `/search/category/${encodeURIComponent(card.key)}`;
           return (
             <article key={card.id} className="relative overflow-hidden rounded-2xl border border-zinc-200 bg-zinc-100">
               {imageUrl ? (
@@ -105,13 +93,12 @@ export function SearchPageClient({ initial }: Props) {
                 <div className="max-w-[62%] space-y-2">
                   <h2 className="line-clamp-2 text-2xl font-bold leading-tight text-zinc-900 sm:text-3xl">{card.title}</h2>
                   <p className="line-clamp-1 text-sm text-zinc-700 sm:text-base">Kategoriya bo&apos;yicha restoranlarni ko&apos;rish</p>
-                  <button
-                    type="button"
-                    onClick={() => applyQuery(card.title)}
+                  <Link
+                    href={targetHref}
                     className="rounded-xl bg-orange-500 px-4 py-1.5 text-sm font-semibold text-white transition hover:bg-orange-600 active:scale-[0.98]"
                   >
                     Ko&apos;rish
-                  </button>
+                  </Link>
                 </div>
                 <Link href={targetHref} className="sr-only" aria-label={`${card.title} sahifasiga o'tish`}>
                   {card.title}
