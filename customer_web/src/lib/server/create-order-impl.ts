@@ -26,7 +26,7 @@ async function enqueueOrderSideEffects(
     rpc: (
       fn: string,
       args: Record<string, unknown>,
-    ) => Promise<{ error: { message?: string } | null }>;
+    ) => PromiseLike<{ error: { message?: string } | null }>;
   },
   orderId: string,
   context: { userId: string | null; promoCode: string | null | undefined; requestId: string | null },
