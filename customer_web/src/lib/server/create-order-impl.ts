@@ -53,7 +53,7 @@ async function enqueueOrderSideEffects(
     });
   }
 
-  const { error } = await admin.rpc("enqueue_order_outbox_events", {
+  const { error } = await (admin as any).rpc("enqueue_order_outbox_events", {
     p_events: jobs,
   });
   if (error) {
