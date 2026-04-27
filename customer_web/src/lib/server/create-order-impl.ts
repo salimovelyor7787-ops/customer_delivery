@@ -26,7 +26,14 @@ async function enqueueOrderSideEffects(
   orderId: string,
   context: { userId: string | null; promoCode: string | null | undefined; requestId: string | null },
 ): Promise<void> {
-  const jobs = [
+  type OutboxPayload = Record<string, string | null>;
+  type OutboxEvent = {
+    order_id: string;
+    event_type: "notification" | "analytics" | "promo_log";
+    payload: OutboxPayload;
+  };
+
+  const jobs: OutboxEvent[] = [
     {
       order_id: orderId,
       event_type: "notification",
