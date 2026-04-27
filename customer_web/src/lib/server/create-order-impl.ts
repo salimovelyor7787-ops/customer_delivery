@@ -53,7 +53,13 @@ async function enqueueOrderSideEffects(
     });
   }
 
-  const { error } = await (admin as any).rpc("enqueue_order_outbox_events", {
+  const adminWithDynamicRpc = admin as unknown as {
+    rpc: (
+      fn: string,
+      args: Record<string, unknown>,
+    ) => Promise<{ error: { message?: string } | null }>;
+  };
+  const { error } = await adminWithDynamicRpc.rpc("enqueue_order_outbox_events", {
     p_events: jobs,
   });
   if (error) {
