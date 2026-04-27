@@ -10,6 +10,7 @@ type CourierOrder = {
   total_cents: number;
   courier_id: string | null;
   restaurant_id: string;
+  pickup_code: string | null;
   guest_phone: string | null;
   customer_phone: string | null;
   guest_lat: number | null;
@@ -30,12 +31,12 @@ export default function CourierOrdersPage() {
       const [assignedRes, publicPoolRes] = await Promise.all([
         supabase
           .from("orders")
-          .select("id,status,total_cents,courier_id,restaurant_id,guest_phone,customer_phone,guest_lat,guest_lng")
+          .select("id,status,total_cents,courier_id,restaurant_id,pickup_code,guest_phone,customer_phone,guest_lat,guest_lng")
           .eq("courier_id", currentUserId)
           .in("status", ASSIGNED_ACTIVE_STATUSES),
         supabase
           .from("orders")
-          .select("id,status,total_cents,courier_id,restaurant_id,guest_phone,customer_phone,guest_lat,guest_lng")
+          .select("id,status,total_cents,courier_id,restaurant_id,pickup_code,guest_phone,customer_phone,guest_lat,guest_lng")
           .is("courier_id", null)
           .in("status", SHARED_READY_STATUSES),
       ]);
@@ -139,6 +140,7 @@ export default function CourierOrdersPage() {
               <div>
                 <p className="font-medium">#{order.id.slice(0, 8)}</p>
                 <p className="text-sm text-zinc-500">{order.status}</p>
+                {order.pickup_code ? <p className="text-sm text-zinc-500">Kod: <span className="font-semibold tracking-widest text-zinc-800">{order.pickup_code}</span></p> : null}
                 <p className="text-sm text-zinc-500">Telefon: {order.customer_phone || order.guest_phone || "—"}</p>
               </div>
               <div className="flex gap-2">

@@ -39,6 +39,7 @@ type RestaurantOrder = {
   created_at: string | null;
   guest_phone: string | null;
   customer_phone: string | null;
+  pickup_code: string | null;
   order_items: OrderLine[] | null;
 };
 
@@ -118,7 +119,7 @@ export default function RestaurantOrdersPage() {
     const { data, error } = await supabase
       .from("orders")
       .select(
-        "id,status,total_cents,restaurant_id,created_at,guest_phone,customer_phone,order_items(id,quantity,unit_price_cents,selected_option_ids,menu_items(name,description))",
+        "id,status,total_cents,restaurant_id,created_at,guest_phone,customer_phone,pickup_code,order_items(id,quantity,unit_price_cents,selected_option_ids,menu_items(name,description))",
       )
       .eq("restaurant_id", restaurant.id)
       .order("created_at", { ascending: false });
@@ -297,6 +298,11 @@ export default function RestaurantOrdersPage() {
                       ) : null}
                     </p>
                     <p className="mt-1 text-sm font-semibold text-zinc-900">Jami: {(order.total_cents / 100).toFixed(0)} so'm</p>
+                    {order.pickup_code ? (
+                      <p className="mt-1 text-sm text-zinc-700">
+                        Kuryer kodi: <span className="font-semibold tracking-widest text-zinc-900">{order.pickup_code}</span>
+                      </p>
+                    ) : null}
                     {order.customer_phone || order.guest_phone ? (
                       <div className="mt-2 inline-flex items-center gap-2 rounded-lg bg-zinc-100 px-2.5 py-1.5 text-sm">
                         <span className="text-zinc-600">Mijoz telefoni:</span>

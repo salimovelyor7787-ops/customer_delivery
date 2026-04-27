@@ -31,6 +31,10 @@ type PriceOk = {
 
 type PriceErr = { ok: false; status: number; body: Record<string, unknown> };
 
+function generatePickupCode(): string {
+  return Math.floor(Math.random() * 10000).toString().padStart(4, "0");
+}
+
 async function calculateOrderPrice(admin: SupabaseClient, restaurantId: string, items: LineItem[]): Promise<PriceOk | PriceErr> {
   const { data: restaurant, error: rErr } = await admin
     .from("restaurants")
@@ -255,6 +259,7 @@ export async function createOrderDirect(params: {
       promocode_id: promoRes.promocodeId,
       promo_discount_cents: promoRes.promoDiscountCents,
       client_request_id: requestId,
+      pickup_code: generatePickupCode(),
     })
     .select("id")
     .single();

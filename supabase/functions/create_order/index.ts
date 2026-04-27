@@ -20,6 +20,10 @@ type PricedLine = {
   unit_price_cents: number;
 };
 
+function generatePickupCode(): string {
+  return Math.floor(Math.random() * 10000).toString().padStart(4, "0");
+}
+
 /** Same rules as calculate_price, inlined so only `create_order` must be deployed. */
 async function calculateOrderPrice(
   admin: SupabaseClient,
@@ -290,6 +294,7 @@ Deno.serve(async (req) => {
         promocode_id: promoRes.promocodeId,
         promo_discount_cents: promoRes.promoDiscountCents,
         client_request_id: requestId,
+        pickup_code: generatePickupCode(),
       })
       .select("id")
       .single();
