@@ -7,23 +7,36 @@ import { createSupabaseServerClient } from "@/lib/supabase-server";
  * Avoids browser → *.supabase.co failures (ad blockers, strict mobile networks).
  */
 export async function POST(req: Request) {
+  const startedAt = Date.now();
+  const traceId = `co-${startedAt}-${Math.random().toString(36).slice(2, 8)}`;
+  let stage = "init";
+  let sessionMs = 0;
+  let directMs = 0;
+  let edgeMs = 0;
+
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
   if (!supabaseUrl || !anonKey) {
+    console.error("[create-order]", { traceId, stage, error: "missing_supabase_env" });
     return NextResponse.json({ error: "Server misconfigured: missing Supabase env" }, { status: 500 });
   }
 
   let body: unknown;
   try {
+    stage = "parse_json";
     body = await req.json();
   } catch {
+    console.warn("[create-order]", { traceId, stage, error: "invalid_json" });
     return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
   }
 
   const supabase = await createSupabaseServerClient();
+  stage = "resolve_session";
+  const sessionStartedAt = Date.now();
   const {
     data: { session },
   } = await supabase.auth.getSession();
+  sessionMs = Date.now() - sessionStartedAt;
   // Do not trust incoming Authorization header from browsers/proxies.
   // Some environments inject non-Supabase JWTs (e.g. ES256), which breaks
   // Supabase auth checks for create_order.
@@ -35,6 +48,8 @@ export async function POST(req: Request) {
   // Prefer server-side direct flow when service key is available, so checkout logic
   // stays in sync with repository code and does not depend on edge deployment lag.
   if (serviceKey) {
+    stage = "direct_rpc";
+    const directStartedAt = Date.now();
     const direct = await createOrderDirect({
       supabaseUrl: base,
       anonKey,
@@ -42,9 +57,21 @@ export async function POST(req: Request) {
       authorizationHeader: `Bearer ${accessToken}`,
       body: body as CreateOrderBody,
     });
+    directMs = Date.now() - directStartedAt;
+    const totalMs = Date.now() - startedAt;
     if (direct.ok) {
+      console.info("[create-order]", { traceId, mode: "direct", status: 200, sessionMs, directMs, totalMs });
       return NextResponse.json({ order_id: direct.order_id }, { status: 200 });
     }
+    console.warn("[create-order]", {
+      traceId,
+      mode: "direct",
+      status: direct.status,
+      sessionMs,
+      directMs,
+      totalMs,
+      body: direct.body,
+    });
     return NextResponse.json(direct.body, { status: direct.status });
   }
 
@@ -56,6 +83,8 @@ export async function POST(req: Request) {
 
   let upstream: Response;
   try {
+    stage = "edge_fetch";
+    const edgeStartedAt = Date.now();
     upstream = await fetch(upstreamUrl, {
       method: "POST",
       headers: {
@@ -66,8 +95,20 @@ export async function POST(req: Request) {
       body: JSON.stringify(body),
       signal: ac.signal,
     });
+    edgeMs = Date.now() - edgeStartedAt;
   } catch (e) {
     const message = e instanceof Error ? e.message : "Upstream fetch failed";
+    const totalMs = Date.now() - startedAt;
+    console.error("[create-order]", {
+      traceId,
+      stage,
+      mode: "edge",
+      status: 502,
+      sessionMs,
+      edgeMs,
+      totalMs,
+      error: message,
+    });
     return NextResponse.json({ error: message }, { status: 502 });
   } finally {
     clearTimeout(timer);
@@ -88,10 +129,29 @@ export async function POST(req: Request) {
     "order_id" in parsed &&
     typeof (parsed as { order_id: unknown }).order_id === "string"
   ) {
+    const totalMs = Date.now() - startedAt;
+    console.info("[create-order]", {
+      traceId,
+      mode: "edge",
+      status: upstream.status,
+      sessionMs,
+      edgeMs,
+      totalMs,
+    });
     return NextResponse.json(parsed, { status: upstream.status });
   }
 
   if (isEdgeFunctionNotFound(upstream.status, text, parsed)) {
+    const totalMs = Date.now() - startedAt;
+    console.warn("[create-order]", {
+      traceId,
+      mode: "edge",
+      status: 503,
+      sessionMs,
+      edgeMs,
+      totalMs,
+      error: "edge_function_not_found",
+    });
     return NextResponse.json(
       {
         error:
@@ -101,5 +161,15 @@ export async function POST(req: Request) {
     );
   }
 
+  const totalMs = Date.now() - startedAt;
+  console.warn("[create-order]", {
+    traceId,
+    mode: "edge",
+    status: upstream.status,
+    sessionMs,
+    edgeMs,
+    totalMs,
+    response: parsed,
+  });
   return NextResponse.json(parsed, { status: upstream.status });
 }
