@@ -22,7 +22,12 @@ function generatePickupCode(): string {
 }
 
 async function enqueueOrderSideEffects(
-  admin: ReturnType<typeof createClient>,
+  admin: {
+    rpc: (
+      fn: string,
+      args: Record<string, unknown>,
+    ) => Promise<{ error: { message?: string } | null }>;
+  },
   orderId: string,
   context: { userId: string | null; promoCode: string | null | undefined; requestId: string | null },
 ): Promise<void> {
@@ -53,13 +58,7 @@ async function enqueueOrderSideEffects(
     });
   }
 
-  const adminWithDynamicRpc = admin as unknown as {
-    rpc: (
-      fn: string,
-      args: Record<string, unknown>,
-    ) => Promise<{ error: { message?: string } | null }>;
-  };
-  const { error } = await adminWithDynamicRpc.rpc("enqueue_order_outbox_events", {
+  const { error } = await admin.rpc("enqueue_order_outbox_events", {
     p_events: jobs,
   });
   if (error) {
