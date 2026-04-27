@@ -228,18 +228,6 @@ Deno.serve(async (req) => {
         return json({ error: "Guest checkout requires phone and location" }, 400);
       }
       customerPhone = String(guestPhone).trim();
-      const now = new Date();
-      const dayStartUtc = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 0, 0, 0, 0)).toISOString();
-      const dayEndUtc = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 23, 59, 59, 999)).toISOString();
-      const { count } = await admin
-        .from("orders")
-        .select("id", { count: "exact", head: true })
-        .eq("guest_device_id", guestDeviceId)
-        .gte("created_at", dayStartUtc)
-        .lte("created_at", dayEndUtc);
-      if ((count ?? 0) >= 2) {
-        return json({ error: "Guest daily limit reached (2 orders)" }, 429);
-      }
     }
 
     if (requestId) {
