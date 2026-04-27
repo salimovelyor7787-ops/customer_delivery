@@ -70,6 +70,33 @@ as $$
   where id = p_id;
 $$;
 
+create or replace function public.enqueue_order_outbox_events(p_events jsonb)
+returns int
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  inserted_count int := 0;
+begin
+  if p_events is null or jsonb_typeof(p_events) <> 'array' or jsonb_array_length(p_events) = 0 then
+    return 0;
+  end if;
+
+  insert into public.order_events_outbox (order_id, event_type, payload)
+  select
+    (e->>'order_id')::uuid,
+    e->>'event_type',
+    coalesce(e->'payload', '{}'::jsonb)
+  from jsonb_array_elements(p_events) e
+  where e ? 'order_id'
+    and e ? 'event_type';
+
+  get diagnostics inserted_count = row_count;
+  return inserted_count;
+end;
+$$;
+
 create or replace function public.fail_order_outbox_event(
   p_id bigint,
   p_error text,
@@ -89,4 +116,5 @@ $$;
 
 grant execute on function public.claim_order_outbox_batch(int) to service_role;
 grant execute on function public.complete_order_outbox_event(bigint) to service_role;
+grant execute on function public.enqueue_order_outbox_events(jsonb) to service_role;
 grant execute on function public.fail_order_outbox_event(bigint, text, int) to service_role;

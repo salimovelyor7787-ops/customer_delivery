@@ -26,13 +26,7 @@ async function enqueueOrderSideEffects(
   orderId: string,
   context: { userId: string | null; promoCode: string | null | undefined; requestId: string | null },
 ): Promise<void> {
-  type OutboxJob = {
-    order_id: string;
-    event_type: "notification" | "analytics" | "promo_log";
-    payload: Record<string, string | null>;
-  };
-
-  const jobs: OutboxJob[] = [
+  const jobs = [
     {
       order_id: orderId,
       event_type: "notification",
@@ -52,7 +46,9 @@ async function enqueueOrderSideEffects(
     });
   }
 
-  const { error } = await admin.from("order_events_outbox").insert(jobs);
+  const { error } = await admin.rpc("enqueue_order_outbox_events", {
+    p_events: jobs,
+  });
   if (error) {
     // Queue failure should not fail checkout; we can rehydrate side effects later.
     console.error("createOrderDirect: outbox enqueue failed", error);
