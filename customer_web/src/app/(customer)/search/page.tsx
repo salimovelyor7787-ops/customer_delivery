@@ -1,6 +1,8 @@
 import { loadSearchCatalog } from "@/lib/server/load-search-catalog";
 import { SearchPageClient, type SearchPageInitialPayload } from "./search-page-client";
 
+export const dynamic = "force-dynamic";
+
 type SearchPageProps = {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
 };

@@ -2,6 +2,8 @@ import { unstable_cache } from "next/cache";
 import { loadHomeCatalog } from "@/lib/server/load-home-catalog";
 import { HomePageClient, type HomePageInitialPayload } from "./home-page-client";
 
+export const dynamic = "force-dynamic";
+
 const getHomeCatalog = unstable_cache(async () => loadHomeCatalog(), ["customer-web-home-catalog"], { revalidate: 120 });
 
 export default async function HomePage() {
