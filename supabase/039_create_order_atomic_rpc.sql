@@ -90,9 +90,23 @@ begin
     raise exception 'BAD_REQUEST: Restaurant is closed';
   end if;
 
+  create temporary table if not exists _order_input_items (
+    menu_item_id uuid,
+    quantity int,
+    selected_option_ids jsonb not null
+  ) on commit drop;
+  truncate _order_input_items;
+
+  insert into _order_input_items (menu_item_id, quantity, selected_option_ids)
+  select
+    i.menu_item_id,
+    i.quantity,
+    coalesce(i.selected_option_ids, '[]'::jsonb)
+  from jsonb_to_recordset(p_items) as i(menu_item_id uuid, quantity int, selected_option_ids jsonb);
+
   if exists (
     select 1
-    from jsonb_to_recordset(p_items) as i(menu_item_id uuid, quantity int, selected_option_ids jsonb)
+    from _order_input_items i
     where i.menu_item_id is null or coalesce(i.quantity, 0) < 1
   ) then
     raise exception 'BAD_REQUEST: Invalid line item';
@@ -103,7 +117,7 @@ begin
     select count(*)
     from (
       select distinct i.menu_item_id
-      from jsonb_to_recordset(p_items) as i(menu_item_id uuid, quantity int, selected_option_ids jsonb)
+      from _order_input_items i
     ) req
     left join public.menu_items mi
       on mi.id = req.menu_item_id
@@ -118,7 +132,7 @@ begin
   if exists (
     with req_options as (
       select i.menu_item_id, (opt.value)::uuid as option_id
-      from jsonb_to_recordset(p_items) as i(menu_item_id uuid, quantity int, selected_option_ids jsonb)
+      from _order_input_items i
       join lateral jsonb_array_elements_text(coalesce(i.selected_option_ids, '[]'::jsonb)) opt(value) on true
     )
     select 1
@@ -132,27 +146,44 @@ begin
     raise exception 'BAD_REQUEST: Option mismatch';
   end if;
 
-  -- Compute subtotal using batched joins.
-  with item_base as (
-    select i.menu_item_id, i.quantity, coalesce(i.selected_option_ids, '[]'::jsonb) as selected_option_ids, mi.price_cents
-    from jsonb_to_recordset(p_items) as i(menu_item_id uuid, quantity int, selected_option_ids jsonb)
-    join public.menu_items mi on mi.id = i.menu_item_id
-  ),
-  line_calc as (
+  -- Price lines once and reuse for subtotal + order_items insert.
+  create temporary table if not exists _order_priced_lines (
+    menu_item_id uuid not null,
+    quantity int not null,
+    unit_price_cents int not null,
+    selected_option_ids uuid[] not null
+  ) on commit drop;
+  truncate _order_priced_lines;
+
+  insert into _order_priced_lines (menu_item_id, quantity, unit_price_cents, selected_option_ids)
+  with option_totals as (
     select
-      ib.menu_item_id,
-      ib.quantity,
-      ib.price_cents + coalesce(sum(o.price_delta_cents), 0) as unit_price
-    from item_base ib
+      i.menu_item_id,
+      i.quantity,
+      i.selected_option_ids,
+      coalesce(sum(o.price_delta_cents), 0)::int as option_delta_cents
+    from _order_input_items i
     left join lateral (
       select moo.price_delta_cents
-      from jsonb_array_elements_text(ib.selected_option_ids) t(option_id)
+      from jsonb_array_elements_text(i.selected_option_ids) t(option_id)
       join public.menu_item_options moo on moo.id = (t.option_id)::uuid
     ) o on true
-    group by ib.menu_item_id, ib.quantity, ib.price_cents
+    group by i.menu_item_id, i.quantity, i.selected_option_ids
   )
-  select coalesce(sum(lc.unit_price * lc.quantity), 0)::int into v_subtotal
-  from line_calc lc;
+  select
+    ot.menu_item_id,
+    ot.quantity,
+    (mi.price_cents + ot.option_delta_cents)::int as unit_price_cents,
+    coalesce(array(
+      select (x.value)::uuid
+      from jsonb_array_elements_text(ot.selected_option_ids) x(value)
+    ), '{}'::uuid[]) as selected_option_ids
+  from option_totals ot
+  join public.menu_items mi on mi.id = ot.menu_item_id;
+
+  select coalesce(sum(pl.unit_price_cents * pl.quantity), 0)::int
+  into v_subtotal
+  from _order_priced_lines pl;
 
   v_delivery := coalesce(v_restaurant.delivery_fee_cents, 0);
   v_tax := 0;
@@ -296,35 +327,13 @@ begin
     unit_price_cents,
     selected_option_ids
   )
-  with item_base as (
-    select i.menu_item_id, i.quantity, coalesce(i.selected_option_ids, '[]'::jsonb) as selected_option_ids, mi.price_cents
-    from jsonb_to_recordset(p_items) as i(menu_item_id uuid, quantity int, selected_option_ids jsonb)
-    join public.menu_items mi on mi.id = i.menu_item_id
-  ),
-  priced as (
-    select
-      ib.menu_item_id,
-      ib.quantity,
-      ib.selected_option_ids,
-      ib.price_cents + coalesce(sum(o.price_delta_cents), 0) as unit_price
-    from item_base ib
-    left join lateral (
-      select moo.price_delta_cents
-      from jsonb_array_elements_text(ib.selected_option_ids) t(option_id)
-      join public.menu_item_options moo on moo.id = (t.option_id)::uuid
-    ) o on true
-    group by ib.menu_item_id, ib.quantity, ib.selected_option_ids, ib.price_cents
-  )
   select
     v_existing_id,
-    p.menu_item_id,
-    p.quantity,
-    p.unit_price::int,
-    coalesce(array(
-      select (x.value)::uuid
-      from jsonb_array_elements_text(p.selected_option_ids) x(value)
-    ), '{}'::uuid[])
-  from priced p;
+    pl.menu_item_id,
+    pl.quantity,
+    pl.unit_price_cents,
+    pl.selected_option_ids
+  from _order_priced_lines pl;
 
   order_id := v_existing_id;
   total_cents := v_total;
