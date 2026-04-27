@@ -1,0 +1,75 @@
+import { Router } from "express";
+import { z } from "zod";
+import { authOptional, type AuthRequest } from "../auth/auth.middleware.js";
+import { OrdersService } from "./orders.service.js";
+import { HttpError } from "../../common/http-error.js";
+import { orderRateLimit, requestDedupe } from "./orders.guard.js";
+import { metrics } from "../../common/metrics.js";
+
+const createOrderSchema = z.object({
+  restaurant_id: z.string().uuid(),
+  address_id: z.string().uuid().nullable(),
+  payment_method: z.string().min(1),
+  guest_phone: z.string().nullable().optional(),
+  guest_lat: z.number().nullable().optional(),
+  guest_lng: z.number().nullable().optional(),
+  guest_device_id: z.string().nullable().optional(),
+  request_id: z.string().min(1),
+  promo_code: z.string().nullable().optional(),
+  items: z
+    .array(
+      z.object({
+        menu_item_id: z.string().uuid(),
+        quantity: z.number().int().min(1),
+        selected_option_ids: z.array(z.string().uuid()).default([]),
+      }),
+    )
+    .min(1),
+});
+
+export function createOrdersRouter() {
+  const router = Router();
+  const service = new OrdersService();
+
+  router.post("/", authOptional, orderRateLimit, requestDedupe, async (req: AuthRequest, res, next) => {
+    try {
+      metrics.ordersPostTotal += 1;
+      const parsed = createOrderSchema.parse(req.body);
+      const result = await service.createOrder(parsed, req.user ? { id: req.user.sub, role: req.user.role, phone: req.user.phone } : null);
+      res.status(200).json(result);
+    } catch (error) {
+      metrics.ordersPostErrors += 1;
+      next(error);
+    }
+  });
+
+  router.get("/", async (req, res, next) => {
+    try {
+      const limit = Number(req.query.limit || 50);
+      const result = await service.getOrders(limit);
+      res.json(result);
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  router.get("/:id", async (req, res, next) => {
+    try {
+      const id = z.string().uuid().parse(req.params.id);
+      const result = await service.getOrderById(id);
+      res.json(result);
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  router.use((error: unknown, _req: unknown, res: any, _next: any) => {
+    if (error instanceof HttpError) {
+      res.status(error.status).json({ error: error.message, details: error.details ?? null });
+      return;
+    }
+    res.status(500).json({ error: "Internal server error" });
+  });
+
+  return router;
+}
