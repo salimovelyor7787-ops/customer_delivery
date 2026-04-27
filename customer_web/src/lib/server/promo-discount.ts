@@ -95,14 +95,16 @@ export async function resolveOrderPromo(
     if (!input.userId) {
       return { ok: false, status: 400, body: { error: "This promo requires a signed-in account" } };
     }
-    const { count, error: cErr } = await admin
+    const { data: firstOrderRow, error: cErr } = await admin
       .from("orders")
-      .select("id", { count: "exact", head: true })
-      .eq("user_id", input.userId);
+      .select("id")
+      .eq("user_id", input.userId)
+      .limit(1)
+      .maybeSingle();
     if (cErr) {
       return { ok: false, status: 500, body: { error: "Could not validate promo" } };
     }
-    if ((count ?? 0) > 0) {
+    if (firstOrderRow?.id) {
       return { ok: false, status: 400, body: { error: "Promo only for first order" } };
     }
   }

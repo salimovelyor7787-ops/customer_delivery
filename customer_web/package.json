@@ -11,7 +11,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "outbox:process": "node ./scripts/process-order-outbox.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.10.2",

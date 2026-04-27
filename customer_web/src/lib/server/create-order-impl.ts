@@ -1,5 +1,4 @@
-import { createClient, type SupabaseClient } from "@supabase/supabase-js";
-import { resolveOrderPromo } from "@/lib/server/promo-discount";
+import { createClient } from "@supabase/supabase-js";
 
 export type CreateOrderBody = {
   restaurant_id: string;
@@ -18,102 +17,40 @@ export type CreateOrderBody = {
   }>;
 };
 
-type LineItem = CreateOrderBody["items"][number];
-
-type PriceOk = {
-  ok: true;
-  subtotal_cents: number;
-  delivery_fee_cents: number;
-  tax_cents: number;
-  total_cents: number;
-  is_open: boolean;
-};
-
-type PriceErr = { ok: false; status: number; body: Record<string, unknown> };
-
 function generatePickupCode(): string {
   return Math.floor(Math.random() * 10000).toString().padStart(4, "0");
 }
 
-async function calculateOrderPrice(admin: SupabaseClient, restaurantId: string, items: LineItem[]): Promise<PriceOk | PriceErr> {
-  const { data: restaurant, error: rErr } = await admin
-    .from("restaurants")
-    .select("id, delivery_fee_cents, min_order_cents, is_open")
-    .eq("id", restaurantId)
-    .maybeSingle();
-
-  if (rErr || !restaurant) {
-    return { ok: false, status: 404, body: { error: "Restaurant not found" } };
+async function enqueueOrderSideEffects(
+  admin: ReturnType<typeof createClient>,
+  orderId: string,
+  context: { userId: string | null; promoCode: string | null | undefined; requestId: string | null },
+): Promise<void> {
+  const jobs = [
+    {
+      order_id: orderId,
+      event_type: "notification",
+      payload: { order_id: orderId, user_id: context.userId },
+    },
+    {
+      order_id: orderId,
+      event_type: "analytics",
+      payload: { order_id: orderId, request_id: context.requestId },
+    },
+  ];
+  if (context.promoCode && context.promoCode.trim().length > 0) {
+    jobs.push({
+      order_id: orderId,
+      event_type: "promo_log",
+      payload: { order_id: orderId, promo_code: context.promoCode.trim().toUpperCase() },
+    });
   }
 
-  let subtotal = 0;
-
-  for (const line of items) {
-    if (!line.menu_item_id || line.quantity < 1) {
-      return { ok: false, status: 400, body: { error: "Invalid line item" } };
-    }
-
-    const { data: menuItem, error: mErr } = await admin
-      .from("menu_items")
-      .select("id, price_cents, restaurant_id, is_available")
-      .eq("id", line.menu_item_id)
-      .maybeSingle();
-
-    if (mErr || !menuItem || menuItem.restaurant_id !== restaurantId) {
-      return { ok: false, status: 400, body: { error: "Invalid menu item" } };
-    }
-    if (!menuItem.is_available) {
-      return { ok: false, status: 400, body: { error: `Item unavailable: ${line.menu_item_id}` } };
-    }
-
-    let lineUnit = menuItem.price_cents as number;
-
-    if (line.selected_option_ids?.length) {
-      const { data: opts, error: oErr } = await admin
-        .from("menu_item_options")
-        .select("id, price_delta_cents, menu_item_id")
-        .in("id", line.selected_option_ids);
-
-      if (oErr || !opts || opts.length !== line.selected_option_ids.length) {
-        return { ok: false, status: 400, body: { error: "Invalid options" } };
-      }
-      for (const o of opts) {
-        if (o.menu_item_id !== line.menu_item_id) {
-          return { ok: false, status: 400, body: { error: "Option mismatch" } };
-        }
-        lineUnit += o.price_delta_cents as number;
-      }
-    }
-
-    subtotal += lineUnit * line.quantity;
+  const { error } = await admin.from("order_events_outbox").insert(jobs);
+  if (error) {
+    // Queue failure should not fail checkout; we can rehydrate side effects later.
+    console.error("createOrderDirect: outbox enqueue failed", error);
   }
-
-  const delivery = restaurant.delivery_fee_cents as number;
-  const minOrder = restaurant.min_order_cents as number;
-
-  if (subtotal < minOrder) {
-    return {
-      ok: false,
-      status: 400,
-      body: {
-        error: "Below minimum order",
-        min_order_cents: minOrder,
-        subtotal_cents: subtotal,
-      },
-    };
-  }
-
-  const tax = Math.round(subtotal * 0);
-  const total = subtotal + delivery + tax;
-
-  return {
-    ok: true,
-    subtotal_cents: subtotal,
-    delivery_fee_cents: delivery,
-    tax_cents: tax,
-    total_cents: total,
-    is_open: Boolean(restaurant.is_open),
-  };
 }
 
 /**
@@ -168,127 +105,53 @@ export async function createOrderDirect(params: {
   const admin = createClient(supabaseUrl, serviceRoleKey, {
     auth: { persistSession: false, autoRefreshToken: false },
   });
+  const normalizedItems = items.map((line) => ({
+    menu_item_id: line.menu_item_id,
+    quantity: line.quantity,
+    selected_option_ids: Array.isArray(line.selected_option_ids) ? line.selected_option_ids : [],
+  }));
 
-  let customerPhone: string | null = String(guestPhone).trim();
-
-  if (uid) {
-    if (guestLat == null || guestLng == null) {
-      return { ok: false, status: 400, body: { error: "Location is required" } };
-    }
-    const { data: profile } = await admin.from("profiles").select("role,phone").eq("id", uid).maybeSingle();
-    if (!profile || profile.role !== "customer") {
-      return { ok: false, status: 403, body: { error: "Forbidden" } };
-    }
-    if (!customerPhone) {
-      customerPhone = (profile.phone as string | null) ?? null;
-    }
-    if (addressId) {
-      const { data: address } = await admin.from("addresses").select("id, user_id").eq("id", addressId).maybeSingle();
-      if (!address || address.user_id !== uid) {
-        return { ok: false, status: 400, body: { error: "Invalid address" } };
-      }
-    }
-  } else {
-    if (guestLat == null || guestLng == null || !guestDeviceId) {
-      return { ok: false, status: 400, body: { error: "Guest checkout requires phone and location" } };
-    }
-    customerPhone = String(guestPhone).trim();
-  }
-
-  if (requestId) {
-    const lookup = admin.from("orders").select("id").eq("client_request_id", requestId);
-    const { data: existingOrder } = uid
-      ? await lookup.eq("user_id", uid).maybeSingle()
-      : await lookup.eq("guest_device_id", guestDeviceId ?? "__missing__").maybeSingle();
-    if (existingOrder?.id) {
-      return { ok: true, order_id: existingOrder.id as string };
-    }
-  }
-
-  const priced = await calculateOrderPrice(admin, restaurantId, items);
-  if (!priced.ok) {
-    return { ok: false, status: priced.status, body: priced.body };
-  }
-
-  if (!priced.is_open) {
-    return { ok: false, status: 400, body: { error: "Restaurant is closed" } };
-  }
-
-  const promoRes = await resolveOrderPromo(admin, {
-    promoCodeRaw: promoCode ?? undefined,
-    restaurantId,
-    userId: uid,
-    subtotalCents: priced.subtotal_cents,
-    deliveryFeeCents: priced.delivery_fee_cents,
-    taxCents: priced.tax_cents,
+  const { data, error } = await admin.rpc("create_order_atomic", {
+    p_user_id: uid,
+    p_restaurant_id: restaurantId,
+    p_address_id: addressId,
+    p_payment_method: paymentMethod,
+    p_guest_phone: String(guestPhone).trim(),
+    p_guest_lat: guestLat ?? null,
+    p_guest_lng: guestLng ?? null,
+    p_guest_device_id: guestDeviceId ?? null,
+    p_promo_code: promoCode ?? null,
+    p_client_request_id: requestId,
+    p_pickup_code: generatePickupCode(),
+    p_items: normalizedItems,
   });
-  if (!promoRes.ok) {
-    return { ok: false, status: promoRes.status, body: promoRes.body };
-  }
 
-  const { data: orderRow, error: orderErr } = await admin
-    .from("orders")
-    .insert({
-      user_id: uid,
-      restaurant_id: restaurantId,
-      address_id: addressId,
-      status: "placed",
-      payment_method: paymentMethod,
-      guest_phone: String(guestPhone).trim(),
-      customer_phone: customerPhone,
-      guest_lat: guestLat ?? null,
-      guest_lng: guestLng ?? null,
-      guest_device_id: uid ? null : guestDeviceId ?? null,
-      subtotal_cents: priced.subtotal_cents,
-      delivery_fee_cents: priced.delivery_fee_cents,
-      tax_cents: priced.tax_cents,
-      total_cents: promoRes.totalCents,
-      promo_code: promoRes.promoCodeStored,
-      promocode_id: promoRes.promocodeId,
-      promo_discount_cents: promoRes.promoDiscountCents,
-      client_request_id: requestId,
-      pickup_code: generatePickupCode(),
-    })
-    .select("id")
-    .single();
-
-  if (orderErr || !orderRow) {
-    if (requestId && orderErr?.code === "23505") {
-      const lookup = admin.from("orders").select("id").eq("client_request_id", requestId);
-      const { data: existingOrder } = uid
-        ? await lookup.eq("user_id", uid).maybeSingle()
-        : await lookup.eq("guest_device_id", guestDeviceId ?? "__missing__").maybeSingle();
-      if (existingOrder?.id) {
-        return { ok: true, order_id: existingOrder.id as string };
-      }
+  if (error) {
+    const message = error.message || "Could not create order";
+    if (message.startsWith("BAD_REQUEST: ")) {
+      return { ok: false, status: 400, body: { error: message.replace("BAD_REQUEST: ", "") } };
     }
-    console.error(orderErr);
+    if (message.startsWith("FORBIDDEN: ")) {
+      return { ok: false, status: 403, body: { error: message.replace("FORBIDDEN: ", "") } };
+    }
+    if (message.startsWith("NOT_FOUND: ")) {
+      return { ok: false, status: 404, body: { error: message.replace("NOT_FOUND: ", "") } };
+    }
+    console.error("createOrderDirect RPC error", error);
     return { ok: false, status: 500, body: { error: "Could not create order" } };
   }
 
-  const orderId = orderRow.id as string;
-
-  for (const line of items) {
-    const { data: menuItem } = await admin.from("menu_items").select("id, price_cents").eq("id", line.menu_item_id).maybeSingle();
-
-    if (!menuItem) continue;
-
-    let unit = menuItem.price_cents as number;
-    if (line.selected_option_ids?.length) {
-      const { data: opts } = await admin.from("menu_item_options").select("price_delta_cents").in("id", line.selected_option_ids);
-      for (const o of opts ?? []) {
-        unit += o.price_delta_cents as number;
-      }
-    }
-
-    await admin.from("order_items").insert({
-      order_id: orderId,
-      menu_item_id: line.menu_item_id,
-      quantity: line.quantity,
-      unit_price_cents: unit,
-      selected_option_ids: line.selected_option_ids ?? [],
-    });
+  const row = Array.isArray(data) ? data[0] : null;
+  const orderId = row?.order_id as string | undefined;
+  if (!orderId) {
+    return { ok: false, status: 500, body: { error: "Could not create order" } };
   }
+
+  await enqueueOrderSideEffects(admin, orderId, {
+    userId: uid,
+    promoCode,
+    requestId,
+  });
 
   return { ok: true, order_id: orderId };
 }
