@@ -57,7 +57,7 @@ export class OrdersService {
     }
 
     const idempotent = await client.query<{ id: string }>(
-      "select id from orders where client_request_id = $1 limit 1",
+      "select id from orders where client_request_id = $1::text limit 1",
       [reqId],
     );
     if (idempotent.rowCount) return { order_id: idempotent.rows[0].id, idempotent: true };
@@ -114,7 +114,7 @@ export class OrdersService {
         subtotal_cents, delivery_fee_cents, tax_cents, total_cents,
         promo_code, promocode_id, promo_discount_cents, client_request_id, pickup_code
       ) values (
-        $1::uuid,$2::uuid,$3::uuid,'placed',$4,$5,$6,$7,$8,$9,$10,$11,0,$12,$13,$14::uuid,$15,$16,$17
+        $1::uuid,$2::uuid,$3::uuid,'placed',$4::text,$5::text,$6::text,$7::double precision,$8::double precision,$9::text,$10::int,$11::int,0,$12::int,$13::text,$14::uuid,$15::int,$16::text,$17::text
       ) returning id`,
       [
         actor?.id || null,
@@ -143,7 +143,7 @@ export class OrdersService {
     pricedLines.forEach((line, idx) => {
       const base = idx * 5;
       values.push(orderId, line.menu_item_id, line.quantity, line.unit_price_cents, line.selected_option_ids);
-      tuples.push(`($${base + 1},$${base + 2},$${base + 3},$${base + 4},$${base + 5}::uuid[])`);
+      tuples.push(`($${base + 1}::uuid,$${base + 2}::uuid,$${base + 3}::int,$${base + 4}::int,$${base + 5}::uuid[])`);
     });
     await client.query(
       `insert into order_items (order_id, menu_item_id, quantity, unit_price_cents, selected_option_ids)
@@ -155,7 +155,7 @@ export class OrdersService {
       `insert into order_events_outbox (order_id, event_type, payload)
        values ($1::uuid,'notification',jsonb_build_object('order_id',$1::uuid)),
               ($1::uuid,'telegram',jsonb_build_object('order_id',$1::uuid)),
-              ($1::uuid,'analytics',jsonb_build_object('order_id',$1::uuid,'request_id',$2))`,
+              ($1::uuid,'analytics',jsonb_build_object('order_id',$1::uuid,'request_id',$2::text))`,
       [orderId, reqId],
     );
 
