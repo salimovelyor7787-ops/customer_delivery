@@ -9,15 +9,39 @@ function generatePickupCode() {
   return Math.floor(Math.random() * 10000).toString().padStart(4, "0");
 }
 
+function isUuid(value: string): boolean {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
+}
+
 export class OrdersService {
   async createOrder(input: CreateOrderInput, actor: Actor) {
-    if (!input.restaurant_id || !input.payment_method || input.items.length === 0) {
-      throw new HttpError(400, "Invalid payload");
+    try {
+      if (!input.restaurant_id) throw new HttpError(400, "restaurant_id is required");
+      if (!isUuid(input.restaurant_id)) throw new HttpError(400, "restaurant_id must be a valid UUID");
+      if (!input.payment_method || input.payment_method.trim().length === 0) {
+        throw new HttpError(400, "payment_method is required");
+      }
+      if (!Array.isArray(input.items) || input.items.length === 0) {
+        throw new HttpError(400, "items must be a non-empty array");
+      }
+      if (!input.request_id || input.request_id.trim().length === 0 || input.request_id.length > 120) {
+        throw new HttpError(400, "request_id is required");
+      }
+      if (input.address_id !== null && !isUuid(input.address_id)) {
+        throw new HttpError(400, "address_id must be a valid UUID or null");
+      }
+      return await withTransaction(async (client) => this.createOrderTx(client, input, actor));
+    } catch (error) {
+      const requestId = typeof input.request_id === "string" ? input.request_id : null;
+      console.error("[orders.service.createOrder] failed", {
+        request_id: requestId,
+        restaurant_id: input.restaurant_id ?? null,
+        actor_id: actor?.id ?? null,
+        error,
+        stack: error instanceof Error ? error.stack : undefined,
+      });
+      throw error;
     }
-    if (!input.request_id || input.request_id.trim().length === 0 || input.request_id.length > 120) {
-      throw new HttpError(400, "request_id is required");
-    }
-    return withTransaction(async (client) => this.createOrderTx(client, input, actor));
   }
 
   private async createOrderTx(client: PoolClient, input: CreateOrderInput, actor: Actor) {
@@ -56,6 +80,9 @@ export class OrdersService {
     }
 
     let addressId: string | null = input.address_id;
+    if (actor && !addressId) {
+      throw new HttpError(400, "address_id is required for authenticated user");
+    }
     if (actor && addressId) {
       const addr = await client.query(
         "select id from addresses where id = $1 and user_id = $2 limit 1",
@@ -136,6 +163,12 @@ export class OrdersService {
   }
 
   private async priceLines(client: PoolClient, restaurantId: string, items: CreateOrderItem[]) {
+    for (const line of items) {
+      if (!line.menu_item_id) throw new HttpError(400, "menu_item_id is required");
+      if (!isUuid(line.menu_item_id)) throw new HttpError(400, "menu_item_id must be a valid UUID");
+      if (!Number.isInteger(line.quantity) || line.quantity < 1) throw new HttpError(400, "quantity must be >= 1");
+    }
+
     const itemIds = [...new Set(items.map((x) => x.menu_item_id))];
     const menuRes = await client.query<{
       id: string;
