@@ -52,7 +52,7 @@ export class OrdersService {
         const idempotent = await client.query("select id from orders where client_request_id = $1 limit 1", [reqId]);
         if (idempotent.rowCount)
             return { order_id: idempotent.rows[0].id, idempotent: true };
-        const restaurantRes = await client.query("select id, is_open, delivery_fee_cents, min_order_cents from restaurants where id = $1 limit 1", [input.restaurant_id]);
+        const restaurantRes = await client.query("select id, is_open, delivery_fee_cents, min_order_cents from restaurants where id = $1::uuid limit 1", [input.restaurant_id]);
         if (!restaurantRes.rowCount)
             throw new HttpError(404, "Restaurant not found");
         const restaurant = restaurantRes.rows[0];
@@ -123,9 +123,9 @@ export class OrdersService {
         await client.query(`insert into order_items (order_id, menu_item_id, quantity, unit_price_cents, selected_option_ids)
        values ${tuples.join(",")}`, values);
         await client.query(`insert into order_events_outbox (order_id, event_type, payload)
-       values ($1,'notification',jsonb_build_object('order_id',$1)),
-              ($1,'telegram',jsonb_build_object('order_id',$1)),
-              ($1,'analytics',jsonb_build_object('order_id',$1,'request_id',$2))`, [orderId, reqId]);
+       values ($1::uuid,'notification',jsonb_build_object('order_id',$1::uuid)),
+              ($1::uuid,'telegram',jsonb_build_object('order_id',$1::uuid)),
+              ($1::uuid,'analytics',jsonb_build_object('order_id',$1::uuid,'request_id',$2))`, [orderId, reqId]);
         return { order_id: orderId, total_cents: total, idempotent: false };
     }
     async priceLines(client, restaurantId, items) {

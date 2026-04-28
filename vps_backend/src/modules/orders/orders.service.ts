@@ -68,7 +68,7 @@ export class OrdersService {
       delivery_fee_cents: number;
       min_order_cents: number;
     }>(
-      "select id, is_open, delivery_fee_cents, min_order_cents from restaurants where id = $1 limit 1",
+      "select id, is_open, delivery_fee_cents, min_order_cents from restaurants where id = $1::uuid limit 1",
       [input.restaurant_id],
     );
     if (!restaurantRes.rowCount) throw new HttpError(404, "Restaurant not found");
@@ -153,9 +153,9 @@ export class OrdersService {
 
     await client.query(
       `insert into order_events_outbox (order_id, event_type, payload)
-       values ($1,'notification',jsonb_build_object('order_id',$1)),
-              ($1,'telegram',jsonb_build_object('order_id',$1)),
-              ($1,'analytics',jsonb_build_object('order_id',$1,'request_id',$2))`,
+       values ($1::uuid,'notification',jsonb_build_object('order_id',$1::uuid)),
+              ($1::uuid,'telegram',jsonb_build_object('order_id',$1::uuid)),
+              ($1::uuid,'analytics',jsonb_build_object('order_id',$1::uuid,'request_id',$2))`,
       [orderId, reqId],
     );
 
