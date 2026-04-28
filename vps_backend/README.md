@@ -78,6 +78,7 @@ Configured in `src/db/pool.ts`:
 - Rate limit: max `5` requests / `10s` (per user or per IP).
 - Deduplication: temporary lock by `request_id` (`15s` TTL) to stop duplicate submits.
 - DB idempotency remains final safety via unique `client_request_id` index.
+- Toggle limiter with `ENABLE_RATE_LIMIT=true|false` (default: `true` in `.env.example`).
 
 ## Queue hardening
 - BullMQ attempts: `5`

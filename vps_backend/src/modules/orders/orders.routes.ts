@@ -27,21 +27,29 @@ const createOrderSchema = z.object({
     .min(1),
 });
 
+const enableRateLimit = process.env.ENABLE_RATE_LIMIT === "true";
+
 export function createOrdersRouter() {
   const router = Router();
   const service = new OrdersService();
 
-  router.post("/", authOptional, orderRateLimit, requestDedupe, async (req: AuthRequest, res, next) => {
-    try {
-      metrics.ordersPostTotal += 1;
-      const parsed = createOrderSchema.parse(req.body);
-      const result = await service.createOrder(parsed, req.user ? { id: req.user.sub, role: req.user.role, phone: req.user.phone } : null);
-      res.status(200).json(result);
-    } catch (error) {
-      metrics.ordersPostErrors += 1;
-      next(error);
-    }
-  });
+  router.post(
+    "/",
+    authOptional,
+    ...(enableRateLimit ? [orderRateLimit] : []),
+    requestDedupe,
+    async (req: AuthRequest, res, next) => {
+      try {
+        metrics.ordersPostTotal += 1;
+        const parsed = createOrderSchema.parse(req.body);
+        const result = await service.createOrder(parsed, req.user ? { id: req.user.sub, role: req.user.role, phone: req.user.phone } : null);
+        res.status(200).json(result);
+      } catch (error) {
+        metrics.ordersPostErrors += 1;
+        next(error);
+      }
+    },
+  );
 
   router.get("/", async (req, res, next) => {
     try {

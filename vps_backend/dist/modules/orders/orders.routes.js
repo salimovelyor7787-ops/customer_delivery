@@ -23,10 +23,11 @@ const createOrderSchema = z.object({
     }))
         .min(1),
 });
+const enableRateLimit = process.env.ENABLE_RATE_LIMIT === "true";
 export function createOrdersRouter() {
     const router = Router();
     const service = new OrdersService();
-    router.post("/", authOptional, orderRateLimit, requestDedupe, async (req, res, next) => {
+    router.post("/", authOptional, ...(enableRateLimit ? [orderRateLimit] : []), requestDedupe, async (req, res, next) => {
         try {
             metrics.ordersPostTotal += 1;
             const parsed = createOrderSchema.parse(req.body);
