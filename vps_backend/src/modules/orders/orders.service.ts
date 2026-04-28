@@ -85,7 +85,7 @@ export class OrdersService {
     }
     if (actor && addressId) {
       const addr = await client.query(
-        "select id from addresses where id = $1 and user_id = $2 limit 1",
+        "select id from addresses where id = $1::uuid and user_id = $2::uuid limit 1",
         [addressId, actor.id],
       );
       if (!addr.rowCount) throw new HttpError(400, "Invalid address");
@@ -114,7 +114,7 @@ export class OrdersService {
         subtotal_cents, delivery_fee_cents, tax_cents, total_cents,
         promo_code, promocode_id, promo_discount_cents, client_request_id, pickup_code
       ) values (
-        $1,$2,$3,'placed',$4,$5,$6,$7,$8,$9,$10,$11,0,$12,$13,$14,$15,$16,$17
+        $1::uuid,$2::uuid,$3::uuid,'placed',$4,$5,$6,$7,$8,$9,$10,$11,0,$12,$13,$14::uuid,$15,$16,$17
       ) returning id`,
       [
         actor?.id || null,
