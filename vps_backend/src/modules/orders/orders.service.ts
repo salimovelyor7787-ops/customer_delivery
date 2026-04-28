@@ -232,7 +232,7 @@ export class OrdersService {
       active: boolean;
     }>(
       `select id, discount, discount_fixed_cents, restaurant_id, audience, min_subtotal_cents, expires_at, active
-       from promocodes where code = $1 and active = true limit 1`,
+       from promocodes where code = $1::text and active = true limit 1`,
       [code],
     );
     if (!promoRes.rowCount) throw new HttpError(400, "Invalid promo code");
@@ -242,7 +242,7 @@ export class OrdersService {
     if (promo.min_subtotal_cents > args.subtotal) throw new HttpError(400, "Order subtotal below promo minimum");
     if (promo.audience === "first_order") {
       if (!args.userId) throw new HttpError(400, "Promo requires account");
-      const firstOrder = await client.query("select id from orders where user_id = $1 limit 1", [args.userId]);
+      const firstOrder = await client.query("select id from orders where user_id = $1::uuid limit 1", [args.userId]);
       if (firstOrder.rowCount) throw new HttpError(400, "Promo only for first order");
     }
     const discount =
@@ -255,7 +255,7 @@ export class OrdersService {
   async getOrders(limit = 50) {
     const res = await pgPool.query(
       `select id, status, total_cents, restaurant_id, user_id, courier_id, created_at
-       from orders order by created_at desc limit $1`,
+       from orders order by created_at desc limit $1::int`,
       [Math.max(1, Math.min(limit, 200))],
     );
     return res.rows;
@@ -264,7 +264,7 @@ export class OrdersService {
   async getOrderById(id: string) {
     const orderRes = await pgPool.query(
       `select id, status, total_cents, subtotal_cents, delivery_fee_cents, tax_cents, created_at
-       from orders where id = $1 limit 1`,
+       from orders where id = $1::uuid limit 1`,
       [id],
     );
     if (!orderRes.rowCount) throw new HttpError(404, "Order not found");
