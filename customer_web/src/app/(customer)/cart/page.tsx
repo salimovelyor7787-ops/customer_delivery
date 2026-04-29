@@ -150,7 +150,7 @@ export default function CartPage() {
               />
             </label>
             <p className="mb-3 text-lg font-semibold">Jami: {(totalCents / 100).toFixed(0)} so&apos;m</p>
-            <Link href="/checkout" className="inline-flex w-full justify-center rounded-lg bg-zinc-900 px-4 py-2.5 text-center text-white sm:w-auto">Buyurtma berish</Link>
+            <Link href="/checkout" className="inline-flex w-full justify-center rounded-lg bg-zinc-900 px-4 py-2.5 text-center text-white sm:w-auto">Buyurtmani rasmiylashtirish</Link>
           </div>
         ) : null}
       </div>

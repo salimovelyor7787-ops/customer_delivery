@@ -289,7 +289,7 @@ export default function CheckoutPage() {
         </form>
       </div>
 
-      <div className="fixed inset-x-0 bottom-0 z-30 border-t border-zinc-200 bg-white/95 px-4 pb-[max(env(safe-area-inset-bottom),12px)] pt-3 backdrop-blur">
+      <div className="fixed inset-x-0 bottom-[74px] z-[60] px-4 pb-[max(env(safe-area-inset-bottom),10px)] pt-2">
         <div className="mx-auto w-full max-w-md">
           <button
             type="button"
