@@ -16,9 +16,24 @@ function getClientIp(req: Request): string {
 }
 
 export async function enforceIpRateLimit(req: Request, keyPrefix: string, limitPerMinute = 20): Promise<boolean> {
+  return enforceRateLimit(req, keyPrefix, limitPerMinute);
+}
+
+export async function enforceRateLimit(
+  req: Request,
+  keyPrefix: string,
+  limitPerMinute = 20,
+  identity?: { userId?: string | null; guestDeviceId?: string | null },
+): Promise<boolean> {
   if (!redis) return true;
-  const ip = getClientIp(req);
-  const key = `${keyPrefix}:${ip}`;
+  const userId = identity?.userId?.trim();
+  const guestDeviceId = identity?.guestDeviceId?.trim();
+  const bucket = userId
+    ? `user:${userId}`
+    : guestDeviceId
+      ? `guest:${guestDeviceId}`
+      : `ip:${getClientIp(req)}`;
+  const key = `${keyPrefix}:${bucket}`;
 
   try {
     const count = await redis.incr(key);

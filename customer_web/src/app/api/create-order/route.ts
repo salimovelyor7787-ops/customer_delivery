@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { createOrderDirect, isEdgeFunctionNotFound, type CreateOrderBody } from "@/lib/server/create-order-impl";
 import { redis } from "@/lib/redis";
-import { enforceIpRateLimit } from "@/lib/server/rate-limit";
+import { enforceRateLimit } from "@/lib/server/rate-limit";
 import { createSupabaseServerClient } from "@/lib/supabase-server";
 
 /**
@@ -16,17 +16,15 @@ export async function POST(req: Request) {
   let directMs = 0;
   let edgeMs = 0;
   let dbMs = 0;
+  const logEvent = (level: "info" | "warn" | "error", event: Record<string, unknown>) => {
+    console[level](JSON.stringify({ scope: "api/create-order", traceId, ...event }));
+  };
 
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
   if (!supabaseUrl || !anonKey) {
-    console.error("[create-order]", { traceId, stage, error: "missing_supabase_env" });
+    logEvent("error", { stage, error: "missing_supabase_env" });
     return NextResponse.json({ error: "Server misconfigured: missing Supabase env" }, { status: 500 });
-  }
-
-  const allowed = await enforceIpRateLimit(req, "rl:create-order", 5000);
-  if (!allowed) {
-    return NextResponse.json({ error: "Too many requests" }, { status: 429 });
   }
 
   let body: unknown;
@@ -34,7 +32,7 @@ export async function POST(req: Request) {
     stage = "parse_json";
     body = await req.json();
   } catch {
-    console.warn("[create-order]", { traceId, stage, error: "invalid_json" });
+    logEvent("warn", { stage, error: "invalid_json" });
     return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
   }
 
@@ -68,6 +66,13 @@ export async function POST(req: Request) {
     data: { session },
   } = await supabase.auth.getSession();
   sessionMs = Date.now() - sessionStartedAt;
+  const allowed = await enforceRateLimit(req, "rl:create-order", 20, {
+    userId: session?.user?.id ?? null,
+    guestDeviceId: payload.guest_device_id ?? null,
+  });
+  if (!allowed) {
+    return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+  }
   // Do not trust incoming Authorization header from browsers/proxies.
   // Some environments inject non-Supabase JWTs (e.g. ES256), which breaks
   // Supabase auth checks for create_order.
@@ -99,7 +104,7 @@ export async function POST(req: Request) {
           // Ignore Redis write errors.
         }
       }
-      console.info("[create-order]", { traceId, mode: "direct", status: 200, sessionMs, dbMs, directMs, totalMs });
+      logEvent("info", { mode: "direct", status: 200, sessionMs, dbMs, directMs, totalMs });
       return NextResponse.json({ order_id: direct.order_id }, { status: 200 });
     }
     if (redis && idemKey && idemLocked) {
@@ -109,16 +114,7 @@ export async function POST(req: Request) {
         // Ignore Redis delete errors.
       }
     }
-    console.warn("[create-order]", {
-      traceId,
-      mode: "direct",
-      status: direct.status,
-      sessionMs,
-      dbMs,
-      directMs,
-      totalMs,
-      body: direct.body,
-    });
+    logEvent("warn", { mode: "direct", status: direct.status, sessionMs, dbMs, directMs, totalMs, body: direct.body });
     return NextResponse.json(direct.body, { status: direct.status });
   }
 
@@ -154,8 +150,7 @@ export async function POST(req: Request) {
       }
     }
     const totalMs = Date.now() - startedAt;
-    console.error("[create-order]", {
-      traceId,
+    logEvent("error", {
       stage,
       mode: "edge",
       status: aborted ? 504 : 502,
@@ -194,15 +189,7 @@ export async function POST(req: Request) {
       }
     }
     const totalMs = Date.now() - startedAt;
-    console.info("[create-order]", {
-      traceId,
-      mode: "edge",
-      status: upstream.status,
-      sessionMs,
-      dbMs,
-      edgeMs,
-      totalMs,
-    });
+    logEvent("info", { mode: "edge", status: upstream.status, sessionMs, dbMs, edgeMs, totalMs });
     return NextResponse.json(parsed, { status: upstream.status });
   }
 
@@ -216,16 +203,7 @@ export async function POST(req: Request) {
       }
     }
     const totalMs = Date.now() - startedAt;
-    console.warn("[create-order]", {
-      traceId,
-      mode: "edge",
-      status: 503,
-      sessionMs,
-      dbMs,
-      edgeMs,
-      totalMs,
-      error: "edge_function_not_found",
-    });
+    logEvent("warn", { mode: "edge", status: 503, sessionMs, dbMs, edgeMs, totalMs, error: "edge_function_not_found" });
     return NextResponse.json(
       {
         error:
@@ -245,15 +223,6 @@ export async function POST(req: Request) {
     }
   }
 
-  console.warn("[create-order]", {
-    traceId,
-    mode: "edge",
-    status: upstream.status,
-    sessionMs,
-    dbMs,
-    edgeMs,
-    totalMs,
-    response: parsed,
-  });
+  logEvent("warn", { mode: "edge", status: upstream.status, sessionMs, dbMs, edgeMs, totalMs, response: parsed });
   return NextResponse.json(parsed, { status: upstream.status });
 }

@@ -1,10 +1,11 @@
 import { NextResponse } from "next/server";
 import { createSupabasePublicServerClient } from "@/lib/server/supabase-public";
-import { enforceIpRateLimit } from "@/lib/server/rate-limit";
+import { enforceRateLimit } from "@/lib/server/rate-limit";
 import { redis } from "@/lib/redis";
 
 const CACHE_ENV = process.env.VERCEL_ENV ?? process.env.NODE_ENV ?? "dev";
 const SEARCH_CACHE_TTL_SECONDS = 60;
+const SEARCH_CACHE_JITTER_SECONDS = 10;
 
 function parseLimit(raw: string | null): number {
   const value = Number(raw ?? 20);
@@ -20,9 +21,18 @@ function parseOffset(raw: string | null): number {
   return Math.floor(value);
 }
 
+function sanitizeSearchQuery(raw: string): string {
+  return raw.replace(/[%_]/g, "").trim();
+}
+
+function resolveCacheTtl(baseSeconds: number, jitterSeconds: number): number {
+  const delta = Math.floor(Math.random() * (jitterSeconds * 2 + 1)) - jitterSeconds;
+  return Math.max(1, baseSeconds + delta);
+}
+
 function buildSearchCacheKey(req: Request): string {
   const url = new URL(req.url);
-  const q = url.searchParams.get("q")?.trim() ?? "";
+  const q = sanitizeSearchQuery(url.searchParams.get("q")?.trim() ?? "");
   const limit = parseLimit(url.searchParams.get("limit"));
   const offset = parseOffset(url.searchParams.get("offset"));
   const normalizedQuery = q ? encodeURIComponent(q.toLowerCase()) : "__empty__";
@@ -30,8 +40,12 @@ function buildSearchCacheKey(req: Request): string {
 }
 
 export async function GET(req: Request) {
+  const traceId = `search-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
   try {
-    const allowed = await enforceIpRateLimit(req, "rl:search", 20);
+    const allowed = await enforceRateLimit(req, "rl:search", 20, {
+      userId: req.headers.get("x-user-id"),
+      guestDeviceId: req.headers.get("x-guest-device-id"),
+    });
     if (!allowed) {
       return NextResponse.json({ error: "Too many requests" }, { status: 429 });
     }
@@ -41,7 +55,7 @@ export async function GET(req: Request) {
       try {
         const cached = await redis.get(cacheKey);
         if (cached) {
-          console.info("[api/search]", { cache: "hit", key: cacheKey });
+          console.info(JSON.stringify({ scope: "api/search", traceId, cache: "hit", key: cacheKey, latencyMs: 0 }));
           return NextResponse.json(cached, {
             headers: {
               "Cache-Control": "public, s-maxage=120, max-age=60, stale-while-revalidate=600",
@@ -54,9 +68,10 @@ export async function GET(req: Request) {
     }
 
     const url = new URL(req.url);
-    const q = url.searchParams.get("q")?.trim() ?? "";
+    const q = sanitizeSearchQuery(url.searchParams.get("q")?.trim() ?? "");
     const limit = parseLimit(url.searchParams.get("limit"));
     const offset = parseOffset(url.searchParams.get("offset"));
+    const shouldFilterByQuery = q.length >= 2;
     const supabase = createSupabasePublicServerClient();
 
     const dbStartedAt = Date.now();
@@ -67,7 +82,7 @@ export async function GET(req: Request) {
         .select("id,service_key,title,image_url,banner_image_url,sort_order")
         .eq("is_active", true)
         .order("sort_order", { ascending: true }),
-      q
+      shouldFilterByQuery
         ? supabase
             .from("restaurants")
             .select("id,name,image_url,is_open,category_id,category_ids")
@@ -105,10 +120,21 @@ export async function GET(req: Request) {
       })),
     };
     const dbMs = Date.now() - dbStartedAt;
-    console.info("[api/search]", { cache: "miss", key: cacheKey, dbMs, q: q ? "set" : "empty", limit, offset });
+    console.info(
+      JSON.stringify({
+        scope: "api/search",
+        traceId,
+        cache: "miss",
+        key: cacheKey,
+        latencyMs: dbMs,
+        q: shouldFilterByQuery ? "set" : "empty_or_short",
+        limit,
+        offset,
+      }),
+    );
     if (redis) {
       try {
-        await redis.set(cacheKey, data, { ex: SEARCH_CACHE_TTL_SECONDS });
+        await redis.set(cacheKey, data, { ex: resolveCacheTtl(SEARCH_CACHE_TTL_SECONDS, SEARCH_CACHE_JITTER_SECONDS) });
       } catch {
         // Ignore Redis write errors and return fresh response.
       }
