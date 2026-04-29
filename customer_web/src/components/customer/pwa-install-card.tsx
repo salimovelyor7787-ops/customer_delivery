@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Download, Smartphone, X } from "lucide-react";
+import { CheckCircle2, Download, PlusSquare, Share2, Smartphone, X } from "lucide-react";
 import toast from "react-hot-toast";
 
 type BeforeInstallPromptEvent = Event & {
@@ -165,16 +165,90 @@ export function PwaInstallCard({ variant = "card" }: PwaInstallCardProps) {
 
       {showIosGuide ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/45 p-4">
-          <div className="w-full max-w-md rounded-2xl bg-white p-5 shadow-xl">
-            <h2 className="text-lg font-semibold">{"iPhone/iPad uchun o'rnatish"}</h2>
-            <p className="mt-2 text-sm text-zinc-600">
-              {safari
-                ? "Safari menyusida Share tugmasini bosing va Add to Home Screen ni tanlang."
-                : "Iltimos, sahifani Safari brauzerida oching, so'ng Share -> Add to Home Screen ni tanlang."}
-            </p>
+          <div className="w-full max-w-md rounded-3xl bg-white p-5 shadow-xl">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <h2 className="text-2xl font-semibold text-zinc-900">Ilovani o&apos;rnatish</h2>
+                <p className="mt-1 text-sm text-zinc-600">Ilovani bosh ekranga qo&apos;shing va tezroq foydalaning.</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowIosGuide(false)}
+                className="rounded-full p-2 text-zinc-500 transition hover:bg-zinc-100"
+                aria-label="Yopish"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <div className="mt-4 rounded-2xl border border-zinc-200 bg-zinc-50/70 p-4">
+              <p className="text-base font-semibold text-zinc-900">Bir necha qadamda o&apos;rnating</p>
+              <p className="mt-1 text-sm text-zinc-600">Quyidagi amallarni bajaring:</p>
+
+              <div className="mt-4 space-y-3">
+                <div className="rounded-xl border border-zinc-200 bg-white p-3">
+                  <div className="flex items-start gap-3">
+                    <span className="mt-0.5 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-violet-100 text-xs font-semibold text-violet-700">
+                      1
+                    </span>
+                    <div className="min-w-0">
+                      <p className="text-sm font-semibold text-zinc-900">Pastdagi ulashish tugmasini bosing</p>
+                      <p className="mt-1 text-sm text-zinc-600">
+                        Safari pastki panelidagi <span className="font-medium">Share</span> tugmasini bosing.
+                      </p>
+                    </div>
+                    <Share2 className="mt-0.5 h-4 w-4 shrink-0 text-violet-600" />
+                  </div>
+                </div>
+
+                <div className="rounded-xl border border-zinc-200 bg-white p-3">
+                  <div className="flex items-start gap-3">
+                    <span className="mt-0.5 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-violet-100 text-xs font-semibold text-violet-700">
+                      2
+                    </span>
+                    <div className="min-w-0">
+                      <p className="text-sm font-semibold text-zinc-900">&quot;Bosh ekranga qo&apos;shish&quot; bandini tanlang</p>
+                      <p className="mt-1 text-sm text-zinc-600">
+                        Ochilgan ro&apos;yxatdan <span className="font-medium">Add to Home Screen</span> ni topib bosing.
+                      </p>
+                    </div>
+                    <PlusSquare className="mt-0.5 h-4 w-4 shrink-0 text-violet-600" />
+                  </div>
+                </div>
+
+                <div className="rounded-xl border border-zinc-200 bg-white p-3">
+                  <div className="flex items-start gap-3">
+                    <span className="mt-0.5 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-violet-100 text-xs font-semibold text-violet-700">
+                      3
+                    </span>
+                    <div className="min-w-0">
+                      <p className="text-sm font-semibold text-zinc-900">&quot;Qo&apos;shish&quot; tugmasini bosing</p>
+                      <p className="mt-1 text-sm text-zinc-600">
+                        O&apos;ng yuqoridagi <span className="font-medium">Qo&apos;shish (Add)</span> tugmasini bosib yakunlang.
+                      </p>
+                    </div>
+                    <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-violet-600" />
+                  </div>
+                </div>
+              </div>
+
+              {!safari ? (
+                <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
+                  Ushbu amallar faqat Safari ichida ko&apos;rinadi. Iltimos, sahifani Safari brauzerida oching.
+                </div>
+              ) : null}
+            </div>
+
+            <div className="mt-4 rounded-2xl bg-violet-50 px-4 py-3">
+              <p className="text-sm font-semibold text-violet-900">Tayyor!</p>
+              <p className="mt-1 text-sm text-violet-900/90">
+                Ilova belgisi bosh ekranda paydo bo&apos;ladi va keyingi safar bir bosishda ochiladi.
+              </p>
+            </div>
+
             <div className="mt-4 flex justify-end">
               <button type="button" onClick={() => setShowIosGuide(false)} className="rounded-lg border border-zinc-300 px-4 py-2 text-sm">
-                Yopish
+                Tushunarli
               </button>
             </div>
           </div>
