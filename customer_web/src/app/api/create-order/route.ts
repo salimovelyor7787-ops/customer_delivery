@@ -24,7 +24,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Server misconfigured: missing Supabase env" }, { status: 500 });
   }
 
-  const allowed = await enforceIpRateLimit(req, "rl:create-order", 20);
+  const allowed = await enforceIpRateLimit(req, "rl:create-order", 5000);
   if (!allowed) {
     return NextResponse.json({ error: "Too many requests" }, { status: 429 });
   }
