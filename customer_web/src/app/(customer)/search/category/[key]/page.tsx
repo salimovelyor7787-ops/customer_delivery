@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { RestaurantHeroCard } from "@/components/customer/restaurant-hero-card";
-import { loadSearchCatalog } from "@/lib/server/load-search-catalog";
+import { getSearchCatalogCached } from "@/lib/server/load-search-catalog";
 
 type CategoryPageProps = {
   params: Promise<{ key: string }>;
@@ -8,7 +8,7 @@ type CategoryPageProps = {
 
 export default async function SearchCategoryPage({ params }: CategoryPageProps) {
   const { key } = await params;
-  const raw = await loadSearchCatalog();
+  const raw = await getSearchCatalogCached();
   const serviceCards = raw.serviceCards;
   const currentCard = serviceCards.find((item) => item.key === key);
 

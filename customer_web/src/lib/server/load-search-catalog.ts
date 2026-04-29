@@ -1,3 +1,4 @@
+import { unstable_cache } from "next/cache";
 import { createSupabasePublicServerClient } from "@/lib/server/supabase-public";
 
 export type SearchCatalogPayload = {
@@ -45,3 +46,7 @@ export async function loadSearchCatalog(): Promise<SearchCatalogPayload> {
     })),
   };
 }
+
+export const getSearchCatalogCached = unstable_cache(async () => loadSearchCatalog(), ["customer-web-search-catalog"], {
+  revalidate: 120,
+});

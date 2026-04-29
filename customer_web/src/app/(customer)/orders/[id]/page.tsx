@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
 import { createSupabaseBrowserClient } from "@/lib/supabase";
 
@@ -23,7 +23,7 @@ type OrderLine = {
 
 export default function OrderDetailPage() {
   const { id } = useParams<{ id: string }>();
-  const supabase = createSupabaseBrowserClient();
+  const supabase = useMemo(() => createSupabaseBrowserClient(), []);
   const [order, setOrder] = useState<OrderDetail | null>(null);
   const [lines, setLines] = useState<OrderLine[]>([]);
   const [loggedIn, setLoggedIn] = useState<boolean | null>(null);

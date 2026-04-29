@@ -7,7 +7,6 @@ import { Bell, Search, ShieldCheck, Store, Tag, Truck } from "lucide-react";
 import { RestaurantHeroCard } from "@/components/customer/restaurant-hero-card";
 import { PwaInstallCard } from "@/components/customer/pwa-install-card";
 import { setCachedValue } from "@/lib/client-cache";
-import { createSupabaseBrowserClient } from "@/lib/supabase";
 
 export type Restaurant = {
   id: string;
@@ -88,9 +87,8 @@ const REFRESH_DELAY_MS = 2800;
 type Props = { initial: HomePageInitialPayload };
 
 export function HomePageClient({ initial }: Props) {
-  const supabase = useMemo(() => createSupabaseBrowserClient(), []);
   const [restaurants, setRestaurants] = useState<Restaurant[]>(() => initial.restaurants);
-  const [banners, setBanners] = useState<Banner[]>(() => initial.banners);
+  const banners = initial.banners;
   const [serviceCards, setServiceCards] = useState<ServiceCard[]>(() => initial.serviceCards ?? []);
   const serviceCardsVersionRef = useRef<string | null>(initial.serviceCardsVersion ?? null);
   const [deals, setDeals] = useState<DealItem[]>(() => initial.deals);
@@ -139,76 +137,15 @@ export function HomePageClient({ initial }: Props) {
         return;
       }
 
-      const [{ data: rests }, { data: catRows }, { data: serviceRows }, { data: bannerRows }, { data: dealRows }, { data: nearbyRows }, { data: pushRows }] =
-        await Promise.all([
-        supabase.from("restaurants").select("id,name,image_url,is_open,delivery_fee_cents,category_id,category_ids").order("name", { ascending: true }),
-        supabase.from("categories").select("id,name").order("sort_order", { ascending: true }),
-        supabase.from("home_service_cards").select("id,service_key,title,image_url,banner_image_url,sort_order,updated_at").eq("is_active", true).order("sort_order", { ascending: true }),
-        supabase
-          .from("banners")
-          .select("id,image_url,title,subtitle,button_text,action_path,sort_order")
-          .eq("active", true)
-          .order("sort_order", { ascending: true })
-          .limit(5),
-        supabase
-          .from("menu_items")
-          .select("id,restaurant_id,name,image_url,price_cents,deal_price_cents")
-          .eq("is_available", true)
-          .eq("is_deal", true)
-          .not("deal_price_cents", "is", null)
-          .order("sort_order", { ascending: true })
-          .limit(10),
-        supabase.from("home_nearby_cards").select("id,title,image_url,restaurant_id").eq("is_active", true).order("sort_order", { ascending: true }).limit(20),
-        supabase.from("push_notifications").select("id").eq("is_active", true).limit(1),
-      ]);
-      const normalizedServiceRows = (serviceRows ?? []) as Array<{
-        id: string;
-        service_key: string;
-        title: string;
-        image_url: string | null;
-        banner_image_url: string | null;
-        updated_at: string | null;
-      }>;
-      const serviceCardsVersion =
-        normalizedServiceRows.reduce<string | null>((latest, row) => {
-          if (!row.updated_at) return latest;
-          if (!latest || row.updated_at > latest) return row.updated_at;
-          return latest;
-        }, null) ?? null;
-
-      const nextPayload: HomePageInitialPayload = {
-        restaurants: (rests ?? []) as Restaurant[],
-        categories: Object.fromEntries((catRows ?? []).map((c: { id: string; name: string }) => [c.id, c.name])),
-        serviceCards: normalizedServiceRows.map((c) => ({
-          id: c.id,
-          key: c.service_key,
-          title: c.title,
-          image_url: c.image_url ?? null,
-          banner_image_url: c.banner_image_url ?? null,
-        })),
-        serviceCardsVersion,
-        banners: (bannerRows ?? []) as Banner[],
-        deals: (dealRows ?? []) as DealItem[],
-        nearbyCards: (nearbyRows ?? []) as NearbyStoreCard[],
-        hasNotifications: (pushRows ?? []).length > 0,
-      };
-
-      setRestaurants(nextPayload.restaurants);
-      setCategoryNames(nextPayload.categories);
-      setServiceCards(nextPayload.serviceCards);
-      serviceCardsVersionRef.current = nextPayload.serviceCardsVersion;
-      setBanners(nextPayload.banners);
-      setDeals(nextPayload.deals);
-      setNearbyCards(nextPayload.nearbyCards);
-      setHasNotifications(nextPayload.hasNotifications);
-      setCachedValue(HOME_CACHE_KEY, nextPayload, HOME_CACHE_TTL_MS);
+      // Avoid direct browser -> Supabase fallback to prevent duplicate heavy reads.
+      // If API is temporarily unavailable, keep current SSR data and retry later.
     };
 
     const t = window.setTimeout(() => {
       void load();
     }, REFRESH_DELAY_MS);
     return () => window.clearTimeout(t);
-  }, [supabase, initial]);
+  }, [initial]);
 
   const storeCarouselItems = useMemo((): NearbyStoreCard[] => nearbyCards, [nearbyCards]);
 

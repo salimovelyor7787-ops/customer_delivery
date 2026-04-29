@@ -15,9 +15,28 @@ type OrderRow = {
 const TERMINAL = ["delivered", "cancelled", "rejected"];
 
 export default function OrdersPage() {
-  const supabase = createSupabaseBrowserClient();
+  const supabase = useMemo(() => createSupabaseBrowserClient(), []);
   const [rows, setRows] = useState<OrderRow[]>([]);
   const [loggedIn, setLoggedIn] = useState<boolean | null>(null);
+  const [nextCursor, setNextCursor] = useState<string | null>(null);
+  const [loadingMore, setLoadingMore] = useState(false);
+
+  const loadPage = async (cursor?: string | null) => {
+    const params = new URLSearchParams({ limit: "20" });
+    if (cursor) params.set("cursor", cursor);
+    const res = await fetch(`/api/orders?${params.toString()}`, { credentials: "same-origin" });
+    if (res.status === 401) {
+      setLoggedIn(false);
+      setRows([]);
+      setNextCursor(null);
+      return;
+    }
+    if (!res.ok) return;
+    const json = (await res.json()) as { data?: OrderRow[]; nextCursor?: string | null };
+    const chunk = Array.isArray(json.data) ? json.data : [];
+    setRows((prev) => (cursor ? [...prev, ...chunk] : chunk));
+    setNextCursor(typeof json.nextCursor === "string" ? json.nextCursor : null);
+  };
 
   useEffect(() => {
     const load = async () => {
@@ -25,11 +44,11 @@ export default function OrdersPage() {
       if (!sessionData.session) {
         setLoggedIn(false);
         setRows([]);
+        setNextCursor(null);
         return;
       }
       setLoggedIn(true);
-      const { data } = await supabase.from("orders").select("id,status,total_cents,created_at,restaurants(name)").order("created_at", { ascending: false });
-      setRows(((data ?? []) as unknown as OrderRow[]) ?? []);
+      await loadPage(null);
     };
     void load();
   }, [supabase]);
@@ -70,6 +89,26 @@ export default function OrdersPage() {
           </Link>
         ))}
       </section>
+      {nextCursor ? (
+        <div>
+          <button
+            type="button"
+            disabled={loadingMore}
+            onClick={async () => {
+              if (!nextCursor) return;
+              setLoadingMore(true);
+              try {
+                await loadPage(nextCursor);
+              } finally {
+                setLoadingMore(false);
+              }
+            }}
+            className="rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-800 disabled:opacity-50"
+          >
+            {loadingMore ? "Yuklanmoqda..." : "Yana ko'rsatish"}
+          </button>
+        </div>
+      ) : null}
     </main>
   );
 }

@@ -1,4 +1,4 @@
-import { loadSearchCatalog } from "@/lib/server/load-search-catalog";
+import { getSearchCatalogCached } from "@/lib/server/load-search-catalog";
 import { SearchPageClient, type SearchPageInitialPayload } from "./search-page-client";
 
 export const dynamic = "force-dynamic";
@@ -8,7 +8,7 @@ type SearchPageProps = {
 };
 
 export default async function SearchPage({ searchParams }: SearchPageProps) {
-  const raw = await loadSearchCatalog();
+  const raw = await getSearchCatalogCached();
   const resolvedParams = searchParams ? await searchParams : {};
   const rawQuery = resolvedParams.q;
   const initialQuery =
