@@ -55,8 +55,7 @@ export async function GET(req: Request) {
       .limit(limit);
 
     if (cursor) {
-      // Cursor uses created_at primarily; id is carried for future tie-break upgrades.
-      query = query.lt("created_at", cursor.created_at);
+      query = query.or(`created_at.lt.${cursor.created_at},and(created_at.eq.${cursor.created_at},id.lt.${cursor.id})`);
     }
 
     const { data, error } = await query;

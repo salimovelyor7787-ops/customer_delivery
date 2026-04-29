@@ -161,7 +161,8 @@ export async function createOrderDirect(params: {
     return { ok: false, status: 500, body: { error: "Could not create order" } };
   }
 
-  await enqueueOrderSideEffects(admin, orderId, {
+  // Fire-and-forget: side effects are non-critical for checkout response path.
+  void enqueueOrderSideEffects(admin, orderId, {
     userId: uid,
     promoCode,
     requestId,
