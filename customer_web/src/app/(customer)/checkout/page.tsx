@@ -1,7 +1,7 @@
 "use client";
 
 import { FormEvent, useRef, useState } from "react";
-import { ArrowLeft, ChevronRight, MapPin, PencilLine, Phone, Shield, ShoppingBag, TicketPercent } from "lucide-react";
+import { ArrowLeft, MapPin, Phone, Shield, ShoppingBag, TicketPercent } from "lucide-react";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import { useCart } from "@/components/customer/cart-context";
@@ -258,16 +258,6 @@ export default function CheckoutPage() {
                 >
                   <MapPin className="h-4 w-4" /> {geoButtonLabel}
                 </button>
-                <p className="my-2 text-center text-xs text-zinc-400">yoki</p>
-                <button
-                  type="button"
-                  className="flex w-full items-center justify-between rounded-xl border border-zinc-200 bg-white px-4 py-3 text-sm text-zinc-700"
-                >
-                  <span className="flex items-center gap-2">
-                    <PencilLine className="h-4 w-4 text-orange-500" /> Manzilni qo&apos;lda kiritish
-                  </span>
-                  <ChevronRight className="h-4 w-4 text-zinc-400" />
-                </button>
               </div>
             </div>
           </section>
@@ -308,7 +298,7 @@ export default function CheckoutPage() {
             className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-orange-500 to-orange-600 px-4 py-3 text-base font-bold text-white shadow-sm disabled:opacity-50"
           >
             <ShoppingBag className="h-5 w-5" />
-            {saving ? "Yuborilmoqda..." : "Buyurtmani tasdiqlash"}
+            {saving ? "Yuborilmoqda..." : "Buyurtma berish"}
           </button>
         </div>
       </div>
