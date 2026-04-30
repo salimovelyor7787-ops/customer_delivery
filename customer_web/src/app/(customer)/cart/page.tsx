@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
+import { CheckCircle2, Circle, MapPin, MessageCircle, PhoneCall, ShieldCheck, Truck } from "lucide-react";
 import { useCart } from "@/components/customer/cart-context";
 import { createSupabaseBrowserClient } from "@/lib/supabase";
 
@@ -9,10 +10,25 @@ type TrackedOrder = {
   id: string;
   status: string;
   created_at: string;
+  total_cents: number;
+  delivery_fee_cents: number;
   restaurants: { name: string } | { name: string }[] | null;
 };
 
+type TrackedOrderLine = {
+  id: string;
+  quantity: number;
+  unit_price_cents: number;
+  menu_items: { name: string } | { name: string }[] | null;
+};
+
 const TERMINAL_STATUSES = new Set(["delivered", "cancelled", "rejected"]);
+const STATUS_STEPS = [
+  { key: "placed", label: "Qabul qilindi" },
+  { key: "preparing", label: "Tayyorlanmoqda" },
+  { key: "on_the_way", label: "Yo'lda" },
+  { key: "delivered", label: "Yetkazib berildi" },
+];
 
 function normalizeStatus(status: string) {
   return status.trim().toLowerCase();
@@ -32,10 +48,20 @@ function statusLabel(status: string) {
   return status || "Noma'lum";
 }
 
+function getActiveStepIndex(status: string | undefined): number {
+  const value = normalizeStatus(status ?? "");
+  if (value === "confirmed" || value === "placed") return 0;
+  if (value === "preparing" || value === "ready_for_pickup" || value === "picked_up") return 1;
+  if (value === "on_the_way") return 2;
+  if (value === "delivered") return 3;
+  return 0;
+}
+
 export default function CartPage() {
   const { items, setQuantity, totalCents, removeItem, promoCode, setPromoCode } = useCart();
   const supabase = useMemo(() => createSupabaseBrowserClient(), []);
   const [trackedOrder, setTrackedOrder] = useState<TrackedOrder | null>(null);
+  const [trackedLines, setTrackedLines] = useState<TrackedOrderLine[]>([]);
   const [trackingReady, setTrackingReady] = useState(false);
 
   useEffect(() => {
@@ -56,7 +82,15 @@ export default function CartPage() {
 
       const savedOrderId = window.localStorage.getItem("customer_last_order_id");
 
-      const selectFields = "id,status,created_at,restaurants(name)";
+      const selectFields = "id,status,created_at,total_cents,delivery_fee_cents,restaurants(name)";
+      const loadLines = async (orderId: string) => {
+        const { data: lineRows } = await supabase
+          .from("order_items")
+          .select("id,quantity,unit_price_cents,menu_items(name)")
+          .eq("order_id", orderId);
+        if (!active) return;
+        setTrackedLines((lineRows as unknown as TrackedOrderLine[]) ?? []);
+      };
       if (savedOrderId) {
         const { data } = await supabase
           .from("orders")
@@ -66,6 +100,7 @@ export default function CartPage() {
           .maybeSingle();
         if (active && data) {
           setTrackedOrder(data as unknown as TrackedOrder);
+          await loadLines((data as { id: string }).id);
           setTrackingReady(true);
           return;
         }
@@ -81,6 +116,11 @@ export default function CartPage() {
 
       if (!active) return;
       setTrackedOrder((data as unknown as TrackedOrder) ?? null);
+      if (data?.id) {
+        await loadLines(data.id);
+      } else {
+        setTrackedLines([]);
+      }
       setTrackingReady(true);
     };
 
@@ -102,24 +142,98 @@ export default function CartPage() {
   }, [trackedOrder]);
 
   const isTerminal = trackedOrder ? TERMINAL_STATUSES.has(normalizeStatus(trackedOrder.status)) : false;
+  const activeStepIndex = getActiveStepIndex(trackedOrder?.status);
+  const trackedItemsSubtotal = trackedLines.reduce((sum, line) => sum + line.quantity * line.unit_price_cents, 0);
+  const trackedTotalCents = trackedOrder?.total_cents ?? trackedItemsSubtotal + (trackedOrder?.delivery_fee_cents ?? 0);
 
   return (
     <main className="space-y-4 p-4 sm:p-6 lg:p-8">
       <h1 className="text-2xl font-semibold sm:text-3xl">Savat</h1>
-      {trackingReady && trackedOrder ? (
-        <section className="rounded-xl border border-zinc-200 bg-white p-4">
-          <p className="text-sm text-zinc-500">So&apos;nggi buyurtma</p>
-          <p className="font-medium">{restaurantName}</p>
-          <p className="mt-1 text-sm text-zinc-700">
-            Holat: <span className={isTerminal ? "font-medium text-zinc-600" : "font-semibold text-emerald-700"}>{statusLabel(trackedOrder.status)}</span>
-          </p>
-          <p className="text-xs text-zinc-500">{new Date(trackedOrder.created_at).toLocaleString()}</p>
-          <Link href={`/orders/${trackedOrder.id}`} className="mt-3 inline-flex rounded-lg border border-zinc-300 px-3 py-1.5 text-sm">
-            Buyurtmani ochish
-          </Link>
-        </section>
+      {trackingReady && items.length === 0 && trackedOrder ? (
+        <div className="mx-auto w-full max-w-md space-y-3">
+          <section className="rounded-2xl border border-zinc-200 bg-white p-4">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <h2 className="text-3xl font-bold text-zinc-900">Buyurtmangiz yo&apos;lda</h2>
+                <p className="mt-1 text-sm text-zinc-500">Buyurtma #{trackedOrder.id.slice(0, 6).toUpperCase()}</p>
+              </div>
+              <button type="button" className="inline-flex items-center gap-1 rounded-xl border border-zinc-200 px-3 py-2 text-sm text-zinc-700">
+                Yordam
+              </button>
+            </div>
+          </section>
+          <section className="rounded-2xl border border-zinc-200 bg-white p-4">
+            <div className="grid grid-cols-4 gap-2">
+              {STATUS_STEPS.map((step, idx) => {
+                const done = idx <= activeStepIndex;
+                const isCurrent = idx === activeStepIndex;
+                return (
+                  <div key={step.key} className="relative text-center">
+                    {idx < STATUS_STEPS.length - 1 ? (
+                      <span className={`absolute left-[52%] top-3 block h-0.5 w-full ${idx < activeStepIndex ? "bg-green-500" : "bg-zinc-200"}`} />
+                    ) : null}
+                    <div className="relative z-10 inline-flex h-6 w-6 items-center justify-center rounded-full bg-white">
+                      {done ? <CheckCircle2 className={`h-5 w-5 ${isCurrent ? "text-orange-500" : "text-green-600"}`} /> : <Circle className="h-5 w-5 text-zinc-300" />}
+                    </div>
+                    <p className={`mt-1 text-xs ${done ? "text-zinc-800" : "text-zinc-400"}`}>{step.label}</p>
+                  </div>
+                );
+              })}
+            </div>
+            <div className="mt-3 rounded-xl border border-emerald-100 bg-emerald-50 px-3 py-2 text-sm text-emerald-800">
+              <p className="flex items-center gap-1.5 font-medium">
+                <ShieldCheck className="h-4 w-4" /> Xavotir olmang, buyurtmangiz nazoratda.
+              </p>
+              <p className="mt-0.5 text-xs text-emerald-700">Agar muammo bo&apos;lsa, sizga darhol xabar beramiz.</p>
+            </div>
+          </section>
+          <section className="rounded-2xl border border-zinc-200 bg-white p-4">
+            <p className="text-lg font-semibold text-zinc-900">Kuryer yo&apos;lda</p>
+            <p className="text-sm text-zinc-500">Holat: {isTerminal ? "Yakunlangan" : statusLabel(trackedOrder.status)}</p>
+            <div className="mt-3 flex items-center justify-between gap-3">
+              <div>
+                <p className="font-semibold text-zinc-900">Azizbek ★ 4.9</p>
+                <p className="text-sm text-zinc-500">7 daqiqa ichida yetib boradi</p>
+              </div>
+              <div className="flex items-center gap-2">
+                <button type="button" className="rounded-xl border border-zinc-200 p-2.5 text-zinc-700"><PhoneCall className="h-4 w-4" /></button>
+                <button type="button" className="rounded-xl border border-zinc-200 p-2.5 text-zinc-700"><MessageCircle className="h-4 w-4" /></button>
+              </div>
+            </div>
+            <div className="mt-3 overflow-hidden rounded-xl border border-zinc-100 bg-zinc-100">
+              <div className="flex h-40 items-center justify-center bg-[linear-gradient(135deg,#f4f4f5,#e4e4e7)] text-zinc-500">
+                <MapPin className="mr-2 h-4 w-4" /> Kuryer harakati xaritasi
+              </div>
+              <div className="rounded-b-xl bg-orange-50 px-3 py-2 text-sm">
+                <p className="flex items-center justify-between font-medium text-orange-700">
+                  <span className="inline-flex items-center gap-1"><Truck className="h-4 w-4" /> Taxminiy yetkazish vaqti</span>
+                  <span>18:20-18:25</span>
+                </p>
+              </div>
+            </div>
+          </section>
+          <section className="rounded-2xl border border-zinc-200 bg-white p-4">
+            <p className="mb-2 text-lg font-semibold text-zinc-900">Buyurtma tafsilotlari</p>
+            <div className="space-y-2">
+              {trackedLines.map((line) => (
+                <article key={line.id} className="flex items-center justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="font-medium text-zinc-900">{Array.isArray(line.menu_items) ? (line.menu_items[0]?.name ?? "Mahsulot") : (line.menu_items?.name ?? "Mahsulot")}</p>
+                    <p className="text-sm text-zinc-500">{line.quantity} x {(line.unit_price_cents / 100).toFixed(0)} so&apos;m</p>
+                  </div>
+                  <p className="shrink-0 text-sm font-medium text-zinc-700">{((line.quantity * line.unit_price_cents) / 100).toFixed(0)} so&apos;m</p>
+                </article>
+              ))}
+            </div>
+            <div className="mt-3 space-y-1 border-t border-zinc-100 pt-3 text-sm">
+              <div className="flex justify-between text-zinc-600"><span>{restaurantName}</span><span>{(trackedItemsSubtotal / 100).toFixed(0)} so&apos;m</span></div>
+              <div className="flex justify-between text-zinc-600"><span>Yetkazib berish</span><span>{((trackedOrder.delivery_fee_cents ?? 0) / 100).toFixed(0)} so&apos;m</span></div>
+              <div className="flex justify-between text-base font-semibold text-zinc-900"><span>Jami</span><span>{(trackedTotalCents / 100).toFixed(0)} so&apos;m</span></div>
+            </div>
+          </section>
+        </div>
       ) : null}
-      {items.length === 0 ? <p className="text-sm text-zinc-500">Savat bo&apos;sh</p> : null}
+      {items.length === 0 && (!trackingReady || !trackedOrder) ? <p className="text-sm text-zinc-500">Savat bo&apos;sh</p> : null}
       <div className="lg:grid lg:grid-cols-[1fr_min(22rem,100%)] lg:items-start lg:gap-8">
         <div className="space-y-2 sm:grid sm:grid-cols-2 sm:gap-3 sm:space-y-0 xl:grid-cols-3">
           {items.map((item) => (
