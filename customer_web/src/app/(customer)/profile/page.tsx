@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Bell, ChevronRight, CircleHelp, Gift, MapPin, Settings, UserRound } from "lucide-react";
+import { Bell, ChevronRight, CircleHelp, Gift, MapPin, UserRound } from "lucide-react";
 import { InviteShareButton } from "@/components/customer/invite-share-button";
 import { PwaInstallCard } from "@/components/customer/pwa-install-card";
 import { SignOutButton } from "@/components/customer/sign-out-button";
@@ -14,8 +14,8 @@ export default async function ProfilePage() {
   const sessionUser = sessionData.session?.user ?? null;
 
   const { data: profile } = isGuest
-    ? { data: null as { full_name: string | null; phone: string | null; role: string | null } | null }
-    : await supabase.from("profiles").select("full_name,phone,role").eq("id", sessionData.session.user.id).single();
+    ? { data: null as { full_name: string | null; role: string | null } | null }
+    : await supabase.from("profiles").select("full_name,role").eq("id", sessionData.session.user.id).single();
 
   const displayName =
     profile?.full_name?.trim() ||
@@ -26,12 +26,7 @@ export default async function ProfilePage() {
 
   return (
     <main className="space-y-5 p-4 sm:p-6 lg:p-8">
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-semibold">Profil</h1>
-        <button type="button" className="rounded-full p-2 text-zinc-700">
-          <Settings className="h-5 w-5" />
-        </button>
-      </div>
+      <h1 className="text-3xl font-semibold">Profil</h1>
 
       <Link
         href={isGuest ? "/login?next=/profile" : "/profile"}
@@ -45,7 +40,7 @@ export default async function ProfilePage() {
           <p className="truncate text-sm text-zinc-500">
             {isGuest
               ? "Profil va manzillar uchun tizimga kiring"
-              : profile?.phone?.trim() || "Profil ma'lumotlari"}
+              : sessionUser?.email?.trim() || "Profil ma'lumotlari"}
           </p>
         </div>
         <ChevronRight className="h-5 w-5 text-zinc-400" />

@@ -13,7 +13,7 @@ export function InviteShareButton({ inviteCode }: InviteShareButtonProps) {
   const [copied, setCopied] = useState(false);
 
   const inviteUrl = useMemo(() => {
-    const basePath = inviteCode ? `/register?ref=${encodeURIComponent(inviteCode)}` : "/register";
+    const basePath = inviteCode ? `/?ref=${encodeURIComponent(inviteCode)}` : "/";
     return `${PUBLIC_APP_URL}${basePath}`;
   }, [inviteCode]);
 

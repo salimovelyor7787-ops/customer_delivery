@@ -26,15 +26,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
     if (session == null) {
       return Scaffold(
-        appBar: AppBar(
-          title: const Text('Profil'),
-          actions: const [
-            Padding(
-              padding: EdgeInsetsDirectional.only(end: 10),
-              child: Icon(Icons.settings_outlined),
-            ),
-          ],
-        ),
+        appBar: AppBar(title: const Text('Profil')),
         body: ListView(
           padding: const EdgeInsets.fromLTRB(16, 12, 16, 20),
           children: [
@@ -98,21 +90,13 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     }
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Profil'),
-        actions: const [
-          Padding(
-            padding: EdgeInsetsDirectional.only(end: 10),
-            child: Icon(Icons.settings_outlined),
-          ),
-        ],
-      ),
+      appBar: AppBar(title: const Text('Profil')),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 12, 16, 20),
         children: [
           _ProfileHeader(
             title: user?.fullName?.trim().isNotEmpty == true ? user!.fullName! : 'Foydalanuvchi',
-            subtitle: user?.phone?.trim().isNotEmpty == true ? user!.phone! : (user?.email ?? ''),
+            subtitle: user?.email ?? '',
           ),
           const SizedBox(height: 14),
           _InviteCard(onTap: () {}),
