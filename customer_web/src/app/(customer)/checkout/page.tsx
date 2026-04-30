@@ -160,7 +160,6 @@ export default function CheckoutPage() {
       setRequestId(null);
       clear();
       toast.success("Buyurtma yuborildi");
-      if (isGuest) return router.push("/home");
       router.push(`/orders/${row.order_id}`);
       return;
     }
