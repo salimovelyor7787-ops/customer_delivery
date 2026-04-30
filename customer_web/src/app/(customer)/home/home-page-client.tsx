@@ -96,6 +96,7 @@ export function HomePageClient({ initial }: Props) {
   const [categoryNames, setCategoryNames] = useState<Record<string, string>>(() => initial.categories);
   const [hasNotifications, setHasNotifications] = useState(() => initial.hasNotifications);
   const [searchQuery, setSearchQuery] = useState("");
+  const [activeBannerIndex, setActiveBannerIndex] = useState(0);
 
   useEffect(() => {
     setCachedValue(HOME_CACHE_KEY, initial, HOME_CACHE_TTL_MS);
@@ -172,6 +173,20 @@ export function HomePageClient({ initial }: Props) {
     });
   }, [restaurants, searchQuery, getRestaurantCategoryNames]);
 
+  useEffect(() => {
+    if (banners.length <= 1) return;
+    const timer = window.setTimeout(() => {
+      setActiveBannerIndex(1);
+    }, 2200);
+    return () => window.clearTimeout(timer);
+  }, [banners.length]);
+
+  useEffect(() => {
+    if (activeBannerIndex >= banners.length) {
+      setActiveBannerIndex(0);
+    }
+  }, [activeBannerIndex, banners.length]);
+
   return (
     <main className="space-y-4 p-4 sm:p-6 lg:space-y-6 lg:p-8">
       <div className="flex items-center justify-between gap-4">
@@ -200,53 +215,71 @@ export function HomePageClient({ initial }: Props) {
       <PwaInstallCard variant="banner" />
 
       <div className="space-y-2">
-        <div className="flex gap-2 overflow-x-auto pb-1 md:grid md:grid-cols-2 md:overflow-x-visible lg:grid-cols-3">
-          {banners.map((banner, index) => {
-            const hasLink = bannerHasActionUrl(banner.action_path);
-            const sub = banner.subtitle?.trim() ?? "";
-            const subtitleLines = sub ? splitBannerLines(sub) : [];
-            const btn = banner.button_text?.trim() ?? "";
-            /** Promo line often lives in `button_text` even when there is no URL — show as text, not only hide the button. */
-            const showButtonTextAsPlain =
-              !hasLink && btn.length > 0 && (sub.length === 0 || btn !== sub);
-            return (
-              <div key={banner.id} className="relative h-[142px] min-w-full overflow-hidden rounded-2xl bg-zinc-100 sm:h-[156px] md:min-w-0 lg:h-[168px]">
-                <Image
-                  src={banner.image_url}
-                  alt={banner.title ?? "Banner"}
-                  fill
-                  sizes="(max-width: 768px) 280px, (max-width: 1024px) 50vw, 33vw"
-                  className="h-full w-full object-cover"
-                  priority={index === 0}
-                  fetchPriority={index === 0 ? "high" : "low"}
-                  decoding={index === 0 ? "sync" : "async"}
-                />
-                <div className="absolute inset-x-0 top-0 z-10 flex flex-col items-stretch gap-1.5 p-3 text-left md:gap-2 md:p-4">
-                  {banner.title?.trim() ? (
-                    <h3 className="text-balance text-xl font-bold leading-snug text-black md:text-xl md:leading-tight">{banner.title.trim()}</h3>
-                  ) : null}
-                  {subtitleLines.length > 0 ? (
-                    <p className="text-pretty text-sm font-semibold leading-normal text-black/90 md:text-sm md:leading-snug">
-                      {subtitleLines.map((line, lineIdx) => (
-                        <span key={`${banner.id}-subtitle-${lineIdx}`} className="block">
-                          {line}
-                        </span>
-                      ))}
-                    </p>
-                  ) : null}
-                  {showButtonTextAsPlain ? (
-                    <p className="text-pretty text-sm font-semibold leading-normal text-black/95 md:text-sm md:leading-snug">{btn}</p>
-                  ) : null}
-                  {hasLink ? (
-                    <span className="pointer-events-auto mt-0.5 self-start">
-                      <BannerCta href={String(banner.action_path).trim()} label={btn || "Ko'rish"} />
-                    </span>
-                  ) : null}
+        <div className="overflow-hidden rounded-2xl">
+          <div
+            className="flex transition-transform duration-500 ease-out"
+            style={{ transform: `translateX(-${activeBannerIndex * 100}%)` }}
+          >
+            {banners.map((banner, index) => {
+              const hasLink = bannerHasActionUrl(banner.action_path);
+              const sub = banner.subtitle?.trim() ?? "";
+              const subtitleLines = sub ? splitBannerLines(sub) : [];
+              const btn = banner.button_text?.trim() ?? "";
+              /** Promo line often lives in `button_text` even when there is no URL — show as text, not only hide the button. */
+              const showButtonTextAsPlain =
+                !hasLink && btn.length > 0 && (sub.length === 0 || btn !== sub);
+              return (
+                <div key={banner.id} className="relative h-[142px] w-full shrink-0 overflow-hidden bg-zinc-100 sm:h-[156px] lg:h-[168px]">
+                  <Image
+                    src={banner.image_url}
+                    alt={banner.title ?? "Banner"}
+                    fill
+                    sizes="100vw"
+                    className="h-full w-full object-cover"
+                    priority={index === 0}
+                    fetchPriority={index === 0 ? "high" : "low"}
+                    decoding={index === 0 ? "sync" : "async"}
+                  />
+                  <div className="absolute inset-x-0 top-0 z-10 flex flex-col items-stretch gap-1.5 p-3 text-left md:gap-2 md:p-4">
+                    {banner.title?.trim() ? (
+                      <h3 className="text-balance text-xl font-bold leading-snug text-black md:text-xl md:leading-tight">{banner.title.trim()}</h3>
+                    ) : null}
+                    {subtitleLines.length > 0 ? (
+                      <p className="text-pretty text-sm font-semibold leading-normal text-black/90 md:text-sm md:leading-snug">
+                        {subtitleLines.map((line, lineIdx) => (
+                          <span key={`${banner.id}-subtitle-${lineIdx}`} className="block">
+                            {line}
+                          </span>
+                        ))}
+                      </p>
+                    ) : null}
+                    {showButtonTextAsPlain ? (
+                      <p className="text-pretty text-sm font-semibold leading-normal text-black/95 md:text-sm md:leading-snug">{btn}</p>
+                    ) : null}
+                    {hasLink ? (
+                      <span className="pointer-events-auto mt-0.5 self-start">
+                        <BannerCta href={String(banner.action_path).trim()} label={btn || "Ko'rish"} />
+                      </span>
+                    ) : null}
+                  </div>
                 </div>
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
         </div>
+        {banners.length > 1 ? (
+          <div className="flex items-center justify-center gap-1.5">
+            {banners.map((banner, index) => (
+              <button
+                key={`${banner.id}-dot`}
+                type="button"
+                aria-label={`Banner ${index + 1}`}
+                onClick={() => setActiveBannerIndex(index)}
+                className={`h-2 rounded-full transition-all ${index === activeBannerIndex ? "w-5 bg-orange-500" : "w-2 bg-zinc-300"}`}
+              />
+            ))}
+          </div>
+        ) : null}
       </div>
 
       <section className="rounded-2xl border border-zinc-200 bg-white px-2.5 py-2 shadow-[0_2px_10px_rgba(0,0,0,0.04)]">
