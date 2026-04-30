@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import { CheckCircle2, Circle, MapPin, MessageCircle, PhoneCall, ShieldCheck, Truck } from "lucide-react";
+import { CheckCircle2, Circle, ShieldCheck } from "lucide-react";
 import { useCart } from "@/components/customer/cart-context";
 import { createSupabaseBrowserClient } from "@/lib/supabase";
 
@@ -198,31 +198,6 @@ export default function CartPage() {
                 <ShieldCheck className="h-4 w-4" /> Xavotir olmang, buyurtmangiz nazoratda.
               </p>
               <p className="mt-0.5 text-xs text-emerald-700">Agar muammo bo&apos;lsa, sizga darhol xabar beramiz.</p>
-            </div>
-          </section>
-          <section className="rounded-2xl border border-zinc-200 bg-white p-4">
-            <p className="text-lg font-semibold text-zinc-900">Kuryer yo&apos;lda</p>
-            <p className="text-sm text-zinc-500">Holat: {statusLabel(trackedOrder.status)}</p>
-            <div className="mt-3 flex items-center justify-between gap-3">
-              <div>
-                <p className="font-semibold text-zinc-900">Azizbek ★ 4.9</p>
-                <p className="text-sm text-zinc-500">7 daqiqa ichida yetib boradi</p>
-              </div>
-              <div className="flex items-center gap-2">
-                <button type="button" className="rounded-xl border border-zinc-200 p-2.5 text-zinc-700"><PhoneCall className="h-4 w-4" /></button>
-                <button type="button" className="rounded-xl border border-zinc-200 p-2.5 text-zinc-700"><MessageCircle className="h-4 w-4" /></button>
-              </div>
-            </div>
-            <div className="mt-3 overflow-hidden rounded-xl border border-zinc-100 bg-zinc-100">
-              <div className="flex h-40 items-center justify-center bg-[linear-gradient(135deg,#f4f4f5,#e4e4e7)] text-zinc-500">
-                <MapPin className="mr-2 h-4 w-4" /> Kuryer harakati xaritasi
-              </div>
-              <div className="rounded-b-xl bg-orange-50 px-3 py-2 text-sm">
-                <p className="flex items-center justify-between font-medium text-orange-700">
-                  <span className="inline-flex items-center gap-1"><Truck className="h-4 w-4" /> Taxminiy yetkazish vaqti</span>
-                  <span>18:20-18:25</span>
-                </p>
-              </div>
             </div>
           </section>
           <section className="rounded-2xl border border-zinc-200 bg-white p-4">

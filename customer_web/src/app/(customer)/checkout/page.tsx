@@ -160,7 +160,7 @@ export default function CheckoutPage() {
       setRequestId(null);
       clear();
       toast.success("Buyurtma yuborildi");
-      router.push(`/orders/${row.order_id}`);
+      router.push("/cart");
       return;
     }
 
