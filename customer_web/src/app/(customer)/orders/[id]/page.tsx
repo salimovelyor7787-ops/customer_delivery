@@ -54,6 +54,14 @@ export default function OrderDetailPage() {
     const load = async () => {
       const { data: sessionData } = await supabase.auth.getSession();
       if (!sessionData.session) {
+        const lastOrderId = window.localStorage.getItem("customer_last_order_id");
+        if (lastOrderId === id) {
+          // Allow guests to reopen their just-created order screen from local storage.
+          setLoggedIn(true);
+          setOrder((prev) => prev ?? { id, status: "placed", total_cents: 0, delivery_fee_cents: 0, created_at: new Date().toISOString(), restaurants: null });
+          setLines([]);
+          return;
+        }
         setLoggedIn(false);
         return;
       }
