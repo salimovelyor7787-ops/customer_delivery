@@ -99,7 +99,14 @@ export default function CartPage() {
           .eq("user_id", session.user.id)
           .maybeSingle();
         if (active && data) {
-          setTrackedOrder(data as unknown as TrackedOrder);
+          const parsed = data as unknown as TrackedOrder;
+          if (TERMINAL_STATUSES.has(normalizeStatus(parsed.status))) {
+            setTrackedOrder(null);
+            setTrackedLines([]);
+            setTrackingReady(true);
+            return;
+          }
+          setTrackedOrder(parsed);
           await loadLines((data as { id: string }).id);
           setTrackingReady(true);
           return;
@@ -115,9 +122,16 @@ export default function CartPage() {
         .maybeSingle();
 
       if (!active) return;
-      setTrackedOrder((data as unknown as TrackedOrder) ?? null);
-      if (data?.id) {
-        await loadLines(data.id);
+      const parsed = (data as unknown as TrackedOrder) ?? null;
+      if (parsed && TERMINAL_STATUSES.has(normalizeStatus(parsed.status))) {
+        setTrackedOrder(null);
+        setTrackedLines([]);
+        setTrackingReady(true);
+        return;
+      }
+      setTrackedOrder(parsed);
+      if (parsed?.id) {
+        await loadLines(parsed.id);
       } else {
         setTrackedLines([]);
       }
@@ -141,7 +155,6 @@ export default function CartPage() {
     return trackedOrder.restaurants.name;
   }, [trackedOrder]);
 
-  const isTerminal = trackedOrder ? TERMINAL_STATUSES.has(normalizeStatus(trackedOrder.status)) : false;
   const activeStepIndex = getActiveStepIndex(trackedOrder?.status);
   const trackedItemsSubtotal = trackedLines.reduce((sum, line) => sum + line.quantity * line.unit_price_cents, 0);
   const trackedTotalCents = trackedOrder?.total_cents ?? trackedItemsSubtotal + (trackedOrder?.delivery_fee_cents ?? 0);
@@ -189,7 +202,7 @@ export default function CartPage() {
           </section>
           <section className="rounded-2xl border border-zinc-200 bg-white p-4">
             <p className="text-lg font-semibold text-zinc-900">Kuryer yo&apos;lda</p>
-            <p className="text-sm text-zinc-500">Holat: {isTerminal ? "Yakunlangan" : statusLabel(trackedOrder.status)}</p>
+            <p className="text-sm text-zinc-500">Holat: {statusLabel(trackedOrder.status)}</p>
             <div className="mt-3 flex items-center justify-between gap-3">
               <div>
                 <p className="font-semibold text-zinc-900">Azizbek ★ 4.9</p>
