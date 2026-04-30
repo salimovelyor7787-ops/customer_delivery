@@ -180,12 +180,7 @@ export function HomePageClient({ initial }: Props) {
     }, 2200);
     return () => window.clearTimeout(timer);
   }, [banners.length]);
-
-  useEffect(() => {
-    if (activeBannerIndex >= banners.length) {
-      setActiveBannerIndex(0);
-    }
-  }, [activeBannerIndex, banners.length]);
+  const visibleBannerIndex = banners.length === 0 ? 0 : Math.min(activeBannerIndex, banners.length - 1);
 
   return (
     <main className="space-y-4 p-4 sm:p-6 lg:space-y-6 lg:p-8">
@@ -218,7 +213,7 @@ export function HomePageClient({ initial }: Props) {
         <div className="overflow-hidden rounded-2xl">
           <div
             className="flex transition-transform duration-500 ease-out"
-            style={{ transform: `translateX(-${activeBannerIndex * 100}%)` }}
+            style={{ transform: `translateX(-${visibleBannerIndex * 100}%)` }}
           >
             {banners.map((banner, index) => {
               const hasLink = bannerHasActionUrl(banner.action_path);
@@ -275,7 +270,7 @@ export function HomePageClient({ initial }: Props) {
                 type="button"
                 aria-label={`Banner ${index + 1}`}
                 onClick={() => setActiveBannerIndex(index)}
-                className={`h-2 rounded-full transition-all ${index === activeBannerIndex ? "w-5 bg-orange-500" : "w-2 bg-zinc-300"}`}
+                className={`h-2 rounded-full transition-all ${index === visibleBannerIndex ? "w-5 bg-orange-500" : "w-2 bg-zinc-300"}`}
               />
             ))}
           </div>

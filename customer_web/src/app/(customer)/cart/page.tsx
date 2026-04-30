@@ -34,20 +34,6 @@ function normalizeStatus(status: string) {
   return status.trim().toLowerCase();
 }
 
-function statusLabel(status: string) {
-  const value = normalizeStatus(status);
-  if (value === "placed") return "Qabul qilindi";
-  if (value === "confirmed") return "Tasdiqlandi";
-  if (value === "preparing") return "Tayyorlanmoqda";
-  if (value === "ready_for_pickup") return "Olib ketishga tayyor";
-  if (value === "picked_up") return "Kuryer oldi";
-  if (value === "on_the_way") return "Yo'lda";
-  if (value === "delivered") return "Yetkazildi";
-  if (value === "cancelled") return "Bekor qilindi";
-  if (value === "rejected") return "Rad etildi";
-  return status || "Noma'lum";
-}
-
 function getActiveStepIndex(status: string | undefined): number {
   const value = normalizeStatus(status ?? "");
   if (value === "confirmed" || value === "placed") return 0;
