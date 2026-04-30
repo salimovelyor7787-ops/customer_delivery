@@ -97,6 +97,8 @@ export function HomePageClient({ initial }: Props) {
   const [hasNotifications, setHasNotifications] = useState(() => initial.hasNotifications);
   const [searchQuery, setSearchQuery] = useState("");
   const [activeBannerIndex, setActiveBannerIndex] = useState(0);
+  const bannerTouchStartXRef = useRef<number | null>(null);
+  const bannerTouchEndXRef = useRef<number | null>(null);
 
   useEffect(() => {
     setCachedValue(HOME_CACHE_KEY, initial, HOME_CACHE_TTL_MS);
@@ -182,6 +184,40 @@ export function HomePageClient({ initial }: Props) {
   }, [banners.length]);
   const visibleBannerIndex = banners.length === 0 ? 0 : Math.min(activeBannerIndex, banners.length - 1);
 
+  const goToPrevBanner = useCallback(() => {
+    setActiveBannerIndex((prev) => Math.max(0, prev - 1));
+  }, []);
+
+  const goToNextBanner = useCallback(() => {
+    if (banners.length === 0) return;
+    setActiveBannerIndex((prev) => Math.min(banners.length - 1, prev + 1));
+  }, [banners.length]);
+
+  const onBannerTouchStart = useCallback((event: React.TouchEvent<HTMLDivElement>) => {
+    bannerTouchStartXRef.current = event.touches[0]?.clientX ?? null;
+    bannerTouchEndXRef.current = null;
+  }, []);
+
+  const onBannerTouchMove = useCallback((event: React.TouchEvent<HTMLDivElement>) => {
+    bannerTouchEndXRef.current = event.touches[0]?.clientX ?? null;
+  }, []);
+
+  const onBannerTouchEnd = useCallback(() => {
+    const startX = bannerTouchStartXRef.current;
+    const endX = bannerTouchEndXRef.current;
+    bannerTouchStartXRef.current = null;
+    bannerTouchEndXRef.current = null;
+    if (startX == null || endX == null) return;
+    const diffX = startX - endX;
+    const swipeThresholdPx = 36;
+    if (Math.abs(diffX) < swipeThresholdPx) return;
+    if (diffX > 0) {
+      goToNextBanner();
+      return;
+    }
+    goToPrevBanner();
+  }, [goToNextBanner, goToPrevBanner]);
+
   return (
     <main className="space-y-4 p-4 sm:p-6 lg:space-y-6 lg:p-8">
       <div className="flex items-center justify-between gap-4">
@@ -214,6 +250,9 @@ export function HomePageClient({ initial }: Props) {
           <div
             className="flex transition-transform duration-500 ease-out"
             style={{ transform: `translateX(-${visibleBannerIndex * 100}%)` }}
+            onTouchStart={onBannerTouchStart}
+            onTouchMove={onBannerTouchMove}
+            onTouchEnd={onBannerTouchEnd}
           >
             {banners.map((banner, index) => {
               const hasLink = bannerHasActionUrl(banner.action_path);
